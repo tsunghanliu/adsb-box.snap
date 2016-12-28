@@ -44,6 +44,7 @@ parts:
       etc/config-template: usr/share/dump1090-mutability/config-template
       COPYING: usr/share/dump1090-mutability/COPYING
     build-packages:
+      - pkg-config
       - libusb-1.0-0-dev
       - librtlsdr-dev
 

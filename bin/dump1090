@@ -1,0 +1,89 @@
+#!/bin/sh
+set -e
+#set -x
+
+BIN="$SNAP/usr/bin/dump1090-mutability"
+ARGS=""
+CONF="$SNAP_DATA/dump1090-mutability.conf"
+
+if [ ! -f $CONF ]; then
+	cp $SNAP/usr/share/dump1090-mutability/config-template $CONF
+fi
+
+# Read configuration variable file if it is present
+[ -r $CONF ] && . $CONF
+
+# work out daemon args
+
+# sanitize missing settings
+#[ -z "$START_DUMP1090" ] && START_DUMP1090=no
+#[ -z "$DUMP1090_USER" ] && DUMP1090_USER="missing-DUMP1090_USER-setting-in-config"
+[ -z "$RAW_INPUT_PORT" ] && RAW_INPUT_PORT=0
+[ -z "$RAW_OUTPUT_PORT" ] && RAW_OUTPUT_PORT=0
+[ -z "$SBS_OUTPUT_PORT" ] && SBS_OUTPUT_PORT=0
+[ -z "$BEAST_INPUT_PORT" ] && BEAST_INPUT_PORT=0
+[ -z "$BEAST_OUTPUT_PORT" ] && BEAST_OUTPUT_PORT=0
+[ -z "$NET_BUFFER" ] && NET_BUFFER=0
+[ -z "$JSON_INTERVAL" ] && JSON_INTERVAL=0
+[ -z "$MAX_RANGE" ] && MAX_RANGE=300
+[ -z "$NICE_LEVEL" ] && NICELEVEL=-5
+
+# receiver:
+case "x$DEVICE" in
+	x|x0) ARGS="$ARGS --net" ;;
+	xnone) ARGS="$ARGS --net-only"; NICELEVEL="" ;;
+	*) ARGS="$ARGS --net --device-index $DEVICE" ;;
+esac
+case "x$GAIN" in
+	x|xmax) ;;
+	xagc) ARGS="$ARGS --gain -10" ;;  
+	*) ARGS="$ARGS --gain $GAIN" ;;
+esac
+if [ -n "$PPM" ]; then ARGS="$ARGS --ppm $PPM"; fi
+
+# decoder:
+if [ "x$FIX_CRC" = "xyes" ]; then ARGS="$ARGS --fix"; fi
+if [ -n "$LAT" ]; then ARGS="$ARGS --lat $LAT"; fi
+if [ -n "$LON" ]; then ARGS="$ARGS --lon $LON"; fi
+ARGS="$ARGS --max-range $MAX_RANGE"
+
+# net:
+
+ARGS="$ARGS \
+--net-ri-port $RAW_INPUT_PORT --net-ro-port $RAW_OUTPUT_PORT \
+--net-bi-port $BEAST_INPUT_PORT --net-bo-port $BEAST_OUTPUT_PORT \
+--net-sbs-port $SBS_OUTPUT_PORT"
+if [ -n "$NET_HEARTBEAT" ]; then ARGS="$ARGS --net-heartbeat $NET_HEARTBEAT"; fi
+if [ -n "$NET_OUTPUT_SIZE" ]; then ARGS="$ARGS --net-ro-size $NET_OUTPUT_SIZE"; fi
+if [ -n "$NET_OUTPUT_INTERVAL" ]; then ARGS="$ARGS --net-ro-interval $NET_OUTPUT_INTERVAL"; fi
+if [ "$NET_BUFFER" -le "65536" ]; then ARGS="$ARGS --net-buffer 0"
+elif [ "$NET_BUFFER" -le "131072" ]; then ARGS="$ARGS --net-buffer 1"
+elif [ "$NET_BUFFER" -le "262144" ]; then ARGS="$ARGS --net-buffer 2"
+else ARGS="$ARGS --net-buffer 3"; fi
+if [ -n "$NET_BIND_ADDRESS" ]; then ARGS="$ARGS --net-bind-address $NET_BIND_ADDRESS"; fi
+
+# misc:
+if [ -n "$STATS_INTERVAL" ]; then ARGS="$ARGS --stats-every $STATS_INTERVAL"; fi
+#if [ -n "$JSON_DIR" ]; then ARGS="$ARGS --write-json $JSON_DIR"; fi
+if [ -n "$JSON_INTERVAL" ]; then ARGS="$ARGS --write-json-every $JSON_INTERVAL"; fi
+case "x$JSON_LOCATION_ACCURACY" in
+	xexact) ARGS="$ARGS --json-location-accuracy 2" ;;
+	xapproximate) ARGS="$ARGS --json-location-accuracy 1" ;;
+	*) ARGS="$ARGS --json-location-accuracy 0" ;;
+esac
+
+if [ "x$LOG_DECODED_MESSAGES" != "xyes" ]; then ARGS="$ARGS --quiet"; fi
+
+if [ -n "$EXTRA_ARGS" ]; then ARGS="$ARGS $EXTRA_ARGS"; fi
+
+# fixed JSON_DIR
+ARGS="$ARGS --write-json $XDG_RUNTIME_DIR/dump1090-mutability"
+
+mkdir -p $XDG_RUNTIME_DIR/dump1090-mutability
+
+if [ -n "$NICELEVEL" ]; then
+	nice -n $NICELEVEL $BIN $ARGS
+else
+	$BIN $ARGS
+fi
+

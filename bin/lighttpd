@@ -1,0 +1,65 @@
+#! /bin/sh
+
+CONF=$SNAP_DATA/lighttpd.conf
+BIN=$SNAP/usr/sbin/lighttpd
+PORT=8080
+
+LC_ALL=C.UTF-8
+LANG=C.UTF-8
+
+#if [ -e $SNAP_DATA/config.yaml ]; then
+#    PORT=$(grep -A1 webdav $SNAP_DATA/config.yaml|\
+#        grep port:|sed "s:.*port\: ::")
+#fi
+
+cat << EOF >$CONF
+server.modules = (
+    "mod_access",
+    "mod_alias",
+    "mod_compress",
+    "mod_redirect",
+)
+
+server.document-root        = "$SNAP/usr/share/dump1090-mutability/html"
+#server.upload-dirs          = ( "$SNAP_DATA/lighttpd/uploads" )
+server.errorlog             = "$SNAP_DATA/lighttpd/error.log"
+server.pid-file             = "$SNAP_DATA/lighttpd.pid"
+server.port                 = $PORT
+
+index-file.names            = ( "gmap.html" )
+url.access-deny             = ( "~", ".inc" )
+
+compress.cache-dir          = "$SNAP_DATA/lighttpd/compress/"
+compress.filetype           = ( "application/javascript", "text/css", "text/html", "text/plain" )
+
+mimetype.assign = (
+    ".js" => "application/javascript",
+    ".json" => "application/json",
+    ".gif" => "image/gif",
+    ".png" => "image/png",
+    ".css" => "text/css",
+    ".html" => "text/html",
+    ".txt" => "text/plain",
+)
+
+url.redirect += (
+    "^/dump1090/$" => "/",
+    "^/dump1090$" => "/",
+)
+
+alias.url += (
+    "/data/" => "$XDG_RUNTIME_DIR/dump1090-mutability/",
+    "/upintheair.json" => "$SNAP_DATA/upintheair.json",
+)
+
+# The stat cache must be disabled, as aircraft.json changes
+# frequently and lighttpd's stat cache often ends up with the
+# wrong content length.
+server.stat-cache-engine    = "disable"
+
+EOF
+chmod 0600 $CONF
+
+[ -e $SNAP_DATA/lighttpd/compress ] || mkdir -p $SNAP_DATA/lighttpd/compress
+
+$BIN -D -f $CONF -m $SNAP/usr/lib/lighttpd

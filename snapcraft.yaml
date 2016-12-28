@@ -1,0 +1,65 @@
+name: adsb-box
+version: '0.1'
+summary: ADS-B tools
+description: |
+  This snap includes several ADS-B related tools to let users builds their
+  own ADS-B receiver station. There are dump1090 and lighttpd in this snap.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: strict
+
+apps:
+  dump1090:
+    command: bin/dump1090
+    daemon: simple
+    plugs: [network, network-bind, raw-usb, process-control]
+  lighttpd:
+    command: bin/lighttpd
+    daemon: simple
+    plugs: [network, network-bind]
+ 
+parts:
+  common:
+    plugin: dump
+    source: .
+    snap:
+      - bin/dump1090
+      - bin/lighttpd
+
+  dump1090:
+    plugin: make
+    #make-parameters: ['ENABLE_HTTPSERVER=1']
+    source: https://github.com/mutability/dump1090.git
+    source-type: git
+    #source-branch: v1.14
+    artifacts:
+      - dump1090
+      - public_html
+      - debian/config-template
+      - COPYING
+    organize:
+      dump1090: usr/bin/dump1090-mutability
+      public_html: usr/share/dump1090-mutability/html
+      debian: etc
+      etc/config-template: usr/share/dump1090-mutability/config-template
+      COPYING: usr/share/dump1090-mutability/COPYING
+    build-packages:
+      - libusb-1.0-0-dev
+      - librtlsdr-dev
+
+  lighttpd:
+    plugin: nil
+    stage-packages:
+      - lighttpd
+    snap:
+      - usr/sbin/lighttpd
+      - usr/lib/libfam*
+      - usr/lib/lighttpd/mod_access.so
+      - usr/lib/lighttpd/mod_alias.so
+      - usr/lib/lighttpd/mod_compress.so
+      - usr/lib/lighttpd/mod_redirect.so
+      - usr/lib/lighttpd/mod_indexfile.so
+      - usr/lib/lighttpd/mod_dirlisting.so
+      - usr/lib/lighttpd/mod_staticfile.so
+      - usr/share/doc/lighttpd/copyright
+

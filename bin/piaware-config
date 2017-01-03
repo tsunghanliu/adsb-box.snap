@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+set -x
+
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
+
+TCL_LIBRARY="$SNAP/usr/share/tcltk/tcl8.6:$TCL_LIBRARY"
+TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tcl8.6"
+TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tcllib1.17"
+TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/itcl3.4"
+TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tls1.6.7"
+TCLLIBPATH="$TCLLIBPATH $SNAP/usr/lib/tcltk/x86_64-linux-gnu/itcl3.4"
+ITCL_LIBRARY="$SNAP/usr/share/tcltk/itcl3.4"
+
+export TCL_LIBRARY="$TCL_LIBRARY"
+export TCLLIBPATH="$TCLLIBPATH"
+export ITCL_LIBRARY=$ITCL_LIBRARY
+
+$SNAP/usr/bin/piaware-config $@

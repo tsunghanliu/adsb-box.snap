@@ -1,0 +1,9 @@
+# snapcraft outputs
+*.snap
+*.snap-build*
+stage
+prime
+# general
+*~
+*.bak
+*.swp

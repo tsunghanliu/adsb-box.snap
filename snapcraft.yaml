@@ -17,6 +17,14 @@ apps:
     command: bin/lighttpd
     daemon: simple
     plugs: [network, network-bind]
+  piaware:
+    command: bin/piaware
+    plugs: [network,network-bind,system-observe,network-observe,mount-observe,hardware-observe,log-observe]
+  piaware-config:
+    command: bin/piaware-config
+  piaware-status:
+    command: bin/piaware-status
+    plugs: [network,system-observe,network-observe]
  
 parts:
   common:
@@ -25,20 +33,25 @@ parts:
     snap:
       - bin/dump1090
       - bin/lighttpd
+      - bin/piaware
+      - bin/piaware-config
+      - bin/piaware-status
 
   dump1090:
     plugin: make
-    #make-parameters: ['ENABLE_HTTPSERVER=1']
+    make-parameters: ['dump1090', 'faup1090']
     source: https://github.com/mutability/dump1090.git
     source-type: git
     #source-branch: v1.14
     artifacts:
       - dump1090
+      - faup1090
       - public_html
       - debian/config-template
       - COPYING
     organize:
       dump1090: usr/bin/dump1090-mutability
+      faup1090: usr/lib/piaware/helpers/faup1090
       public_html: usr/share/dump1090-mutability/html
       debian: etc
       etc/config-template: usr/share/dump1090-mutability/config-template
@@ -63,4 +76,49 @@ parts:
       - usr/lib/lighttpd/mod_dirlisting.so
       - usr/lib/lighttpd/mod_staticfile.so
       - usr/share/doc/lighttpd/copyright
+
+  tcllauncher:
+    plugin: myautotools
+    source: https://github.com/flightaware/tcllauncher.git
+    source-type: git
+    patches:
+      - ../../../patches/tcllauncher.patch
+    configflags: ['--with-tcl=/usr/lib/tcl8.6']
+    build-packages:
+      - tcl8.6-dev
+
+  piaware:
+    after: [tcllauncher]
+    plugin: mymake
+    source: https://github.com/flightaware/piaware.git
+    source-type: git
+    patches:
+      - ../../../patches/piaware.patch
+    stage-packages:
+      - tclx8.4
+      - tcl8.6
+      - tcllib
+      - tcl-tls
+      - itcl3
+    stage:
+      # these pkgIndex.tcl files will be processed at 'pkgindex-patch' parts
+      - -usr/lib/tcltk/x86_64-linux-gnu/itcl3.4/pkgIndex.tcl
+      - -usr/lib/tclx8.4/pkgIndex.tcl
+      - -usr/share/tcltk/tls1.6.7/pkgIndex.tcl
+    snap:
+      - -usr/share/doc
+      - -usr/share/man
+
+  mlat-client:
+    plugin: python
+    source: https://github.com/mutability/mlat-client.git
+    source-type: git
+    snap:
+      - -usr/share/doc
+      - -usr/share/man
+
+  pkgindex-patch:
+    plugin: make
+    source: ./pkgindex-patch
+    after: [piaware]
 

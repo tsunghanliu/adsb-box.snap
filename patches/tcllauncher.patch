@@ -1,0 +1,25 @@
+diff --git a/unix/tclAppInit.c b/unix/tclAppInit.c
+index 5d60ab4..387dc40 100644
+--- a/unix/tclAppInit.c
++++ b/unix/tclAppInit.c
+@@ -42,9 +42,19 @@ int launcher_main_hook (int *argcPtr, char ***argvPtr) {
+     int    newArgc = *argcPtr + 1;
+     int    i;
+ 
++    const char *snap_dir = getenv("SNAP");
++    static char path[256];
++
+     newArgv = malloc (sizeof(char *) * newArgc);
+     newArgv[0] = **argvPtr;
+-    newArgv[1] = TCLLAUNCHER_FILE;
++
++    if (snap_dir) {
++        sprintf(path, "%s%s", snap_dir, TCLLAUNCHER_FILE);
++        newArgv[1] = path;
++    }
++	else {
++        newArgv[1] = TCLLAUNCHER_FILE;
++	}
+ 
+     for (i = 2; i < newArgc; i++) {
+         newArgv[i] = *(*argvPtr + i - 1);

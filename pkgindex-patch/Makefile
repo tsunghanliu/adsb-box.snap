@@ -1,4 +1,5 @@
 ARCH=$(shell uname -m)
+$(info ARCH $(ARCH))
 
 ARCHDIR=
 
@@ -15,12 +16,11 @@ ifeq ($(ARCH),arm64)
 	ARCHDIR="aarch64-linux-gnu"
 endif
 
+$(info ARCHDIR $(ARCHDIR))
+
 ifeq ($(ARCHDIR),)
 	$(error no ARCHDIR defined)
 endif
-
-$(info ARCH $(ARCH))
-$(info ARCHDIR $(ARCHDIR))
 
 all:
 	@echo "copy files needed ..."

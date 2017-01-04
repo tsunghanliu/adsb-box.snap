@@ -7,3 +7,4 @@ prime
 *~
 *.bak
 *.swp
+__pycache__

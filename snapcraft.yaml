@@ -19,7 +19,8 @@ apps:
     plugs: [network, network-bind]
   piaware:
     command: bin/piaware
-    plugs: [network,network-bind,system-observe,network-observe,mount-observe,hardware-observe,log-observe]
+    daemon: simple
+    plugs: [network,network-bind,system-observe,network-observe,mount-observe,hardware-observe]
   piaware-config:
     command: bin/piaware-config
   piaware-status:

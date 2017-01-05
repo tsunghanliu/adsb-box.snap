@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.1'
+version: '0.2'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -104,6 +104,9 @@ parts:
     stage:
       # these pkgIndex.tcl files will be processed at 'pkgindex-patch' parts
       - -usr/lib/tcltk/x86_64-linux-gnu/itcl3.4/pkgIndex.tcl
+      - -usr/lib/tcltk/i386-linux-gnu/itcl3.4/pkgIndex.tcl
+      - -usr/lib/tcltk/arm-linux-gnueabihf/itcl3.4/pkgIndex.tcl
+      - -usr/lib/tcltk/aarch64-linux-gnu/itcl3.4/pkgIndex.tcl
       - -usr/lib/tclx8.4/pkgIndex.tcl
       - -usr/share/tcltk/tls1.6.7/pkgIndex.tcl
     snap:

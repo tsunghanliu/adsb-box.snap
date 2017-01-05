@@ -1,18 +1,19 @@
 ARCH=$(shell uname -m)
 $(info ARCH $(ARCH))
+$(info uname $(shell uname -mpi))
 
 ARCHDIR=
 
 ifeq ($(ARCH),x86_64)
 	ARCHDIR="x86_64-linux-gnu"
 endif
-ifeq ($(ARCH),i386)
+ifeq ($(ARCH),i686)
 	ARCHDIR="i386-linux-gnu"
 endif
-ifeq ($(ARCH),armhf)
+ifeq ($(ARCH),armv7l)
 	ARCHDIR="arm-linux-gnueabihf"
 endif
-ifeq ($(ARCH),arm64)
+ifeq ($(ARCH),aarch64)
 	ARCHDIR="aarch64-linux-gnu"
 endif
 

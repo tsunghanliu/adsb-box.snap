@@ -3,6 +3,14 @@
 *.snap-build*
 stage
 prime
+parts/common/
+parts/dump1090/
+parts/lighttpd/
+parts/mlat-client/
+parts/piaware/
+parts/pkgindex-patch/
+parts/tcllauncher/
+
 # general
 *~
 *.bak

@@ -4,6 +4,9 @@ CONF=$SNAP_DATA/lighttpd.conf
 BIN=$SNAP/usr/sbin/lighttpd
 PORT=8080
 
+## defined in bin/dump1090
+JSON_DIR=/tmp/dump1090-mutability
+
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
@@ -48,7 +51,7 @@ url.redirect += (
 )
 
 alias.url += (
-    "/data/" => "$XDG_RUNTIME_DIR/dump1090-mutability/",
+    "/data/" => "$JSON_DIR/",
     "/upintheair.json" => "$SNAP_DATA/upintheair.json",
 )
 

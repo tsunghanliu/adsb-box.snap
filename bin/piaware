@@ -2,8 +2,8 @@
 set -e
 set -x
 
-PIDFILE=$XDG_RUNTIME_DIR/piaware.pid
-STATUSFILE=$XDG_RUNTIME_DIR/status.json
+PIDFILE=$SNAP_DATA/piaware.pid
+STATUSFILE=/tmp/status.json
 LOGFILE=$SNAP_DATA/piaware.log
 CONFFILE=$SNAP_DATA/piaware.conf
 

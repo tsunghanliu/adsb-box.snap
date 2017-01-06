@@ -85,8 +85,8 @@ index 24c16b4..68ae689 100644
  # where we store our location info
 -set locationFile "/var/cache/piaware/location"
 -set locationFileEnv "/var/cache/piaware/location.env"
-+set locationFile "$::env(XDG_RUNTIME_DIR)/location"
-+set locationFileEnv "$::env(XDG_RUNTIME_DIR)/location.env"
++set locationFile "$::env(SNAP_DATA)/location"
++set locationFileEnv "$::env(SNAP_DATA)/location.env"
  
  # vim: set ts=4 sw=4 sts=4 noet :
 diff --git a/programs/piaware-config/main.tcl b/programs/piaware-config/main.tcl

@@ -117,6 +117,31 @@ Use a web browser to open the web page provide by dump1090. The url would be `ht
 
 Use `piaware-status` to check the stuats of **dump1090**, **piaware**, **faup1090**, and **fa-mlat-client**. Due to the security limitations, the output result is not totally correct.
 
+# Backup, upgrade and restore
+
+Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To upgrade or backup your configurations, you can backup the whole directory, or just pick some of files.
+````
+# dump1090
+$ sudo cp /var/snap/adsb-box/<rev>/dump1090-mutability.conf $HOME
+# piaware
+$ sudo cp /var/snap/adsb-box/<rev>/piaware.conf $HOME
+````
+
+Snapd will refresh snaps automatically by default. If you want to do it manually, use this command:
+````
+$ sudo snap refresh adsb-box
+````
+
+To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
+````
+# restore configuration files
+$ sudo cp $HOME/dump1090-mutability.conf /var/snap/adsb-box/<rev>/
+$ sudo cp $HOME/piaware.conf /var/snap/adsb-box/<rev>/
+# restart services
+$ sudo systemctl restart snap.adsb-box.dump1090.service && sleep 5
+$ sudo systemctl restart snap.adsb-box.piaware.service
+````
+
 # Remove
 
 To remove this snap

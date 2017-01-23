@@ -29,5 +29,6 @@ fi
 
 $SNAP/usr/bin/piaware \
 	-p $PIDFILE \
+	-cachedir /tmp \
 	-logfile $LOGFILE \
 	-statusfile $STATUSFILE

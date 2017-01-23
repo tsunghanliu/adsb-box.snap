@@ -93,6 +93,7 @@ parts:
     plugin: mymake
     source: https://github.com/flightaware/piaware.git
     source-type: git
+    source-branch: v3.3.0
     patches:
       - ../../../patches/piaware.patch
     stage-packages:

@@ -1,5 +1,5 @@
 diff --git a/package/fa_piaware_config.tcl b/package/fa_piaware_config.tcl
-index cf48869..7534cdc 100644
+index fa0828d..31bc6f7 100644
 --- a/package/fa_piaware_config.tcl
 +++ b/package/fa_piaware_config.tcl
 @@ -418,7 +418,7 @@ namespace eval ::fa_piaware_config {
@@ -11,10 +11,10 @@ index cf48869..7534cdc 100644
  			}
  
  			# write the new data
-@@ -929,22 +929,21 @@ namespace eval ::fa_piaware_config {
- 	# (starting from the highest priority):
+@@ -936,22 +936,22 @@ namespace eval ::fa_piaware_config {
  	#
- 	#  priority 100..199: any config files found in /media/usb/*/piaware-config.txt, ordered arbitrarily (readonly)
+ 	#  priority 100+:     any extra config file given as an argument (readonly)
+ 	#  priority 100+:     any config files found in /media/usb/*/piaware-config.txt, ordered arbitrarily (readonly)
 -	#  priority 50:       /boot/piaware-config.txt (readwrite)
 -	#  priority 40:       /etc/piaware.conf (readwrite)
 -	#  priority 30:       /usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
@@ -27,7 +27,7 @@ index cf48869..7534cdc 100644
 +	# which means that in general changes will be written to $SNAP_DATA/piaware.conf where possible
  	#
  	# Provide a itcl name pattern (e.g. #auto) as "name"
- 	proc piaware_combined_config {name} {
+ 	proc piaware_combined_config {name {extraConfigFile ""}} {
  		set metadata [piaware_standard_settings #auto]
  		set combined [uplevel 1 ::fa_piaware_config::new ::fa_piaware_config::ConfigGroup $name -metadata $metadata]
  
@@ -36,8 +36,8 @@ index cf48869..7534cdc 100644
 +		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
 +		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/etc/piaware.conf" -metadata $metadata -priority 40 -readonly 1]
  
--		$combined add [new ConfigFile #auto -filename "/boot/piaware-config.txt" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware.conf" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath]
+ 		$combined add [new ConfigFile #auto -filename "/boot/piaware-config.txt" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
++		$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware.conf" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
  
  		set prio 100
  		foreach f [lsort [glob -nocomplain -types f "/media/usb/*/piaware-config.txt"]] {
@@ -75,20 +75,6 @@ index c511c60..eadd04c 100644
  # current mlat status for the statusfile, one of:
  #   not_enabled
  #   not_running
-diff --git a/programs/piaware/config.tcl b/programs/piaware/config.tcl
-index 24c16b4..68ae689 100644
---- a/programs/piaware/config.tcl
-+++ b/programs/piaware/config.tcl
-@@ -27,7 +27,7 @@ set sendHealthInformationIntervalSeconds 300
- set adsbNoProducerStartDelaySeconds 360
- 
- # where we store our location info
--set locationFile "/var/cache/piaware/location"
--set locationFileEnv "/var/cache/piaware/location.env"
-+set locationFile "$::env(SNAP_DATA)/location"
-+set locationFileEnv "$::env(SNAP_DATA)/location.env"
- 
- # vim: set ts=4 sw=4 sts=4 noet :
 diff --git a/programs/piaware-config/main.tcl b/programs/piaware-config/main.tcl
 index 388b957..61b4968 100644
 --- a/programs/piaware-config/main.tcl

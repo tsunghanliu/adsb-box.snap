@@ -87,12 +87,13 @@ class MakePlugin(snapcraft.BasePlugin):
             items=dict(type='string'), default=[],
         )
 
+        return schema
+
+    @classmethod
+    def get_build_properties(cls):
         # Inform Snapcraft of the properties associated with building. If these
         # change in the YAML Snapcraft will consider the build step dirty.
-        schema['build-properties'].extend(
-            ['makefile', 'make-parameters', 'make-install-var'])
-
-        return schema
+        return ['makefile', 'make-parameters', 'make-install-var', 'artifacts']
 
     def __init__(self, name, options, project):
         super().__init__(name, options, project)
@@ -119,9 +120,12 @@ class MakePlugin(snapcraft.BasePlugin):
                     snapcraft.file_utils.link_or_copy(
                         source_path, destination_path)
         else:
-            install_param = self.options.make_install_var + '=' + \
-                self.installdir
-            self.run(command + ['install', install_param], env=env)
+            command.append('install')
+            if self.options.make_install_var:
+                command.append('{}={}'.format(
+                    self.options.make_install_var, self.installdir))
+
+            self.run(command, env=env)
 
     def build(self):
         super().build()

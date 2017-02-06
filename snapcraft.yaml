@@ -31,7 +31,7 @@ parts:
   common:
     plugin: dump
     source: .
-    snap:
+    prime:
       - bin/dump1090
       - bin/lighttpd
       - bin/piaware
@@ -66,7 +66,7 @@ parts:
     plugin: nil
     stage-packages:
       - lighttpd
-    snap:
+    prime:
       - usr/sbin/lighttpd
       - usr/lib/libfam*
       - usr/lib/lighttpd/mod_access.so
@@ -110,7 +110,7 @@ parts:
       - -usr/lib/tcltk/aarch64-linux-gnu/itcl3.4/pkgIndex.tcl
       - -usr/lib/tclx8.4/pkgIndex.tcl
       - -usr/share/tcltk/tls1.6.7/pkgIndex.tcl
-    snap:
+    prime:
       - -usr/share/doc
       - -usr/share/man
 
@@ -120,7 +120,7 @@ parts:
     source-type: git
     organize:
       bin/fa-mlat-client: usr/lib/piaware/helpers/fa-mlat-client
-    snap:
+    prime:
       - -usr/share/doc
       - -usr/share/man
 

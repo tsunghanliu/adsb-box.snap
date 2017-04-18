@@ -79,23 +79,25 @@ parts:
       - usr/share/doc/lighttpd/copyright
 
   tcllauncher:
-    plugin: myautotools
+    plugin: autotools
     source: https://github.com/flightaware/tcllauncher.git
     source-type: git
-    patches:
-      - ../../../patches/tcllauncher.patch
+    prepare: |
+      echo 'patching tcllauncher ...'
+      patch -p1 < ../../../patches/tcllauncher.patch
     configflags: ['--with-tcl=/usr/lib/tcl8.6']
     build-packages:
       - tcl8.6-dev
 
   piaware:
     after: [tcllauncher]
-    plugin: mymake
+    plugin: make
     source: https://github.com/flightaware/piaware.git
     source-type: git
     source-branch: v3.3.0
-    patches:
-      - ../../../patches/piaware.patch
+    prepare: |
+      echo 'patching piaware ...'
+      patch -p1 < ../../../patches/piaware.patch
     stage-packages:
       - tclx8.4
       - tcl8.6

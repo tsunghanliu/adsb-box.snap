@@ -98,7 +98,7 @@ parts:
     plugin: make
     source: https://github.com/flightaware/piaware.git
     source-type: git
-    source-branch: v3.3.0
+    source-branch: v3.5.0
     prepare: |
       echo 'patching piaware ...'
       patch -p1 < ../../../patches/piaware.patch

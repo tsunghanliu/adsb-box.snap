@@ -131,7 +131,22 @@ parts:
       - -usr/share/man
 
   pkgindex-patch:
-    plugin: make
-    source: ./pkgindex-patch
+    plugin: nil
     after: [piaware]
+    build: |
+        echo "copy and patch pkgindex files"
+        cp ../../piaware/install/usr/lib/tcltk/*/itcl3.4/pkgIndex.tcl itcl3.4-pkgIndex.tcl
+        cp ../../piaware/install/usr/lib/tclx8.4/pkgIndex.tcl tclx8.4-pkgIndex.tcl
+        cp ../../piaware/install/usr/share/tcltk/tls1.6.7/pkgIndex.tcl tls1.6.7-pkgIndex.tcl
+        sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' *-pkgIndex.tcl
+    install: |
+        echo "install patched pkgindex files"
+        ARCHDIR=`ls ../../piaware/install/usr/lib/tcltk`
+        echo "ARCHDIR=$ARCHDIR"
+        mkdir -p $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$ARCHDIR/itcl3.4/
+        cp itcl3.4-pkgIndex.tcl $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$ARCHDIR/itcl3.4/pkgIndex.tcl
+        mkdir -p $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4
+        cp tclx8.4-pkgIndex.tcl $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl
+        mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/tcltk/tls1.6.7/
+        cp tls1.6.7-pkgIndex.tcl $SNAPCRAFT_PART_INSTALL/usr/share/tcltk/tls1.6.7/pkgIndex.tcl
 

@@ -108,7 +108,7 @@ parts:
       ARCHDIR=`ls ../../piaware/install/usr/lib/tcltk`
       echo "ARCHDIR=$ARCHDIR"
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
-        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/x86_64-linux-gnu/itcl3.4/pkgIndex.tcl \
+        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$ARCHDIR/itcl3.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/share/tcltk/tls1.6.7/pkgIndex.tcl \
         || \

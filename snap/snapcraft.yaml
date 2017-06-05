@@ -20,12 +20,12 @@ apps:
   piaware:
     command: bin/piaware
     daemon: simple
-    plugs: [network,network-bind,system-observe,network-observe,mount-observe,hardware-observe]
+    plugs: [network, network-bind, system-observe, network-observe, mount-observe, hardware-observe]
   piaware-config:
     command: bin/piaware-config
   piaware-status:
     command: bin/piaware-status
-    plugs: [network,system-observe,network-observe]
+    plugs: [network, system-observe, network-observe]
  
 parts:
   common:
@@ -45,9 +45,9 @@ parts:
     source-type: git
     #source-branch: v1.14
     prepare: |
-        echo 'patching dump1090 ...'
-        patch -p1 < ../../../patches/dump1090.patch
-        cp ../../../patches/dump1090/Taiwan.png public_html/flags-tiny/
+      echo 'patching dump1090 ...'
+      patch -p1 < ../../../patches/dump1090.patch
+      cp ../../../patches/dump1090/Taiwan.png public_html/flags-tiny/
     artifacts:
       - dump1090
       - faup1090

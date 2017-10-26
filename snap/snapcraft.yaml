@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.3'
+version: '0.4'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -98,7 +98,7 @@ parts:
     plugin: make
     source: https://github.com/flightaware/piaware.git
     source-type: git
-    source-branch: v3.5.0
+    source-branch: v3.5.1
     prepare: |
       echo 'patching piaware ...'
       patch -p1 < ../../../patches/piaware.patch

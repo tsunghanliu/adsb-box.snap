@@ -15,9 +15,9 @@ This is a snap to establish a ADS-B receiver box.
 
 To build the snap, you have to use *snapcraft*. Read the official [document](http://snapcraft.io/docs/build-snaps/) for the details. This command will produce a file named `adsb-box_<ver>_<arch>.snap`. `<ver>` means the version number and `<arch>` stands for the architecture of target machines.
 
-````
+```
 $ snapcraft snap
-````
+```
 
 # Hardware requirement
 
@@ -35,7 +35,7 @@ Please read the official [document](https://developer.ubuntu.com/core/get-starte
 
 The drivers have to be blacklisted, or the librtlsdr won't access the dongle.
 
-````
+```
 $ cat << EOF > /tmp/blacklist-rtl-sdr.conf
 blacklist dvb_usb_rtl28xxu
 blacklist e4000
@@ -43,7 +43,7 @@ blacklist rtl2832
 EOF
 $ sudo mv /tmp/blacklist-rtl-sdr.conf /etc/modprobe.d
 $ sudo reboot
-````
+```
 
 ## install adsb-box
 
@@ -51,30 +51,30 @@ Each snap has a revision (`<rev>`). A snap installed from the store always has a
 
 ### Use the store
 
-````
+```
 $ sudo snap install --beta adsb-box
-````
+```
 
 ### Use local snap
 
 Upload the snap file to your target machine then install it.
 
-````
+```
 $ sudo snap install --dangerous adsb-box_<ver>_<arch>.snap
-````
+```
 
 ## configure interfaces
 
 These interfaces **MUST** be correctly configured, otherwise the services will not start successfully.
 
-````
+```
 $ sudo snap connect adsb-box:raw-usb
 $ sudo snap connect adsb-box:process-control
 $ sudo snap connect adsb-box:system-observe
 $ sudo snap connect adsb-box:network-observe
 $ sudo systemctl restart snap.adsb-box.dump1090.service
 $ sudo systemctl restart snap.adsb-box.piaware.service
-````
+```
 
 ## optional configuration
 
@@ -101,11 +101,11 @@ See section **dump1090** to have a right configuration.
 
 Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware README](https://github.com/flightaware/piaware/blob/master/README.md) for the command usages.
 
-````
+```
 $ sudo adsb-box.piaware-config -showall
 $ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password <PASSWORD>
 $ sudo systemctl restart snap.adsb-box.piaware.service
-````
+```
 
 ## running status
 
@@ -120,35 +120,35 @@ Use `piaware-status` to check the stuats of **dump1090**, **piaware**, **faup109
 # Backup, upgrade and restore
 
 Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To upgrade or backup your configurations, you can backup the whole directory, or just pick some of files.
-````
+```
 # dump1090
 $ sudo cp /var/snap/adsb-box/<rev>/dump1090-mutability.conf $HOME
 # piaware
 $ sudo cp /var/snap/adsb-box/<rev>/piaware.conf $HOME
-````
+```
 
 Snapd will refresh snaps automatically by default. If you want to do it manually, use this command:
-````
+```
 $ sudo snap refresh adsb-box
-````
+```
 
 To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
-````
+```
 # restore configuration files
 $ sudo cp $HOME/dump1090-mutability.conf /var/snap/adsb-box/<rev>/
 $ sudo cp $HOME/piaware.conf /var/snap/adsb-box/<rev>/
 # restart services
 $ sudo systemctl restart snap.adsb-box.dump1090.service && sleep 5
 $ sudo systemctl restart snap.adsb-box.piaware.service
-````
+```
 
 # Remove
 
 To remove this snap
 
-````
+```
 $ sudo snap remove adsb-box
-````
+```
 
 # Bug reports and feedback
 

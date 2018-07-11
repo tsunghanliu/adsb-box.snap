@@ -36,12 +36,11 @@ Please read the official [document](https://developer.ubuntu.com/core/get-starte
 The drivers have to be blacklisted, or the librtlsdr won't access the dongle.
 
 ```
-$ cat << EOF > /tmp/blacklist-rtl-sdr.conf
+$ cat << EOF | sudo tee /etc/modprobe.d/blacklist-rtl-sdr.conf
 blacklist dvb_usb_rtl28xxu
 blacklist e4000
 blacklist rtl2832
 EOF
-$ sudo mv /tmp/blacklist-rtl-sdr.conf /etc/modprobe.d
 $ sudo reboot
 ```
 
@@ -72,8 +71,8 @@ $ sudo snap connect adsb-box:raw-usb
 $ sudo snap connect adsb-box:process-control
 $ sudo snap connect adsb-box:system-observe
 $ sudo snap connect adsb-box:network-observe
-$ sudo systemctl restart snap.adsb-box.dump1090.service
-$ sudo systemctl restart snap.adsb-box.piaware.service
+$ sudo snap restart adsb-box.dump1090
+$ sudo snap restart adsb-box.piaware
 ```
 
 ## optional configuration

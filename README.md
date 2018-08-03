@@ -44,6 +44,12 @@ EOF
 $ sudo reboot
 ```
 
+## enable experimental feature
+It's necessary to enable the layouts feature of the core snap.
+```
+$ sudo snap set core experimental.layouts=true
+```
+
 ## install adsb-box
 
 Each snap has a revision (`<rev>`). A snap installed from the store always has a revision in number. But the revision of a local snap has a lead 'x'.
@@ -106,6 +112,38 @@ $ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password 
 $ sudo systemctl restart snap.adsb-box.piaware.service
 ```
 
+### FR24Feed
+
+Use `adsb-box.fr24feedcli` to sign-up or reconfigure the system.
+People who don't setup the feeder before, please use
+```
+$ sudo adsb-box.fr24feedcli --signup
+```
+And here are answers for the questions
+| Question | Answer | Note |
+|-|-|-|
+| email address | **email address** | your email address on FR24 |
+| sharing key | **sharying key** | If you ever share your day, find it on FR24 web |
+| participate MLAT | **yes or no** (up to you) | If yes, need to specify your coordinates |
+| automatically configure dump1090 | no | |
+| receiver type | 4 | ModeS Beast |
+| connection type | 1 | network connection |
+| receiver address | localhost | |
+| receiver port | 30005 | |
+| enable RAW data feed | yes | |
+| enable Basestation data feed | yes | |
+| logfile mode | 0 | disable |
+
+If you want to modify the configurations later, please use:
+```
+$ sudo adsb-box.fr24feedcli --reconfigure
+```
+
+After finished the setup, restart the service
+```
+$ sudo snap restart adsb-box.fr24feed
+```
+
 ## running status
 
 ### web interface
@@ -161,6 +199,6 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 # Future plans
 
 * Add a configuration item to contorl PiAware service.
-* Support other feeders. But I don't have any ideas yet.
+* Support other feeders. For fr24feed is on-going, others are planing.
 * Support other architectures. (x86/armhf/arm64) (on-going)
 * Include rtl-sdr tools.

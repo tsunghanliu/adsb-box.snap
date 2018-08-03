@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.5'
+version: '0.6'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -26,17 +26,23 @@ apps:
   piaware-status:
     command: bin/piaware-status
     plugs: [network, system-observe, network-observe]
- 
+  fr24feed:
+    command: bin/fr24feed
+    daemon: simple
+    plugs: [network, network-bind, network-observe]
+  fr24feedcli:
+    command: bin/fr24feed
+    plugs: [network, network-bind, network-observe]
+  rtltest:
+    command: usr/bin/rtl_test
+    plugs: [network, network-bind, raw-usb]
+
 parts:
   common:
     plugin: dump
     source: .
     prime:
-      - bin/dump1090
-      - bin/lighttpd
-      - bin/piaware
-      - bin/piaware-config
-      - bin/piaware-status
+      - bin
 
   dump1090:
     plugin: make
@@ -132,4 +138,45 @@ parts:
     prime:
       - -usr/share/doc
       - -usr/share/man
+
+  fr24feed:
+    plugin: nil
+    build-packages:
+      - wget
+    override-pull: |
+      env | sort
+      snapcraftctl pull
+      case $SNAP_ARCH in
+        amd64)
+          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.18-5_amd64.tgz
+          ;;
+        i386)
+          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.18-5_i386.tgz
+          ;;
+        amrhf|arm64)
+          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.19-15_armhf.tgz
+          ;;
+        *)
+          echo "Unknown architecture: $SNAP_ARCH"
+          exit 1
+          ;;
+      esac
+    override-build: |
+      # build
+      tar zxf $SNAPCRAFT_PART_SRC/fr24feed.tgz
+      # install
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin $SNAPCRAFT_PART_INSTALL/usr/bin
+      cp fr24feed_*/fr24feed $SNAPCRAFT_PART_INSTALL/usr/bin
+
+  rtlsdr:
+    plugin: nil
+    stage-packages:
+      - rtl-sdr
+
+passthrough:
+  layout:
+    /etc/fr24feed.ini:
+      bind-file: $SNAP_DATA/fr24feed.ini
+    /var/log:
+      bind: $SNAP_DATA/log/fr24feed
 

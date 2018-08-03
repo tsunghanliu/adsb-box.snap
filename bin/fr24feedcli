@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+set -x
+
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
+
+if [ ! -f /etc/fr24feed.ini ]; then
+	touch /etc/fr24feed.ini
+fi
+
+$SNAP/usr/bin/fr24feed $@

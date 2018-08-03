@@ -9,6 +9,7 @@ This is a snap to establish a ADS-B receiver box.
 * [tcllauncher](https://github.com/flightaware/tcllauncher/)
 * [piaware](https://github.com/flightaware/piaware/)
 * [mlat-client](https://github.com/mutability/mlat-client/)
+* [fr24feed](https://www.flightradar24.com/share-your-data)
 * other base tools and libraries, e.g python and tcl
 
 # Build
@@ -119,20 +120,21 @@ People who don't setup the feeder before, please use
 ```
 $ sudo adsb-box.fr24feedcli --signup
 ```
-And here are answers for the questions
-| Question | Answer | Note |
-|-|-|-|
-| email address | **email address** | your email address on FR24 |
-| sharing key | **sharying key** | If you ever share your day, find it on FR24 web |
-| participate MLAT | **yes or no** (up to you) | If yes, need to specify your coordinates |
-| automatically configure dump1090 | no | |
-| receiver type | 4 | ModeS Beast |
-| connection type | 1 | network connection |
-| receiver address | localhost | |
-| receiver port | 30005 | |
-| enable RAW data feed | yes | |
-| enable Basestation data feed | yes | |
-| logfile mode | 0 | disable |
+fr24feed will ask serval questions and here are the recommended answers for the questions.
+
+Question | Answer | Note
+-|-|-
+email address | email_address | your email address on FR24
+sharing key | sharying_key | If you ever share your day, find it on FR24 web
+participate MLAT | yes_or_no (up to you) | If yes, need to specify your coordinates
+automatically configure dump1090 | no |
+receiver type | 4 | ModeS Beast
+connection type | 1 | network connection
+receiver address | localhost |
+receiver port | 30005 |
+enable RAW data feed | yes |
+enable Basestation data feed | yes |
+logfile mode | 0 | disable
 
 If you want to modify the configurations later, please use:
 ```
@@ -152,7 +154,11 @@ Use a web browser to open the web page provide by dump1090. The url would be `ht
 
 ### service status
 
-Use `piaware-status` to check the stuats of **dump1090**, **piaware**, **faup1090**, and **fa-mlat-client**. Due to the security limitations, the output result is not totally correct.
+Use `adsb-box.piaware-status` to check the stuats of **dump1090**, **piaware**, **faup1090**, and **fa-mlat-client**. Due to the security limitations, the output result is not totally correct.
+
+### fr24feed status
+
+If fr24feed is configured correctly, you can find the web here `http://your-device-ip:8754/`.
 
 # Backup, upgrade and restore
 

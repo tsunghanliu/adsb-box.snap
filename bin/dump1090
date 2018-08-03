@@ -27,9 +27,10 @@ JSON_DIR="/tmp/dump1090-mutability"
 [ -z "$BEAST_INPUT_PORT" ] && BEAST_INPUT_PORT=0
 [ -z "$BEAST_OUTPUT_PORT" ] && BEAST_OUTPUT_PORT=0
 [ -z "$NET_BUFFER" ] && NET_BUFFER=0
-[ -z "$JSON_INTERVAL" ] && JSON_INTERVAL=0
+[ -z "$JSON_INTERVAL" ] && JSON_INTERVAL=3
 [ -z "$MAX_RANGE" ] && MAX_RANGE=300
 [ -z "$NICE_LEVEL" ] && NICELEVEL=-5
+[ -z "$STATS_INTERVAL" ] && STATS_INTERVAL=3600
 
 # receiver:
 case "x$DEVICE" in

@@ -146,18 +146,18 @@ parts:
     override-pull: |
       env | sort
       snapcraftctl pull
-      case $SNAP_ARCH in
-        amd64)
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        x86_64-*)
           wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.18-5_amd64.tgz
           ;;
-        i386)
+        i386-*)
           wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.18-5_i386.tgz
           ;;
-        amrhf|arm64)
+        arm-*|aarch64-*)
           wget -O fr24feed.tgz https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.19-15_armhf.tgz
           ;;
         *)
-          echo "Unknown architecture: $SNAP_ARCH"
+          echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"
           exit 1
           ;;
       esac

@@ -50,10 +50,11 @@ parts:
     source: https://github.com/mutability/dump1090.git
     source-type: git
     #source-branch: v1.14
-    prepare: |
+    override-build: |
       echo 'patching dump1090 ...'
       patch -p1 < ../../../patches/dump1090.patch
       cp ../../../patches/dump1090/Taiwan.png public_html/flags-tiny/
+      snapcraftctl build
     artifacts:
       - dump1090
       - faup1090
@@ -92,9 +93,10 @@ parts:
     plugin: autotools
     source: https://github.com/flightaware/tcllauncher.git
     source-type: git
-    prepare: |
+    override-build: |
       echo 'patching tcllauncher ...'
       patch -p1 < ../../../patches/tcllauncher.patch
+      snapcraftctl build
     configflags: ['--with-tcl=/usr/lib/tcl8.6']
     build-packages:
       - tcl8.6-dev
@@ -105,16 +107,13 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     source-branch: v3.5.3
-    prepare: |
+    override-build: |
       echo 'patching piaware ...'
       patch -p1 < ../../../patches/piaware.patch
-    install: |
+      snapcraftctl build
       echo 'patching pkgIndex.tcl files ...'
-      ## get system architecture
-      ARCHDIR=`ls ../../piaware/install/usr/lib/tcltk`
-      echo "ARCHDIR=$ARCHDIR"
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
-        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$ARCHDIR/itcl3.4/pkgIndex.tcl \
+        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/itcl3.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/share/tcltk/tls1.6.7/pkgIndex.tcl \
         || \

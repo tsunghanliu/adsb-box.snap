@@ -176,6 +176,4 @@ passthrough:
   layout:
     /etc/fr24feed.ini:
       bind-file: $SNAP_DATA/fr24feed.ini
-    /var/log:
-      bind: $SNAP_DATA/log/fr24feed
 

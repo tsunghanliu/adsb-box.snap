@@ -2,10 +2,11 @@
 set -e
 set -x
 
-PIDFILE=$SNAP_DATA/piaware.pid
+CACHEDIR=$SNAP_DATA/piaware
+PIDFILE=$CACHEDIR/piaware.pid
 STATUSFILE=/tmp/status.json
-LOGFILE=$SNAP_DATA/piaware.log
-CONFFILE=$SNAP_DATA/piaware.conf
+LOGFILE=$CACHEDIR/piaware.log
+CONFFILE=$CACHEDIR/piaware.conf
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
 
@@ -29,6 +30,6 @@ fi
 
 $SNAP/usr/bin/piaware \
 	-p $PIDFILE \
-	-cachedir /tmp \
+	-cachedir $CACHEDIR \
 	-logfile $LOGFILE \
 	-statusfile $STATUSFILE

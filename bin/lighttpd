@@ -7,6 +7,8 @@ PORT=8080
 ## defined in bin/dump1090
 JSON_DIR=/tmp/dump1090-mutability
 
+COMPRESS_DIR=/tmp/lighttpd/compress
+
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
@@ -15,24 +17,30 @@ LANG=C.UTF-8
 #        grep port:|sed "s:.*port\: ::")
 #fi
 
+ACCESS_LOG="$SNAP_DATA/lighttpd/access.log"
+ERROR_LOG="$SNAP_DATA/lighttpd/error.log"
+
 cat << EOF >$CONF
 server.modules = (
     "mod_access",
+    "mod_accesslog",
     "mod_alias",
     "mod_compress",
+    "mod_dirlisting",
     "mod_redirect",
 )
 
-server.document-root        = "$SNAP/usr/share/dump1090-mutability/html"
+#server.document-root        = "$SNAP/usr/share/dump1090-mutability/html"
+server.document-root        = "$SNAP/var/www"
 #server.upload-dirs          = ( "$SNAP_DATA/lighttpd/uploads" )
-server.errorlog             = "$SNAP_DATA/lighttpd/error.log"
+server.errorlog             = "$ERROR_LOG"
 server.pid-file             = "$SNAP_DATA/lighttpd.pid"
 server.port                 = $PORT
 
-index-file.names            = ( "gmap.html" )
+index-file.names            = ( "index.html", "gmap.html" )
 url.access-deny             = ( "~", ".inc" )
 
-compress.cache-dir          = "$SNAP_DATA/lighttpd/compress/"
+compress.cache-dir          = "$COMPRESS_DIR/"
 compress.filetype           = ( "application/javascript", "text/css", "text/html", "text/plain" )
 
 mimetype.assign = (
@@ -46,13 +54,19 @@ mimetype.assign = (
 )
 
 url.redirect += (
-    "^/dump1090/$" => "/",
-    "^/dump1090$" => "/",
+    #"^/data$" => "/data/",
+    "^/dump1090$" => "/dump1090/",
+    "^/dump1090/data$" => "/dump1090/data/",
+    "^/graphs$" => "/graphs/",
 )
 
+# child directory should be prior of parent directory
 alias.url += (
-    "/data/" => "$JSON_DIR/",
-    "/upintheair.json" => "$SNAP_DATA/upintheair.json",
+    "/dump1090/data/" => "$JSON_DIR/",
+    "/dump1090/upintheair.json" => "$SNAP_DATA/upintheair.json",
+    "/dump1090/" => "$SNAP/usr/share/dump1090-mutability/html/",
+    #"/data/" => "$JSON_DIR/",
+    "/graphs/" => "/tmp/graphs/",
 )
 
 # The stat cache must be disabled, as aircraft.json changes
@@ -60,9 +74,24 @@ alias.url += (
 # wrong content length.
 server.stat-cache-engine    = "disable"
 
+accesslog.filename          = "$ACCESS_LOG"
+
+#dir-listing.activate = "disable"
+\$HTTP["url"] =~ "^/(graphs|dump1090\/data)($|/)" {
+    dir-listing.activate = "enable"
+}
+
 EOF
 chmod 0600 $CONF
 
-[ -e $SNAP_DATA/lighttpd/compress ] || mkdir -p $SNAP_DATA/lighttpd/compress
+[ -e "$COMPRESS_DIR" ] || mkdir -p "$COMPRESS_DIR"
+
+# rotate logs
+for logfile in $ACCESS_LOG $ERROR_LOG; do
+	if [ -f "$logfile" ] && [ $(stat -c "%s" $logfile) -gt 67108864 ]; then
+		gzip -c $logfile > $logfile.1.gz
+		cat /dev/null > $logfile
+	fi
+done
 
 $BIN -D -f $CONF -m $SNAP/usr/lib/lighttpd

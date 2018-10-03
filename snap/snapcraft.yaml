@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.6'
+version: '0.7'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -36,13 +36,25 @@ apps:
   rtltest:
     command: usr/bin/rtl_test
     plugs: [network, network-bind, raw-usb]
+  collectd:
+    command: bin/collectd
+    daemon: simple
+    plugs: [network, system-observe, network-observe, mount-observe, hardware-observe]
+  graphs-gend:
+    command: bin/graphs-gend
+    daemon: simple
+    plugs: [process-control]
 
 parts:
   common:
     plugin: dump
     source: .
+    organize:
+      www: var/www
     prime:
       - bin
+      - etc
+      - var
 
   dump1090:
     plugin: make
@@ -80,13 +92,7 @@ parts:
     prime:
       - usr/sbin/lighttpd
       - usr/lib/libfam*
-      - usr/lib/lighttpd/mod_access.so
-      - usr/lib/lighttpd/mod_alias.so
-      - usr/lib/lighttpd/mod_compress.so
-      - usr/lib/lighttpd/mod_redirect.so
-      - usr/lib/lighttpd/mod_indexfile.so
-      - usr/lib/lighttpd/mod_dirlisting.so
-      - usr/lib/lighttpd/mod_staticfile.so
+      - usr/lib/lighttpd
       - usr/share/doc/lighttpd/copyright
 
   tcllauncher:
@@ -171,6 +177,32 @@ parts:
     plugin: nil
     stage-packages:
       - rtl-sdr
+
+  collectd:
+    plugin: nil
+    stage-packages:
+      - collectd
+      - python2.7
+    stage:
+      - -etc/fonts/fonts.conf
+
+  graphs-gend:
+    plugin: nil
+    source: https://github.com/jprochazka/adsb-receiver.git
+    source-type: git
+    stage-packages:
+      - rrdtool
+    override-build: |
+      # patch
+      echo 'patching adsb-receiver scripts ...'
+      patch -p1 < ../../../patches/graphs-gend.patch
+      # no build process is required
+      # install
+      pwd
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
+      cp -a build/portal/graphs $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
+    stage:
+      - -etc/fonts/fonts.conf
 
 passthrough:
   layout:

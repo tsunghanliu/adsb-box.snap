@@ -10,6 +10,8 @@ This is a snap to establish a ADS-B receiver box.
 * [piaware](https://github.com/flightaware/piaware/)
 * [mlat-client](https://github.com/mutability/mlat-client/)
 * [fr24feed](https://www.flightradar24.com/share-your-data)
+* [collectd](https://collectd.org)
+* graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
 * other base tools and libraries, e.g python and tcl
 
 # Build
@@ -80,6 +82,7 @@ $ sudo snap connect adsb-box:system-observe
 $ sudo snap connect adsb-box:network-observe
 $ sudo snap restart adsb-box.dump1090
 $ sudo snap restart adsb-box.piaware
+$ sudo snap restart adsb-box.mount-observe
 ```
 
 ## optional configuration
@@ -91,7 +94,7 @@ Change the items upon the requirements.
 
 To feed your data to FlightAware, set `BEAST_OUTPUT_PORT=30005`
 
-To enable show MLAT results, set `BEAST_INPUT_PORT=30104`
+To enable show MLAT results, set `BEAST_INPUT_PORT=30104` and your location (*LAT*/*LON*)
 
 ### terrain-limit rings
 
@@ -150,7 +153,8 @@ $ sudo snap restart adsb-box.fr24feed
 
 ### web interface
 
-Use a web browser to open the web page provide by dump1090. The url would be `http://your-device-ip:8080/`
+Use a web browser to open the built-in web pages. The url would be `http://your-device-ip:8080/`
+There are two main pages: one is provided by dump1090 and another is for statistics graphs.
 
 ### service status
 
@@ -205,6 +209,6 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 # Future plans
 
 * Add a configuration item to contorl PiAware service.
-* Support other feeders. For fr24feed is on-going, others are planing.
+* Support other feeders. E.g. planfinder or opensky-network.
 * Support other architectures. (x86/armhf/arm64) (on-going)
 * Include rtl-sdr tools.

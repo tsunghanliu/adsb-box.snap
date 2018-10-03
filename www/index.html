@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ADS-B Box Snap</title>
+	<link rel="stylesheet" href="/css/bulma-0.7.1.min.css">
+	<style type="text/css">
+		html, body {
+			height: 100%;
+			width: 100%;
+			margin: 0;
+		}
+		div#container {
+			position: fixed;
+			top: 33px;
+			bottom: 0px;
+			width: 100%;
+		}
+		div#content  {
+			display: block;
+			width: 100%;
+			height: 100%;
+			border: 0;
+		}
+		#map  {
+			display: block;
+			width: 100%;
+			height: 100%;
+			border: 0;
+		}
+	</style>
+</head>
+<body>
+	<!-- Nav tabs -->
+	<div class="tabs is-centered is-boxed is-small">
+		<ul>
+			<li class="tab is-active">
+				<label for="dump1090">
+					<a>
+						<span class="icon is-small"><i class="fas fa-plane" aria-hidden="true"></i></span>
+						<span>Skyview Map</span>
+					</a>
+				</label>
+			</li>
+			<li class="tab">
+				<label for="graphs">
+					<a>
+						<span class="icon is-small"><i class="fas fa-chart-area" aria-hidden="true"></i></span>
+						<span>Performance Graphs</span>
+					</a>
+				</label>
+			</li>
+		</ul>
+	</div>
+	<div id="container">
+		<div class="content" id="content" style="overflow-y: auto;"><iframe id="map" src="/dump1090/"></iframe></div>
+	</div>
+
+	<script defer src="/fontawesome/js/all-v5.3.1.js" data-auto-replace-svg="nest"></script>
+	<script src="/js/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			// set up the click event
+			$('li.tab').on('click', function() {
+				$('li.tab').removeClass('is-active');
+				$(this).addClass('is-active');
+				target='';
+				dump1090 = false;
+				switch($(this).children("label").attr('for'))
+				{
+					case "dump1090":
+						dump1090 = true;
+						break;
+					case "graphs":
+						target="/graphs.html";
+						break;
+				};
+				if (dump1090 == true) {
+					$('.content').html("<iframe id=\"map\" src=\"/dump1090/\"></iframe>");
+				}
+				else {
+					$('.content').slideDown('fast');
+					$('.content').html("<div class=\"modal is-active\"><div class=modal-background\"></div><div class=\"modal-content\"><span class=\"icon is-large\" style=\"width: 100%; scroll: no\"><i class=\"fas fa-spinner fa-3x is-centered\"></i></span></div></div>").delay(1000);
+					$('.content').load(target, '', function(response, status, xhr) {
+						if (status == 'error') {
+							var msg = "Sorry but there was an error: ";
+							$(".content").html(msg + xhr.status + " " + xhr.statusText);
+						}
+					}).fadeIn('slow');
+				}
+				return false;
+			});
+		});
+	</script>
+</body>
+</html>

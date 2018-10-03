@@ -1,0 +1,104 @@
+#!/bin/sh
+
+export XDG_DATA_HOME=$SNAP/usr/share
+export FONTCONFIG_PATH=$SNAP/etc/fonts/config.d
+export FONTCONFIG_FILE=$SNAP/etc/fonts/fonts.conf
+
+## crontab commands
+#*/5 * * * * root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 1h >/dev/null 2>&1
+#*/10 * * * * root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 6h >/dev/null 2>&1
+#2,12,22,32,42,52 * * * * root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 24h >/dev/null 2>&1
+#4,24,44 * * * * root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 7d >/dev/null 2>&1
+#6 * * *	* root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 30d >/dev/null 2>&1
+#8 */12 * * * root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 365d >/dev/null 2>&1
+
+TIMEOUT_1h=0
+TIMEOUT_6h=0
+TIMEOUT_24h=0
+TIMEOUT_7d=0
+TIMEOUT_30d=0
+TIMEOUT_365d=0
+
+PERIOD_1h=300
+PERIOD_6h=600
+PERIOD_24h=600
+PERIOD_7d=1200
+PERIOD_30d=3600
+PERIOD_365d=43200
+
+OFFSET_24h=120
+OFFSET_7d=240
+OFFSET_30d=360
+OFFSET_365d=480
+
+# create output directory which is defined in make-collectd-graphs.sh
+mkdir -p /tmp/graphs
+
+gen_graphs()
+{
+	echo [`date +"%Y%m%d%H%M%S"`] run cmd, arg=$@
+	nice -n 5 $SNAP/usr/share/adsb-receiver/graphs/make-collectd-graphs.sh $@ >/dev/null 2>&1
+}
+
+init_timeouts()
+{
+	now=$(date +"%s")
+
+	mod=$(($now%PERIOD_1h))
+	TIMEOUT_1h=$(($now-$mod))
+	mod=$(($now%PERIOD_6h))
+	TIMEOUT_6h=$(($now-$mod))
+	mod=$(($now%PERIOD_24h))
+	TIMEOUT_24h=$(($now-$mod+$OFFSET_24h))
+	mod=$(($now%PERIOD_7d))
+	TIMEOUT_7d=$(($now-$mod+$OFFSET_7d))
+	mod=$(($now%PERIOD_30d))
+	TIMEOUT_30d=$(($now-$mod+$OFFSET_30d))
+	mod=$(($now%PERIOD_365d))
+	TIMEOUT_365d=$(($now-$mod+$OFFSET_365d))
+}
+
+init_timeouts
+
+while [ true ]; do
+	now=$(date +"%s")
+
+	## 1hr work
+	if [ $now -ge $TIMEOUT_1h ]; then
+		gen_graphs 1h &
+		TIMEOUT_1h=$(($TIMEOUT_1h+PERIOD_1h))
+	fi
+
+	## 6hr work
+	if [ $now -ge $TIMEOUT_6h ]; then
+		gen_graphs 6h &
+		TIMEOUT_6h=$(($TIMEOUT_6h+PERIOD_6h))
+	fi
+
+	## 24hr work
+	if [ $now -ge $TIMEOUT_24h ]; then
+		gen_graphs 24h &
+		TIMEOUT_24h=$(($TIMEOUT_24h+$PERIOD_24h))
+	fi
+
+	## 7d work
+	if [ $now -ge $TIMEOUT_7d ]; then
+		gen_graphs 7d &
+		TIMEOUT_7d=$(($TIMEOUT_7d+$PERIOD_7d))
+	fi
+
+	## 30d work
+	if [ $now -ge $TIMEOUT_30d ]; then
+		gen_graphs 30d &
+		TIMEOUT_30d=$(($TIMEOUT_30d+$PERIOD_30d))
+	fi
+
+	## 365d work
+	if [ $now -ge $TIMEOUT_365d ]; then
+		gen_graphs 365d &
+		TIMEOUT_365d=$(($TIMEOUT_365d+$PERIOD_365d))
+	fi
+
+	sleep 30
+done
+

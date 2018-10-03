@@ -1,0 +1,169 @@
+#! /bin/bash
+
+CONF=$SNAP_DATA/collectd.conf
+BIN=$SNAP/usr/sbin/collectd
+BASEDIR=$SNAP_COMMON/collectd
+RRDDIR=$BASEDIR/rrd
+DISKFILE=$SNAP_DATA/disk.conf
+DISK=
+MOUNTPOINT=
+
+export PYTHONHOME=$SNAP/usr
+export PYTHONPATH=$SNAP/usr/lib/python2.7
+
+LC_ALL=C.UTF-8
+LANG=C.UTF-8
+
+mkdir -p $BASEDIR $RRDDIR
+
+if [ -f $SNAP_COMMON/URL.conf ]; then
+	URL=`head -n 1 $SNAP_COMMON/URL.conf | tr -d '\n'`
+else
+	URL="http://localhost:8080/dump1090"
+fi
+
+# always update the disk.conf
+if [ $(cat /etc/mtab | grep -c "\/dev\/loop0 \/ ") -eq 1 ]; then
+	# Ubuntu Core
+	BOOTDEV=$(cat /etc/mtab | sed -n 's/\ \/writable .*//p' | cut -c 6-)
+	MOUNTPOINT="/writable"
+else
+	# Ubuntu Classic
+	BOOTDEV=$(cat /etc/mtab | sed -n 's/\ \/ .*//p' | cut -c 6-)
+	MOUNTPOINT="/"
+fi
+DISK=$(echo $BOOTDEV | \
+		sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
+echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
+echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > $DISKFILE
+
+cat << EOF >$CONF
+# Config file for collectd(1).
+##############################################################################
+# Global                                                                     #
+##############################################################################
+Hostname "localhost"
+BaseDir "$BASEDIR"
+PIDFile "$SNAP_DATA/collectd.pid"
+PluginDir "$SNAP/usr/lib/collectd"
+#----------------------------------------------------------------------------#
+# Added types for dump1090.                                                  #
+# Make sure the path to dump1090.db is correct.                              #
+#----------------------------------------------------------------------------#
+TypesDB "$SNAP/usr/share/adsb-receiver/graphs/dump1090.db" "$SNAP/usr/share/collectd/types.db"
+#----------------------------------------------------------------------------#
+# Interval at which to query values. This may be overwritten on a per-plugin #
+# base by using the 'Interval' option of the LoadPlugin block:               #
+#   <LoadPlugin foo>                                                         #
+#       Interval 60                                                          #
+#   </LoadPlugin>                                                            #
+#----------------------------------------------------------------------------#
+Interval 60
+Timeout 2
+ReadThreads 5
+WriteThreads 1
+##############################################################################
+# Logging                                                                    #
+##############################################################################
+#LoadPlugin syslog
+#<Plugin syslog>
+#	LogLevel info
+#</Plugin>
+LoadPlugin logfile
+<Plugin logfile>
+	LogLevel info
+	File "$SNAP_DATA/collectd.log"
+</Plugin>
+##############################################################################
+# LoadPlugin section                                                         #
+#----------------------------------------------------------------------------#
+# Specify what features to activate.                                         #
+##############################################################################
+LoadPlugin rrdtool
+LoadPlugin table
+LoadPlugin interface
+LoadPlugin memory
+LoadPlugin cpu
+LoadPlugin aggregation
+LoadPlugin match_regex
+LoadPlugin df
+LoadPlugin disk
+<LoadPlugin python>
+	Globals true
+</LoadPlugin>
+##############################################################################
+# Plugin configuration                                                       #
+##############################################################################
+<Plugin rrdtool>
+	DataDir "$RRDDIR"
+</Plugin>
+#----------------------------------------------------------------------------#
+# Configure the dump1090 python module.                                      #
+#                                                                            #
+# Each Instance block collects statistics from a separate named dump1090.    #
+# The URL should be the base URL of the webmap, i.e. in the examples below,  #
+# statistics will be loaded from http://localhost/dump1090/data/stats.json   #
+#----------------------------------------------------------------------------#
+<Plugin python>
+	ModulePath "$SNAP/usr/share/adsb-receiver/graphs"
+	LogTraces true
+	Interactive false
+	Import "dump1090"
+	<Module dump1090>
+		<Instance localhost>
+			URL "$URL"
+		</Instance>
+	</Module>
+</Plugin>
+<Plugin table>
+	<Table "/sys/class/thermal/thermal_zone0/temp">
+		Instance localhost
+		Separator " "
+		<Result>
+			Type gauge
+			InstancePrefix "cpu_temp"
+			ValuesFrom 0
+		</Result>
+	</Table>
+</Plugin>
+<Plugin "interface">
+	Interface "eth0"
+	Interface "wlan0"
+</Plugin>
+<Plugin "aggregation">
+	<Aggregation>
+		Plugin "cpu"
+		Type "cpu"
+		GroupBy "Host"
+		GroupBy "TypeInstance"
+		CalculateAverage true
+	</Aggregation>
+</Plugin>
+<Plugin "df">
+	MountPoint "$MOUNTPOINT"
+	IgnoreSelected false
+#	ReportReserved true
+	ReportInodes true
+</Plugin>
+<Plugin "disk">
+	Disk "$DISK"
+	IgnoreSelected false
+</Plugin>
+<Chain "PostCache">
+	<Rule>
+		<Match regex>
+			Plugin "^cpu\$"
+			PluginInstance "^[0-9]+\$"
+		</Match>
+		<Target write>
+			Plugin "aggregation"
+		</Target>
+		Target stop
+	</Rule>
+	Target "write"
+</Chain>
+EOF
+
+chmod 0600 $CONF
+
+$BIN -f -C $CONF -P $SNAP_DATA/collectd.pid $@

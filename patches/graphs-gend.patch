@@ -1,0 +1,415 @@
+diff --git a/build/portal/graphs/make-collectd-graphs.sh b/build/portal/graphs/make-collectd-graphs.sh
+index 94a700c..10c377b 100755
+--- a/build/portal/graphs/make-collectd-graphs.sh
++++ b/build/portal/graphs/make-collectd-graphs.sh
+@@ -1,16 +1,29 @@
+ #!/bin/bash
+ 
++export XDG_DATA_HOME=$SNAP/usr/share
++export FONTCONFIG_PATH=$SNAP/etc/fonts
++DISKCONF=$SNAP_DATA/disk.conf
++
++while [ ! -f $DISKCONF ]; do
++	sleep 3
++done
++. $DISKCONF
++if [ "$MOUNTPOINT" == "/writable" ]; then
++	MOUNTPOINT=writable
++else
++	MOUNTPOINT=root
++fi
++
+ # Assign the Lighthttpd document root directory to a variable.
+-RAWDOCUMENTROOT=`/usr/sbin/lighttpd -f /etc/lighttpd/lighttpd.conf -p | grep server.document-root`
+-DOCUMENTROOT=`sed 's/.*"\(.*\)"[^"]*$/\1/' <<< $RAWDOCUMENTROOT`
++DOCUMENTROOT=/tmp
+ 
+-renice -n 5 -p $$
++#renice -n 5 -p $$
+ 
+ ## DUMP1090 GRAPHS
+ 
+ aircraft_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -32,12 +45,13 @@ aircraft_graph() {
+   "LINE1:pos#0000FF:w/ Positions" \
+   "LINE1:noloc#FF0000:w/o Positions" \
+   "LINE1:mlat#000000:mlat" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ aircraft_message_rate_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 428 \
+   --height 200 \
+@@ -62,12 +76,13 @@ aircraft_message_rate_graph() {
+   "LINE1:maxrate#FF0000:Maximum" \
+   "GPRINT:maxrate:%3.1lf\c" \
+   "LINE1:aircrafts10#990000:Aircraft Seen / Tracked (RHS) \c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ cpu_graph_dump1090() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -86,12 +101,13 @@ cpu_graph_dump1090() {
+   "AREA:backgroundp#00C000:Other:STACK" \
+   "AREA:demodp#00FF00:Demodulator\c:STACK" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ tracks_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -107,14 +123,15 @@ tracks_graph() {
+   "AREA:hsingle#FF0000:Tracks with single message" \
+   "AREA:hall#00FF00:Unique tracks\c:STACK" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ ## SYSTEM GRAPHS
+ 
+ cpu_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 1010 \
+   --height 200 \
+@@ -147,12 +164,13 @@ cpu_graph() {
+   "AREA:psystem#FF0000:sys:STACK" \
+   "AREA:puser#40FF40:user:STACK" \
+   "AREA:pnice#008000:nice\c:STACK" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ df_root_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 496 \
+   --height 200 \
+@@ -168,12 +186,13 @@ df_root_graph() {
+   "AREA:totalused#4169E1:Used:STACK" \
+   "AREA:free#32C734:Free\c:STACK" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ disk_io_iops_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -195,12 +214,13 @@ disk_io_iops_graph() {
+   "GPRINT:write:MAX:Max\:%4.1lf iops" \
+   "GPRINT:write:AVERAGE:Avg\:%4.1lf iops" \
+   "GPRINT:write:LAST:Current\:%4.1lf iops\c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ disk_io_octets_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -222,12 +242,13 @@ disk_io_octets_graph() {
+   "GPRINT:write:MAX:Max\: %4.1lf %sB/sec" \
+   "GPRINT:write:AVERAGE:Avg\: %4.1lf %SB/sec" \
+   "GPRINT:write:LAST:Current\: %4.1lf %SB/sec\c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ eth0_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -248,12 +269,13 @@ eth0_graph() {
+   "GPRINT:tx:MAX:Max\:%8.1lf %S" \
+   "GPRINT:tx:AVERAGE:Avg\:%8.1lf %S" \
+   "GPRINT:tx:LAST:Current\:%8.1lf %Sbytes/sec\c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ memory_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 496 \
+   --height 200 \
+@@ -271,12 +293,13 @@ memory_graph() {
+   "AREA:cached#00FF00:Cached:STACK" \
+   "AREA:free#FFFFFF:Free\c:STACK" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ temp_graph_imperial() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -294,12 +317,13 @@ temp_graph_imperial() {
+   "AREA:ttc#ffcc00" \
+   "COMMENT: \n" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ temp_graph_metric() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -315,12 +339,13 @@ temp_graph_metric() {
+   "AREA:tfin#ffcc00" \
+   "COMMENT: \n" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ wlan0_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -341,14 +366,15 @@ wlan0_graph() {
+   "GPRINT:tx:MAX:Max\:%8.1lf %S" \
+   "GPRINT:tx:AVERAGE:Avg\:%8.1lf %S" \
+   "GPRINT:tx:LAST:Current\:%8.1lf %Sbytes/sec\c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ ## RECEIVER GRAPHS
+ 
+ local_rate_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 429 \
+   --height 200 \
+@@ -367,12 +393,13 @@ local_rate_graph() {
+   "AREA:y2strong#FF0000:Messages > -3dBFS / Hr (RHS)" \
+   "LINE1:y2positions#00c0FF:Positions / Hr (RHS)\c" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ local_trailing_rate_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 959 \
+   --height 200 \
+@@ -473,12 +500,13 @@ local_trailing_rate_graph() {
+   "LINE1:messages#0000FF" \
+   "AREA:y2strong#FF0000:Messages > -3dBFS/Hr (RHS)" \
+   "LINE1:y2positions#00c0FF:Positions/Hr (RHS)\c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ range_graph_imperial_nautical(){
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 428 \
+   --height 200 \
+@@ -499,12 +527,13 @@ range_graph_imperial_nautical(){
+   "LINE1:peakrange#FF0000:Peak Range\\:" \
+   "GPRINT:peakrange:%1.1lf NM\c" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ range_graph_imperial_statute(){
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 428 \
+   --height 200 \
+@@ -525,12 +554,13 @@ range_graph_imperial_statute(){
+   "LINE1:peakrange#FF0000:Peak Range\\:" \
+   "GPRINT:peakrange:%1.1lf SM\c" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ range_graph_metric() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 428 \
+   --height 200 \
+@@ -550,12 +580,13 @@ range_graph_metric() {
+   "LINE1:peakrange#FF0000:Peak Range\\:" \
+   "GPRINT:peakrange:%1.1lf km\c" \
+   "COMMENT: \n" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ signal_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 186 \
+@@ -582,14 +613,15 @@ signal_graph() {
+   "GPRINT:noise:AVERAGE:Avg\: %4.1lf\c" \
+   "LINE1:0#000000:Zero dBFS" \
+   "LINE1:-3#FF0000:-3 dBFS\c" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ ## HUB GRAPHS
+ 
+ remote_rate_graph() {
+   rrdtool graph \
+-  "$1" \
++  "$1.new" \
+   --start end-$4 \
+   --width 480 \
+   --height 200 \
+@@ -604,44 +636,45 @@ remote_rate_graph() {
+   "CDEF:y2positions=positions,10,*" \
+   "LINE1:messages#0000FF:messages received" \
+   "LINE1:y2positions#00c0FF:position / hr (RHS)" \
+-  --watermark "Drawn: $nowlit";
++  --watermark "Drawn: $nowlit" && \
++  mv -f "$1.new" "$1";
+ }
+ 
+ 
+ dump1090_graphs() {
+-  aircraft_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  aircraft_message_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft_message_rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  cpu_graph_dump1090 ${DOCUMENTROOT}/graphs/dump1090-$2-cpu-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  tracks_graph ${DOCUMENTROOT}/graphs/dump1090-$2-tracks-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5" 
++  aircraft_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  aircraft_message_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft_message_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  cpu_graph_dump1090 ${DOCUMENTROOT}/graphs/dump1090-$2-cpu-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  tracks_graph ${DOCUMENTROOT}/graphs/dump1090-$2-tracks-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+ }
+ 
+ system_graphs() {
+-  cpu_graph ${DOCUMENTROOT}/graphs/system-$2-cpu-$4.png /var/lib/collectd/rrd/$1/aggregation-cpu-average "$3" "$4" "$5"
+-  df_root_graph ${DOCUMENTROOT}/graphs/system-$2-df_root-$4.png /var/lib/collectd/rrd/$1/df-root "$3" "$4" "$5"
+-  disk_io_iops_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_iops-$4.png /var/lib/collectd/rrd/$1/disk-mmcblk0 "$3" "$4" "$5"
+-  disk_io_octets_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_octets-$4.png /var/lib/collectd/rrd/$1/disk-mmcblk0 "$3" "$4" "$5"
+-  eth0_graph ${DOCUMENTROOT}/graphs/system-$2-eth0_bandwidth-$4.png /var/lib/collectd/rrd/$1/interface-eth0 "$3" "$4" "$5"
+-  memory_graph ${DOCUMENTROOT}/graphs/system-$2-memory-$4.png /var/lib/collectd/rrd/$1/memory "$3" "$4" "$5"
+-  temp_graph_imperial ${DOCUMENTROOT}/graphs/system-$2-temperature_imperial-$4.png /var/lib/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
+-  temp_graph_metric ${DOCUMENTROOT}/graphs/system-$2-temperature_metric-$4.png /var/lib/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
+-  wlan0_graph ${DOCUMENTROOT}/graphs/system-$2-wlan0_bandwidth-$4.png /var/lib/collectd/rrd/$1/interface-wlan0 "$3" "$4" "$5"
++  cpu_graph ${DOCUMENTROOT}/graphs/system-$2-cpu-$4.png $SNAP_COMMON/collectd/rrd/$1/aggregation-cpu-average "$3" "$4" "$5"
++  df_root_graph ${DOCUMENTROOT}/graphs/system-$2-df_root-$4.png $SNAP_COMMON/collectd/rrd/$1/df-$MOUNTPOINT "$3" "$4" "$5"
++  disk_io_iops_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_iops-$4.png $SNAP_COMMON/collectd/rrd/$1/disk-$DISK "$3" "$4" "$5"
++  disk_io_octets_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_octets-$4.png $SNAP_COMMON/collectd/rrd/$1/disk-$DISK "$3" "$4" "$5"
++  eth0_graph ${DOCUMENTROOT}/graphs/system-$2-eth0_bandwidth-$4.png $SNAP_COMMON/collectd/rrd/$1/interface-eth0 "$3" "$4" "$5"
++  memory_graph ${DOCUMENTROOT}/graphs/system-$2-memory-$4.png $SNAP_COMMON/collectd/rrd/$1/memory "$3" "$4" "$5"
++  temp_graph_imperial ${DOCUMENTROOT}/graphs/system-$2-temperature_imperial-$4.png $SNAP_COMMON/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
++  temp_graph_metric ${DOCUMENTROOT}/graphs/system-$2-temperature_metric-$4.png $SNAP_COMMON/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
++  wlan0_graph ${DOCUMENTROOT}/graphs/system-$2-wlan0_bandwidth-$4.png $SNAP_COMMON/collectd/rrd/$1/interface-wlan0 "$3" "$4" "$5"
+ }
+ 
+ dump1090_receiver_graphs() {
+   dump1090_graphs "$1" "$2" "$3" "$4" "$5"
+   system_graphs "$1" "$2" "$3" "$4" "$5"
+-  local_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  local_trailing_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_trailing_rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  range_graph_imperial_nautical ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_nautical-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  range_graph_imperial_statute ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_statute-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  range_graph_metric ${DOCUMENTROOT}/graphs/dump1090-$2-range_metric-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+-  signal_graph ${DOCUMENTROOT}/graphs/dump1090-$2-signal-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  local_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  local_trailing_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_trailing_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  range_graph_imperial_nautical ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_nautical-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  range_graph_imperial_statute ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_statute-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  range_graph_metric ${DOCUMENTROOT}/graphs/dump1090-$2-range_metric-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  signal_graph ${DOCUMENTROOT}/graphs/dump1090-$2-signal-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+ }
+ 
+ dump1090_hub_graphs() {
+   dump1090_graphs "$1" "$2" "$3" "$4" "$5"
+   system_graphs "$1" "$2" "$3" "$4" "$5"
+-  remote_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-remote_rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  remote_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-remote_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
+ }
+ 
+ period="$1"

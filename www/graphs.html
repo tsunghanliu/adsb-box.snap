@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>graphs</title>
+	<link rel="stylesheet" href="/css/bulma-0.7.1.min.css">
+</head>
+<body class="has-navbar-fixed-bottom">
+
+<section>
+	<nav class="navbar is-transparent is-fixed-bottom">
+		<div class="navbar-brand">
+			<a class="navbar-item">
+				<span class="icon">
+					<i class="fas fa-chart-area"></i>
+				</span>
+			</a>
+			<div class="navbar-burger burger" data-target="navbar-graph-settings">
+				<span></span>
+				<span></span>
+				<span></span>
+			</div>
+		</div>
+
+		<div id="navbar-graph-settings" class="navbar-menu">
+			<div class="navbar-start">
+				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
+					<a class="navbar-link">
+						Report Period
+					</a>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile">
+						<a class="navbar-item report-period" id='report-period-1h'><label for='1h'>Hourly</label></a>
+						<a class="navbar-item report-period" id='report-period-6h'><label for='6h'>Six Hours</label></a>
+						<a class="navbar-item report-period" id='report-period-24h'><label for='24h'>Daily</label></a>
+						<hr class="navbar-divider">
+						<a class="navbar-item report-period" id='report-period-7d'><label for='7d'>Weekly</label></a>
+						<a class="navbar-item report-period" id='report-period-30d'><label for='30d'>Monthly</label></a>
+						<a class="navbar-item report-period" id='report-period-365d'><label for='365d'>Yearly</label></a>
+					</div>
+				</div>
+				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
+					<a class="navbar-link">
+						Range Unit
+					</a>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile">
+						<a class="navbar-item range-unit" id="range-unit-nautical-miles">Nautical Miles</a>
+						<a class="navbar-item range-unit" id="range-unit-statute-miles">Statute Miles</a>
+						<a class="navbar-item range-unit" id="range-unit-kilometers">Kilometers</a>
+					</div>
+				</div>
+				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
+					<a class="navbar-link">
+						Temperature Unit
+					</a>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile">
+						<a class="navbar-item temp-unit" id="temp-unit-metric">Metric</a>
+						<a class="navbar-item temp-unit" id="temp-unit-imperial">Imperial</a>
+					</div>
+				</div>
+				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
+					<a class="navbar-link">
+						Network Interface
+					</a>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile">
+						  <a class="navbar-item nic-name" id="nic-name-eth0">eth0</a>
+						  <a class="navbar-item nic-name" id="nic-name-wlan0">wlan0</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nav>
+</section>
+<!--	
+<section class="container hero is-info">
+  <div class="hero-body">
+    <div class="container">
+      <h1 class="title">
+        Performance Graphs
+      </h1>
+      <h2 class="subtitle is-6">
+        Monitor the status of your receiver. Click the button to switch the report period
+      </h2>
+    </div>
+  </div>
+</section>
+-->
+
+<section class="section">
+	<!--
+	<div class="container">
+		<div class="field">
+		<label class="label">Period of Report:</label>
+		<div class="control">
+			<span id="btn-1h" class="button" onclick="switchView('1h')">Hourly</span>
+			<span id="btn-6h" class="button" onclick="switchView('6h')">Six Hours</span>
+			<span id="btn-24h" class="button" onclick="switchView('24h')">Daily</span>
+			<span id="btn-7d" class="button" onclick="switchView('7d')">Weekly</span>
+			<span id="btn-30d" class="button" onclick="switchView('30d')">Monthly</span>
+			<span id="btn-365d" class="button" onclick="switchView('365d')">Yearly</span>
+		</div>
+			<label class="label">Unit of Range:</label>
+			<div class="control">
+				<div class="select">
+					<select id="range-unit">
+						<option>Nautical Miles</option>
+						<option>Statute Miles</option>
+						<option>Kilometers</option>
+					</select>
+				</div>
+			</div>
+			<label class="label">Network Interface:</label>
+			<div class="control">
+				<div class="select">
+					<select id="nic-name">
+						<option>eth0</option>
+						<option>wlan0</option>
+					</select>
+				</div>
+			</div>
+			<label class="label">Unit of Temperature:</label>
+			<div class="control">
+				<div class="select">
+					<select id="temp-unit">
+						<option>Metric</option>
+						<option>Imperial</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="content"></div>
+	-->
+	<div class="container">
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification is-primary">
+					<p class="title">Dump1090 Graphs</p>
+					<p class="subtitle">summary of this group of graphs</p>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id="dump1090-local_trailing_rate-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-local_trailing_rate-image" src="#" alt="Message Rate (Trailing)">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="dump1090-aircraft-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-aircraft-image" src="#" alt="Aircraft Seen">
+						</figure>
+					</a>
+				</article>
+			</div>
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="dump1090-tracks-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-tracks-image" src="#" alt="Tracks Seen">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification" id="range-graph">
+					<!--
+					<a id ="dump1090-range_imperial_nautical-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-range_imperial_nautical-image" src="#" alt="Max Range (Nautical Miles)">
+						</figure>
+					</a>
+					<a id ="dump1090-range_imperial_statute-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-range_imperial_statute-image" src="#" alt="Max Range (Statute Miles)">
+						</figure>
+					</a>
+					<a id ="dump1090-range_metric-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-range_metric-image" src="#" alt="Max Range (Kilometers)">
+						</figure>
+					</a>
+					-->
+				</article>
+			</div>
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="dump1090-signal-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-signal-image" src="#" alt="Signal Level">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="dump1090-local_rate-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-local_rate-image" src="#" alt="Message Rate">
+						</figure>
+					</a>
+				</article>
+			</div>
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="dump1090-aircraft_message_rate-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-aircraft_message_rate-image" src="#" alt="Aircraft Message Rate">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="dump1090-cpu-link" class="graph-link">
+						<figure class="image">
+							<img id="dump1090-cpu-image" src="#" alt="CPU Utilization">
+						</figure>
+					</a>
+				</article>
+			</div>
+			<!-- padding cell -->
+			<div class="tile is-parent">
+				<article class="tile is-child">
+				</article>
+			</div>
+		</div>
+	</div>
+
+	<div class="content"></div>
+	<div class="container">
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification is-primary">
+					<p class="title">System Graphs</p>
+					<p class="subtitle">summary of this group of graphs</p>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="system-cpu-link" class="graph-link">
+						<figure class="image">
+							<img id="system-cpu-image" class="img-responsive" src="#" alt="Overall CPU Utilization">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification" id="core-temp-graph">
+					<!--
+					<a id ="system-temperature_metric-link" class="graph-link">
+						<figure class="image">
+							<img id="system-temperature_metric-image" class="img-responsive" src="#" alt="Core Temperature">
+						</figure>
+					</a>
+					<a id ="system-temperature_imperial-link" class="graph-link">
+						<figure class="image">
+							<img id="system-temperature_imperial-image" class="img-responsive" src="#" alt="Core Temperature">
+						</figure>
+					</a>
+					-->
+				</article>
+			</div>
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="system-memory-link" class="graph-link">
+						<figure class="image">
+							<img id="system-memory-image" class="img-responsive" src="#" alt="Memory Utilization">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification" id="nic-bandwidth-graph">
+					<!--
+					<a id ="system-eth0_bandwidth-link" class="graph-link">
+						<figure class="image">
+							<img id="system-eth0_bandwidth-image" class="img-responsive" src="#" alt="Bandwidth Usage (eth0)">
+						</figure>
+					</a>
+					<a id ="system-wlan0_bandwidth-link" class="graph-link">
+						<figure class="image">
+							<img id="system-wlan0_bandwidth-image" class="img-responsive" src="#" alt="Bandwidth Usage (wlan0)">
+						</figure>
+					</a>
+					-->
+				</article>
+			</div>
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="system-df_root-link" class="graph-link">
+						<figure class="image">
+							<img id="system-df_root-image" class="img-responsive" src="#" alt="Disk Space Usage (/)">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+		<div class="tile is-ancestor">
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="system-disk_io_iops-link" class="graph-link">
+						<figure class="image">
+							<img id="system-disk_io_iops-image" class="img-responsive" src="#" alt="Disk I/O - IOPS">
+						</figure>
+					</a>
+				</article>
+			</div>
+			<div class="tile is-parent">
+				<article class="tile is-child notification">
+					<a id ="system-disk_io_octets-link" class="graph-link">
+						<figure class="image">
+							<img id="system-disk_io_octets-image" class="img-responsive" src="#" alt="Disk I/O - Bandwidth">
+						</figure>
+					</a>
+				</article>
+			</div>
+		</div>
+</section>
+
+<!--
+<footer class="container footer">
+	<div class="content has-text-centered">
+		<p>
+		<strong>Bulma</strong> by <a href="https://jgthms.com">Jeremy Thomas</a>. The source code is licensed
+		<a href="http://opensource.org/licenses/mit-license.php">MIT</a>. The website content
+		is licensed <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY NC SA 4.0</a>.
+		</p>
+	</div>
+</footer>
+-->
+
+<!-- modals: dump1090 -->
+<div id="modal-main" class="modal">
+	<div class="modal-background"></div>
+	<div class="modal-content">
+		<p class="image">
+		<img id="modal-of-image" src="#" alt="#">
+		</p>
+	</div>
+	<button class="modal-close" aria-label="close"></button>
+</div>
+
+<!-- modals: system -->
+
+<script defer src="/fontawesome/js/all-v5.3.1.js" data-auto-replace-svg="nest"></script>
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/graphs.js"></script>
+</body>
+</html>

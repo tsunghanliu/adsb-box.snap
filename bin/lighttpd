@@ -27,6 +27,7 @@ server.modules = (
     "mod_alias",
     "mod_compress",
     "mod_dirlisting",
+    "mod_setenv",
     "mod_redirect",
 )
 
@@ -77,8 +78,15 @@ server.stat-cache-engine    = "disable"
 accesslog.filename          = "$ACCESS_LOG"
 
 #dir-listing.activate = "disable"
-\$HTTP["url"] =~ "^/(graphs|dump1090\/data)($|/)" {
+\$HTTP["url"] =~ "^/(graphs|dump1090\/data)(\$|/)" {
     dir-listing.activate = "enable"
+}
+
+\$HTTP["url"] =~ "^/(dump1090\/data\/.*\.json\$|graphs\/.*\.png\$)" {
+    setenv.add-response-header = ( "Cache-Control" => "no-store, no-cache, must-revalidate, post-check=0, pre-check=0" )
+    etag.use-inode = "disable"
+    etag.use-mtime = "disable"
+    etag.use-size = "disable"
 }
 
 EOF

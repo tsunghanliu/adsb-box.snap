@@ -183,6 +183,7 @@ parts:
     stage-packages:
       - collectd
       - python2.7
+      - libpython2.7
     stage:
       - -etc/fonts/fonts.conf
 

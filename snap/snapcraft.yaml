@@ -5,7 +5,7 @@ description: |
   This snap includes several ADS-B related tools to let users builds their
   own ADS-B receiver station. There are dump1090 and lighttpd in this snap.
 
-grade: devel # must be 'stable' to release into candidate/stable channels
+grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
 
 apps:

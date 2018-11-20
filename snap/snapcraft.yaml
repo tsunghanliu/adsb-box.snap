@@ -138,6 +138,11 @@ parts:
     plugin: python
     source: https://github.com/mutability/mlat-client.git
     source-type: git
+    override-build: |
+      echo 'Replacing distutils with setuptools ...'
+      sed -i 's/distutils\.core/setuptools/g' setup.py
+      echo 'Building mlat-client ...'
+      snapcraftctl build
     organize:
       bin/fa-mlat-client: usr/lib/piaware/helpers/fa-mlat-client
     prime:

@@ -164,7 +164,7 @@ parts:
           wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.18-5_i386.tgz
           ;;
         arm-*|aarch64-*)
-          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.19-15_armhf.tgz
+          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
           ;;
         *)
           echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"

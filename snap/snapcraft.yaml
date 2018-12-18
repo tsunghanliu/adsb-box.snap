@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.7'
+version: '0.8'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their

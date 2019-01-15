@@ -28,6 +28,13 @@ if [ ! -f $CONFFILE ]; then
 	chmod 600 $CONFFILE
 fi
 
+# rotate logs
+if [ -f "$LOGFILE" ] && [ $(stat -c "%s" $LOGFILE) -gt 67108864 ]; then
+	gzip -c $LOGFILE > $LOGFILE.1.gz.tmp
+	mv $LOGFILE.1.gz.tmp $LOGFILE.1.gz
+	cat /dev/null > $LOGFILE
+fi
+
 $SNAP/usr/bin/piaware \
 	-p $PIDFILE \
 	-cachedir $CACHEDIR \

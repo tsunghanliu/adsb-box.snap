@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.8'
+version: '0.9'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -58,28 +58,27 @@ parts:
 
   dump1090:
     plugin: make
-    make-parameters: ['dump1090', 'faup1090']
-    source: https://github.com/mutability/dump1090.git
+    make-parameters: ['BLADERF=no', 'dump1090', 'faup1090']
+    source: https://github.com/flightaware/dump1090.git
     source-type: git
-    #source-branch: v1.14
+    source-branch: v3.6.3
     override-build: |
       echo 'patching dump1090 ...'
       patch -p1 < ../../../patches/dump1090.patch
       cp ../../../patches/dump1090/Taiwan.png public_html/flags-tiny/
+      sed -i '/RTLSDR ?= yes/ i DUMP1090_VERSION ?= \$\(shell git describe --always --tags --match=v\*\)' Makefile
+      echo 'building dump1090 ...'
       snapcraftctl build
     artifacts:
       - dump1090
       - faup1090
       - public_html
-      - debian/config-template
       - COPYING
     organize:
-      dump1090: usr/bin/dump1090-mutability
+      dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
-      public_html: usr/share/dump1090-mutability/html
-      debian: etc
-      etc/config-template: usr/share/dump1090-mutability/config-template
-      COPYING: usr/share/dump1090-mutability/COPYING
+      public_html: usr/share/dump1090-fa/html
+      COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
       - pkg-config
       - libusb-1.0-0-dev

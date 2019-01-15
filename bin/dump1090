@@ -2,19 +2,24 @@
 set -e
 #set -x
 
-BIN="$SNAP/usr/bin/dump1090-mutability"
+BIN="$SNAP/usr/bin/dump1090-fa"
 ARGS=""
-CONF="$SNAP_DATA/dump1090-mutability.conf"
+CONF="$SNAP_DATA/dump1090-fa.conf"
+
+# migration for config file
+if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
+	cp $SNAP_DATA/dump1090-mutability.conf $CONF
+fi
 
 if [ ! -f $CONF ]; then
-	cp $SNAP/usr/share/dump1090-mutability/config-template $CONF
+	cp $SNAP/etc/dump1090-fa/config-template $CONF
 fi
 
 # Read configuration variable file if it is present
 [ -r $CONF ] && . $CONF
 
 # overwrite $JSON_DIR defined in $CONF
-JSON_DIR="/tmp/dump1090-mutability"
+JSON_DIR="/tmp/dump1090-fa"
 
 # work out daemon args
 

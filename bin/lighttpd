@@ -5,7 +5,7 @@ BIN=$SNAP/usr/sbin/lighttpd
 PORT=8080
 
 ## defined in bin/dump1090
-JSON_DIR=/tmp/dump1090-mutability
+JSON_DIR=/tmp/dump1090-fa
 
 COMPRESS_DIR=/tmp/lighttpd/compress
 
@@ -31,7 +31,7 @@ server.modules = (
     "mod_redirect",
 )
 
-#server.document-root        = "$SNAP/usr/share/dump1090-mutability/html"
+#server.document-root        = "$SNAP/usr/share/dump1090-fa/html"
 server.document-root        = "$SNAP/var/www"
 #server.upload-dirs          = ( "$SNAP_DATA/lighttpd/uploads" )
 server.errorlog             = "$ERROR_LOG"
@@ -65,7 +65,7 @@ url.redirect += (
 alias.url += (
     "/dump1090/data/" => "$JSON_DIR/",
     "/dump1090/upintheair.json" => "$SNAP_DATA/upintheair.json",
-    "/dump1090/" => "$SNAP/usr/share/dump1090-mutability/html/",
+    "/dump1090/" => "$SNAP/usr/share/dump1090-fa/html/",
     #"/data/" => "$JSON_DIR/",
     "/graphs/" => "/tmp/graphs/",
 )

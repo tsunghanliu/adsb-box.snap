@@ -4,7 +4,7 @@ This is a snap to establish a ADS-B receiver box.
 
 # Components
 
-* [dump1090 and faup1090](https://github.com/mutability/dump1090/)
+* [dump1090 and faup1090](https://github.com/flightaware/dump1090/)
 * [lighttpd](https://www.lighttpd.net/)
 * [tcllauncher](https://github.com/flightaware/tcllauncher/)
 * [piaware](https://github.com/flightaware/piaware/)
@@ -89,7 +89,7 @@ $ sudo snap restart adsb-box.mount-observe
 
 ### dump1090
 
-The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-mutability.conf`.
+The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-fa.conf`.
 Change the items upon the requirements.
 
 To feed your data to FlightAware, set `BEAST_OUTPUT_PORT=30005`
@@ -98,7 +98,7 @@ To enable show MLAT results, set `BEAST_INPUT_PORT=30104` and your location (*LA
 
 ### terrain-limit rings
 
-Read `/snap/adsb-box/<rev>/usr/share/dump1090-mutability/html/script.js`, and place the upintheair.json at `/var/snap/adsb-box/<rev>/`
+Read `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`, and place the upintheair.json at `/var/snap/adsb-box/<rev>/`
 
 ### lighttpd
 
@@ -169,7 +169,7 @@ If fr24feed is configured correctly, you can find the web here `http://your-devi
 Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To upgrade or backup your configurations, you can backup the whole directory, or just pick some of files.
 ```
 # dump1090
-$ sudo cp /var/snap/adsb-box/<rev>/dump1090-mutability.conf $HOME
+$ sudo cp /var/snap/adsb-box/<rev>/dump1090-fa.conf $HOME
 # piaware
 $ sudo cp /var/snap/adsb-box/<rev>/piaware.conf $HOME
 ```
@@ -182,7 +182,7 @@ $ sudo snap refresh adsb-box
 To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
 ```
 # restore configuration files
-$ sudo cp $HOME/dump1090-mutability.conf /var/snap/adsb-box/<rev>/
+$ sudo cp $HOME/dump1090-fa.conf /var/snap/adsb-box/<rev>/
 $ sudo cp $HOME/piaware.conf /var/snap/adsb-box/<rev>/
 # restart services
 $ sudo systemctl restart snap.adsb-box.dump1090.service && sleep 5

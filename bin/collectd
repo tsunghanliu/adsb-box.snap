@@ -1,6 +1,7 @@
 #! /bin/bash
 
 CONF=$SNAP_DATA/collectd.conf
+LOGFILE=$SNAP_DATA/collectd.log
 BIN=$SNAP/usr/sbin/collectd
 BASEDIR=$SNAP_COMMON/collectd
 RRDDIR=$BASEDIR/rrd
@@ -72,7 +73,7 @@ WriteThreads 1
 LoadPlugin logfile
 <Plugin logfile>
 	LogLevel info
-	File "$SNAP_DATA/collectd.log"
+	File "$LOGFILE"
 </Plugin>
 ##############################################################################
 # LoadPlugin section                                                         #
@@ -165,5 +166,12 @@ LoadPlugin disk
 EOF
 
 chmod 0600 $CONF
+
+# rotate logs
+if [ -f "$LOGFILE" ] && [ $(stat -c "%s" $LOGFILE) -gt 67108864 ]; then
+	gzip -c $LOGFILE > $LOGFILE.1.gz.tmp
+	mv $LOGFILE.1.gz.tmp $LOGFILE.1.gz
+	cat /dev/null > $LOGFILE
+fi
 
 $BIN -f -C $CONF -P $SNAP_DATA/collectd.pid $@

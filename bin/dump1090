@@ -29,13 +29,13 @@ JSON_DIR="/tmp/dump1090-mutability"
 [ -z "$NET_BUFFER" ] && NET_BUFFER=0
 [ -z "$JSON_INTERVAL" ] && JSON_INTERVAL=3
 [ -z "$MAX_RANGE" ] && MAX_RANGE=300
-[ -z "$NICE_LEVEL" ] && NICELEVEL=-5
+[ -z "$NICE_LEVEL" ] && NICE_LEVEL=-5
 [ -z "$STATS_INTERVAL" ] && STATS_INTERVAL=3600
 
 # receiver:
 case "x$DEVICE" in
 	x|x0) ARGS="$ARGS --net" ;;
-	xnone) ARGS="$ARGS --net-only"; NICELEVEL="" ;;
+	xnone) ARGS="$ARGS --net-only"; NICE_LEVEL="" ;;
 	*) ARGS="$ARGS --net --device-index $DEVICE" ;;
 esac
 case "x$GAIN" in
@@ -82,8 +82,8 @@ if [ -n "$EXTRA_ARGS" ]; then ARGS="$ARGS $EXTRA_ARGS"; fi
 
 mkdir -p $JSON_DIR
 
-if [ -n "$NICELEVEL" ]; then
-	nice -n $NICELEVEL $BIN $ARGS
+if [ -n "$NICE_LEVEL" ]; then
+	nice -n $NICE_LEVEL $BIN $ARGS
 else
 	$BIN $ARGS
 fi

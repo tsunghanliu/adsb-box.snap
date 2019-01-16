@@ -83,6 +83,7 @@ parts:
       - pkg-config
       - libusb-1.0-0-dev
       - librtlsdr-dev
+      - libncurses5-dev
 
   lighttpd:
     plugin: nil

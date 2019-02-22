@@ -1,0 +1,70 @@
+#!/bin/sh
+set -e
+set -x
+
+BIN="$SNAP/usr/bin/openskyd-dump1090"
+DAEMON_HOME="$SNAP_DATA/openskyd"
+CONF_DIR="$DAEMON_HOME/conf.d"
+CONF_FILE="$CONF_DIR/10-debconf.conf"
+
+if [ ! -d "$DAEMON_HOME" ] || [ ! -d "$CONF_DIR" ]; then
+	mkdir -p "$CONF_DIR"
+fi
+
+if [ ! -f "$CONF_FILE" ]; then
+	LAT="$(snapctl get receiver.latitude)"
+	LONG="$(snapctl get receiver.longitude)"
+	ALT="$(snapctl get receiver.altitude)"
+	if [ -z "$LAT" ] || [ -z "$LONG" ] || [ -z "$ALT" ]; then
+		echo "Receiver does not have valid settings of its position"
+		exit 1
+	fi
+
+	DEVTYPE="default"
+	USER="$(snapctl get opensky-network.username)"
+	SERIAL="$(snapctl get opensky-network.serial)"
+	if [ -z "$USER" ] || [ -z "$SERIAL" ]; then
+		echo "Username or serial for OpenSky Network is empty, remember to update it"
+	fi
+
+	HOST="localhost"
+	PORT="30005"
+
+	cat > "$CONF_FILE" <<EOF
+[GPS]
+Latitude=$LAT
+Longitude=$LONG
+Altitude=$ALT
+
+[DEVICE]
+Type=$DEVTYPE
+
+[IDENT]
+Username=$USER
+
+[INPUT]
+Host=$HOST
+Port=$PORT
+EOF
+	
+	if [ -n "$SERIAL" ]; then
+		{
+			echo
+			echo "[DEVICE]"
+			echo "Serial=$SERIAL"
+		} >> "$CONF_FILE"
+	fi
+	
+	echo "Your GPS location has been set to Lat: $LAT Long: $LONG Alt: $ALT"
+	if [ -n "$USER" ]; then
+		echo "Your Username has been set to $USER"
+	fi
+	if [ -n "$SERIAL" ]; then
+		echo "Your Serial number has been set to $SERIAL"
+	else
+		echo "Using automatically assigned serial number"
+	fi
+	echo "Dump1090 host has been set to $HOST:$PORT"
+fi
+
+$BIN

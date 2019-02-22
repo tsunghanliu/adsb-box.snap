@@ -1,5 +1,5 @@
 name: adsb-box
-version: '0.9'
+version: '1.0-dev'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -33,6 +33,10 @@ apps:
   fr24feedcli:
     command: bin/fr24feed
     plugs: [network, network-bind, network-observe]
+  openskyd:
+    command: bin/openskyd
+    daemon: simple
+    plugs: [network, network-bind]
   rtltest:
     command: usr/bin/rtl_test
     plugs: [network, network-bind, raw-usb]
@@ -178,6 +182,34 @@ parts:
       mkdir -p $SNAPCRAFT_PART_INSTALL/bin $SNAPCRAFT_PART_INSTALL/usr/bin
       cp fr24feed_*/fr24feed $SNAPCRAFT_PART_INSTALL/usr/bin
 
+  opensky-feeder:
+    plugin: nil
+    build-packages:
+      - wget
+    override-pull: |
+      env | sort
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        x86_64-*)
+          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_amd64.deb
+          ;;
+        i386-*)
+          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_i386.deb
+          ;;
+        arm-*)
+          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_armhf.deb
+          ;;
+        aarch64-*)
+          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_arm64.deb
+          ;;
+        *)
+          echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"
+          exit 1
+          ;;
+      esac
+    override-build: |
+      # build & install (extract to $SNAPCRAFT_PART_INSTALL)
+      dpkg -x $SNAPCRAFT_PART_SRC/opensky-feeder.deb $SNAPCRAFT_PART_INSTALL
+
   rtlsdr:
     plugin: nil
     stage-packages:
@@ -214,4 +246,6 @@ passthrough:
   layout:
     /etc/fr24feed.ini:
       bind-file: $SNAP_DATA/fr24feed.ini
+    /var/lib/openskyd:
+      bind: $SNAP_DATA/openskyd
 

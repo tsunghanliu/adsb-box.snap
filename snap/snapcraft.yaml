@@ -159,7 +159,6 @@ parts:
       - wget
     override-pull: |
       env | sort
-      snapcraftctl pull
       case $SNAPCRAFT_ARCH_TRIPLET in
         x86_64-*)
           wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.18-5_amd64.tgz
@@ -179,8 +178,9 @@ parts:
       # build
       tar zxf $SNAPCRAFT_PART_SRC/fr24feed.tgz
       # install
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin $SNAPCRAFT_PART_INSTALL/usr/bin
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
       cp fr24feed_*/fr24feed $SNAPCRAFT_PART_INSTALL/usr/bin
+      cp fr24feed_*/LICENSE.fr24feed fr24feed_*/version.txt $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
 
   opensky-feeder:
     plugin: nil

@@ -10,6 +10,7 @@ This is a snap to establish a ADS-B receiver box.
 * [piaware](https://github.com/flightaware/piaware/)
 * [mlat-client](https://github.com/mutability/mlat-client/)
 * [fr24feed](https://www.flightradar24.com/share-your-data)
+* [opensky-network](https://opensky-network.org/contribute/improve-coverage)
 * [collectd](https://collectd.org)
 * graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
 * other base tools and libraries, e.g python and tcl
@@ -149,6 +150,18 @@ After finished the setup, restart the service
 $ sudo snap restart adsb-box.fr24feed
 ```
 
+### OpenSky Network
+
+Before openskyd-feeder can run correctly, you need to set at least the GPS location of the receiver. Replace [LATITUDE], [LONGITUDE] and [ALTITUDE] with the real values
+```
+$ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
+```
+
+Username and serial of openskyd-feeder are optional. If you don't set them, you can change them later.
+```
+$ sudo snap set adsb-box opensky-network.username=[USERNAME] opensky-network.serial=[SERIAL]
+```
+
 ## running status
 
 ### web interface
@@ -209,6 +222,6 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 # Future plans
 
 * Add a configuration item to contorl PiAware service.
-* Support other feeders. E.g. planfinder or opensky-network.
+* Support other feeders. E.g. planfinder.
 * Support other architectures. (x86/armhf/arm64) (on-going)
 * Include rtl-sdr tools.

@@ -180,7 +180,8 @@ parts:
       # install
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
       cp fr24feed_*/fr24feed $SNAPCRAFT_PART_INSTALL/usr/bin
-      cp fr24feed_*/LICENSE.fr24feed fr24feed_*/version.txt $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
+      cp -a fr24feed_*/* $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
+      rm $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed/fr24feed
 
   opensky-feeder:
     plugin: nil

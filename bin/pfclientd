@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+set -x
+
+BIN="$SNAP/usr/bin/pfclient"
+
+PFCLIENTDIR="$SNAP_DATA/pfclient"
+PIDFILE="$PFCLIENTDIR/pfclient.pid"
+LOGDIR="$PFCLIENTDIR/log"
+CONFIGFILE="$PFCLIENTDIR/pfclient-config.json"
+
+if [ ! -d "$LOGDIR" ]; then
+	mkdir -p "$LOGDIR"
+fi
+if [ ! -f "$CONFIGFILE" ]; then
+	cp "$SNAP/etc/pfclient-config.json" "$CONFIGFILE"
+fi
+
+$BIN -i "$PIDFILE" -z "$CONFIGFILE" -y "$LOGDIR"

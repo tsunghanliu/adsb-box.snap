@@ -11,6 +11,7 @@ This is a snap to establish a ADS-B receiver box.
 * [mlat-client](https://github.com/mutability/mlat-client/)
 * [fr24feed](https://www.flightradar24.com/share-your-data)
 * [opensky-network](https://opensky-network.org/contribute/improve-coverage)
+* [plane finder](https://planefinder.net/sharing/)
 * [collectd](https://collectd.org)
 * graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
 * other base tools and libraries, e.g python and tcl
@@ -114,7 +115,7 @@ Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware
 ```
 $ sudo adsb-box.piaware-config -showall
 $ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password <PASSWORD>
-$ sudo systemctl restart snap.adsb-box.piaware.service
+$ sudo snap restart adsb-box.piaware
 ```
 
 ### FR24Feed
@@ -162,6 +163,13 @@ Username and serial of openskyd-feeder are optional. If you don't set them, you 
 $ sudo snap set adsb-box opensky-network.username=[USERNAME] opensky-network.serial=[SERIAL]
 ```
 
+### Plane Finder
+
+Due to the limitation of the configuration mechanism, users have to configure the Plane Finder client through its web interface.
+* After installation, open this URL: `http://your-device-ip:30035/` and follow the instructions to fill in fields.
+* Remember to set **Receiver data format** to `Beast`, receiver type to `Network`, **IP address** to `localhost` and **Port number** to `30005`.
+* For more details, please refer to the [document](https://planefinder.net/sharing/client).
+
 ## running status
 
 ### web interface
@@ -177,29 +185,47 @@ Use `adsb-box.piaware-status` to check the stuats of **dump1090**, **piaware**, 
 
 If fr24feed is configured correctly, you can find the web here `http://your-device-ip:8754/`.
 
-# Backup, upgrade and restore
+# Upgrade, backup and restore
 
-Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To upgrade or backup your configurations, you can backup the whole directory, or just pick some of files.
+## Upgrade this snap
+Snapd will refresh snaps automatically by default. If you want to do it manually, use this command:
+```
+$ sudo snap refresh adsb-box
+```
+When upgrading, snapd will clone the files, including configuration files and logs, for the new revision. It's not necessary to perform *backup* or *restore* operations for upgrading.
+ 
+## Backup configuration files
+Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To backup your configurations, you can archive the whole directory, or just pick some of files.
 ```
 # dump1090
 $ sudo cp /var/snap/adsb-box/<rev>/dump1090-fa.conf $HOME
 # piaware
 $ sudo cp /var/snap/adsb-box/<rev>/piaware.conf $HOME
+# fr24feed
+$ sudo cp /var/snap/adsb-box/<rev>/fr24feed.ini $HOME
+# opensky feeder
+$ sudo cp -a /var/snap/adsb-box/<rev>/openskyd $HOME
+# plane finder
+$ sudo cp -a /var/snap/adsb-box/<rev>/pfclient/pfclient-config.json $HOME
 ```
 
-Snapd will refresh snaps automatically by default. If you want to do it manually, use this command:
-```
-$ sudo snap refresh adsb-box
-```
-
+## Restore configuration files
 To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
 ```
 # restore configuration files
 $ sudo cp $HOME/dump1090-fa.conf /var/snap/adsb-box/<rev>/
 $ sudo cp $HOME/piaware.conf /var/snap/adsb-box/<rev>/
+$ sudo cp $HOME/fr24feed.ini /var/snap/adsb-box/<rev>/
+$ sudo cp -a $HOME/openskyd /var/snap/adsb-box/<rev>/
+$ sudo mkdir /var/snap/adsb-box/<rev>/pfclient
+$ sudo cp $HOME/pfclient-config.json /var/snap/adsb-box/<rev>/pfclient/
+
 # restart services
-$ sudo systemctl restart snap.adsb-box.dump1090.service && sleep 5
-$ sudo systemctl restart snap.adsb-box.piaware.service
+$ sudo snap restart adsb-box.dump1090 && sleep 5
+$ sudo snap restart adsb-box.piaware
+$ sudo snap restart adsb-box.fr24feed
+$ sudo snap restart adsb-box.openskyd
+$ sudo snap restart adsb-box.pfclient
 ```
 
 # Remove
@@ -222,6 +248,6 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 # Future plans
 
 * Add a configuration item to contorl PiAware service.
-* Support other feeders. E.g. planfinder.
+* Support other feeders. It there any other public projects?!
 * Support other architectures. (x86/armhf/arm64) (on-going)
 * Include rtl-sdr tools.

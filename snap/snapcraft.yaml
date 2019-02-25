@@ -1,5 +1,5 @@
 name: adsb-box
-version: '1.0-dev'
+version: '1.0-dev2'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -35,6 +35,10 @@ apps:
     plugs: [network, network-bind, network-observe]
   openskyd:
     command: bin/openskyd
+    daemon: simple
+    plugs: [network, network-bind]
+  pfclient:
+    command: bin/pfclientd
     daemon: simple
     plugs: [network, network-bind]
   rtltest:
@@ -210,6 +214,28 @@ parts:
     override-build: |
       # build & install (extract to $SNAPCRAFT_PART_INSTALL)
       dpkg -x $SNAPCRAFT_PART_SRC/opensky-feeder.deb $SNAPCRAFT_PART_INSTALL
+
+  pfclient:
+    plugin: nil
+    build-packages:
+      - wget
+    override-pull: |
+      env | sort
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        x86_64-*|i386-*)
+          wget -O pfclient.deb http://client.planefinder.net/pfclient_4.1.1_i386.deb
+          ;;
+        arm-*|aarch64-*)
+          wget -O pfclient.deb http://client.planefinder.net/pfclient_4.1.1_armhf.deb
+          ;;
+        *)
+          echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"
+          exit 1
+          ;;
+      esac
+    override-build: |
+      # build & install (extract to $SNAPCRAFT_PART_INSTALL)
+      dpkg -x $SNAPCRAFT_PART_SRC/pfclient.deb $SNAPCRAFT_PART_INSTALL
 
   rtlsdr:
     plugin: nil

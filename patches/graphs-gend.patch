@@ -249,7 +249,7 @@ index 94a700c..10c377b 100755
    --width 429 \
    --height 200 \
 @@ -367,12 +393,13 @@ local_rate_graph() {
-   "AREA:y2strong#FF0000:Messages > -3dBFS / Hr (RHS)" \
+   "AREA:y2strong#FF0000:Messages > -3dBFS / 10min (RHS)" \
    "LINE1:y2positions#00c0FF:Positions / Hr (RHS)\c" \
    "COMMENT: \n" \
 -  --watermark "Drawn: $nowlit";
@@ -264,9 +264,9 @@ index 94a700c..10c377b 100755
    --start end-$4 \
    --width 959 \
    --height 200 \
-@@ -473,12 +500,13 @@ local_trailing_rate_graph() {
-   "LINE1:messages#0000FF" \
-   "AREA:y2strong#FF0000:Messages > -3dBFS/Hr (RHS)" \
+@@ -480,12 +507,13 @@ local_trailing_rate_graph() {
+   "AREA:y2strong#FF0000:Messages > -3dBFS/10min (RHS)\g" \
+   "GPRINT:strong_percent_vdef: (%1.1lf<span font='2'> </span>%% of messages)" \
    "LINE1:y2positions#00c0FF:Positions/Hr (RHS)\c" \
 -  --watermark "Drawn: $nowlit";
 +  --watermark "Drawn: $nowlit" && \
@@ -280,7 +280,7 @@ index 94a700c..10c377b 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -499,12 +527,13 @@ range_graph_imperial_nautical(){
+@@ -506,12 +534,13 @@ range_graph_imperial_nautical(){
    "LINE1:peakrange#FF0000:Peak Range\\:" \
    "GPRINT:peakrange:%1.1lf NM\c" \
    "COMMENT: \n" \
@@ -296,7 +296,7 @@ index 94a700c..10c377b 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -525,12 +554,13 @@ range_graph_imperial_statute(){
+@@ -532,12 +561,13 @@ range_graph_imperial_statute(){
    "LINE1:peakrange#FF0000:Peak Range\\:" \
    "GPRINT:peakrange:%1.1lf SM\c" \
    "COMMENT: \n" \
@@ -312,7 +312,7 @@ index 94a700c..10c377b 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -550,12 +580,13 @@ range_graph_metric() {
+@@ -557,12 +587,13 @@ range_graph_metric() {
    "LINE1:peakrange#FF0000:Peak Range\\:" \
    "GPRINT:peakrange:%1.1lf km\c" \
    "COMMENT: \n" \
@@ -328,7 +328,7 @@ index 94a700c..10c377b 100755
    --start end-$4 \
    --width 480 \
    --height 186 \
-@@ -582,14 +613,15 @@ signal_graph() {
+@@ -589,14 +620,15 @@ signal_graph() {
    "GPRINT:noise:AVERAGE:Avg\: %4.1lf\c" \
    "LINE1:0#000000:Zero dBFS" \
    "LINE1:-3#FF0000:-3 dBFS\c" \
@@ -346,7 +346,7 @@ index 94a700c..10c377b 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -604,44 +636,45 @@ remote_rate_graph() {
+@@ -611,44 +643,45 @@ remote_rate_graph() {
    "CDEF:y2positions=positions,10,*" \
    "LINE1:messages#0000FF:messages received" \
    "LINE1:y2positions#00c0FF:position / hr (RHS)" \

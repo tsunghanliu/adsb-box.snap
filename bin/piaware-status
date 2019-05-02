@@ -16,4 +16,4 @@ export TCL_LIBRARY="$TCL_LIBRARY"
 export TCLLIBPATH="$TCLLIBPATH"
 export ITCL_LIBRARY=$ITCL_LIBRARY
 
-$SNAP/usr/bin/piaware-status $@
+"$SNAP/usr/bin/piaware-status" "$@"

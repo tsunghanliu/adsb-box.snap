@@ -1,22 +1,23 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 #set -x
 
 BIN="$SNAP/usr/bin/dump1090-fa"
-ARGS=""
+ARGS=()
 CONF="$SNAP_DATA/dump1090-fa.conf"
 
 # migration for config file
 if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
-	cp $SNAP_DATA/dump1090-mutability.conf $CONF
+	cp "$SNAP_DATA/dump1090-mutability.conf" "$CONF"
 fi
 
-if [ ! -f $CONF ]; then
-	cp $SNAP/etc/dump1090-fa/config-template $CONF
+if [ ! -f "$CONF" ]; then
+	cp "$SNAP/etc/dump1090-fa/config-template" "$CONF"
 fi
 
 # Read configuration variable file if it is present
-[ -r $CONF ] && . $CONF
+# shellcheck source=/dev/null
+[ -r "$CONF" ] && . "$CONF"
 
 # overwrite $JSON_DIR defined in $CONF
 JSON_DIR="/tmp/dump1090-fa"
@@ -39,57 +40,61 @@ JSON_DIR="/tmp/dump1090-fa"
 
 # receiver:
 case "x$DEVICE" in
-	x|x0) ARGS="$ARGS --net" ;;
-	xnone) ARGS="$ARGS --net-only"; NICE_LEVEL="" ;;
-	*) ARGS="$ARGS --net --device-index $DEVICE" ;;
+	x|x0) ARGS+=("--net") ;;
+	xnone) ARGS+=("--net-only") ; NICE_LEVEL="" ;;
+	*) ARGS+=("--net" "--device-index" "$DEVICE") ;;
 esac
 case "x$GAIN" in
 	x|xmax) ;;
-	xagc) ARGS="$ARGS --gain -10" ;;  
-	*) ARGS="$ARGS --gain $GAIN" ;;
+	xagc) ARGS+=("--gain" "-10") ;;
+	*) ARGS+=("--gain" "$GAIN") ;;
 esac
-if [ -n "$PPM" ]; then ARGS="$ARGS --ppm $PPM"; fi
+if [ -n "$PPM" ]; then ARGS+=("--ppm" "$PPM"); fi
 
 # decoder:
-if [ "x$FIX_CRC" = "xyes" ]; then ARGS="$ARGS --fix"; fi
-if [ -n "$LAT" ]; then ARGS="$ARGS --lat $LAT"; fi
-if [ -n "$LON" ]; then ARGS="$ARGS --lon $LON"; fi
-ARGS="$ARGS --max-range $MAX_RANGE"
+if [ "x$FIX_CRC" = "xyes" ]; then ARGS+=("--fix"); fi
+if [ -n "$LAT" ]; then ARGS+=("--lat" "$LAT"); fi
+if [ -n "$LON" ]; then ARGS+=("--lon" "$LON"); fi
+ARGS+=("--max-range" "$MAX_RANGE")
 
 # net:
 
-ARGS="$ARGS \
---net-ri-port $RAW_INPUT_PORT --net-ro-port $RAW_OUTPUT_PORT \
---net-bi-port $BEAST_INPUT_PORT --net-bo-port $BEAST_OUTPUT_PORT \
---net-sbs-port $SBS_OUTPUT_PORT"
-if [ -n "$NET_HEARTBEAT" ]; then ARGS="$ARGS --net-heartbeat $NET_HEARTBEAT"; fi
-if [ -n "$NET_OUTPUT_SIZE" ]; then ARGS="$ARGS --net-ro-size $NET_OUTPUT_SIZE"; fi
-if [ -n "$NET_OUTPUT_INTERVAL" ]; then ARGS="$ARGS --net-ro-interval $NET_OUTPUT_INTERVAL"; fi
-if [ "$NET_BUFFER" -le "65536" ]; then ARGS="$ARGS --net-buffer 0"
-elif [ "$NET_BUFFER" -le "131072" ]; then ARGS="$ARGS --net-buffer 1"
-elif [ "$NET_BUFFER" -le "262144" ]; then ARGS="$ARGS --net-buffer 2"
-else ARGS="$ARGS --net-buffer 3"; fi
-if [ -n "$NET_BIND_ADDRESS" ]; then ARGS="$ARGS --net-bind-address $NET_BIND_ADDRESS"; fi
+ARGS+=(\
+"--net-ri-port" "$RAW_INPUT_PORT" "--net-ro-port" "$RAW_OUTPUT_PORT" \
+"--net-bi-port" "$BEAST_INPUT_PORT" "--net-bo-port" "$BEAST_OUTPUT_PORT" \
+"--net-sbs-port" "$SBS_OUTPUT_PORT")
+if [ -n "$NET_HEARTBEAT" ]; then ARGS+=("--net-heartbeat" "$NET_HEARTBEAT"); fi
+if [ -n "$NET_OUTPUT_SIZE" ]; then ARGS+=("--net-ro-size" "$NET_OUTPUT_SIZE"); fi
+if [ -n "$NET_OUTPUT_INTERVAL" ]; then ARGS+=("--net-ro-interval" "$NET_OUTPUT_INTERVAL"); fi
+if [ "$NET_BUFFER" -le "65536" ]; then ARGS+=("--net-buffer" "0")
+elif [ "$NET_BUFFER" -le "131072" ]; then ARGS+=("--net-buffer" "1")
+elif [ "$NET_BUFFER" -le "262144" ]; then ARGS+=("--net-buffer" "2")
+else ARGS+=("--net-buffer" "3"); fi
+if [ -n "$NET_BIND_ADDRESS" ]; then ARGS+=("--net-bind-address" "$NET_BIND_ADDRESS"); fi
 
 # misc:
-if [ -n "$STATS_INTERVAL" ]; then ARGS="$ARGS --stats-every $STATS_INTERVAL"; fi
-if [ -n "$JSON_DIR" ]; then ARGS="$ARGS --write-json $JSON_DIR"; fi
-if [ -n "$JSON_INTERVAL" ]; then ARGS="$ARGS --write-json-every $JSON_INTERVAL"; fi
+if [ -n "$STATS_INTERVAL" ]; then ARGS+=("--stats-every" "$STATS_INTERVAL"); fi
+if [ -n "$JSON_DIR" ]; then ARGS+=("--write-json" "$JSON_DIR"); fi
+if [ -n "$JSON_INTERVAL" ]; then ARGS+=("--write-json-every" "$JSON_INTERVAL"); fi
 case "x$JSON_LOCATION_ACCURACY" in
-	xexact) ARGS="$ARGS --json-location-accuracy 2" ;;
-	xapproximate) ARGS="$ARGS --json-location-accuracy 1" ;;
-	*) ARGS="$ARGS --json-location-accuracy 0" ;;
+	xexact) ARGS+=("--json-location-accuracy" "2") ;;
+	xapproximate) ARGS+=("--json-location-accuracy" "1") ;;
+	*) ARGS+=("--json-location-accuracy" "0") ;;
 esac
 
-if [ "x$LOG_DECODED_MESSAGES" != "xyes" ]; then ARGS="$ARGS --quiet"; fi
+if [ "x$LOG_DECODED_MESSAGES" != "xyes" ]; then ARGS+=("--quiet"); fi
 
-if [ -n "$EXTRA_ARGS" ]; then ARGS="$ARGS $EXTRA_ARGS"; fi
+if [ -n "$EXTRA_ARGS" ]; then
+	for a in $EXTRA_ARGS; do
+		ARGS+=("$a");
+	done
+fi
 
 mkdir -p $JSON_DIR
 
 if [ -n "$NICE_LEVEL" ]; then
-	nice -n $NICE_LEVEL $BIN $ARGS
+	nice -n $NICE_LEVEL "$BIN" "${ARGS[@]}"
 else
-	$BIN $ARGS
+	$BIN "${ARGS[@]}"
 fi
 

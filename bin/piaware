@@ -23,20 +23,23 @@ export TCL_LIBRARY="$TCL_LIBRARY"
 export TCLLIBPATH="$TCLLIBPATH"
 export ITCL_LIBRARY=$ITCL_LIBRARY
 
-if [ ! -f $CONFFILE ]; then
-	touch $CONFFILE
-	chmod 600 $CONFFILE
+if [ ! -d "$CACHEDIR" ]; then
+	mkdir -p "$CACHEDIR"
+fi
+if [ ! -f "$CONFFILE" ]; then
+	touch "$CONFFILE"
+	chmod 600 "$CONFFILE"
 fi
 
 # rotate logs
-if [ -f "$LOGFILE" ] && [ $(stat -c "%s" $LOGFILE) -gt 67108864 ]; then
-	gzip -c $LOGFILE > $LOGFILE.1.gz.tmp
-	mv $LOGFILE.1.gz.tmp $LOGFILE.1.gz
-	cat /dev/null > $LOGFILE
+if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
+	gzip -c "$LOGFILE" > "$LOGFILE.1.gz.tmp"
+	mv "$LOGFILE.1.gz.tmp" "$LOGFILE.1.gz"
+	cat /dev/null > "$LOGFILE"
 fi
 
-$SNAP/usr/bin/piaware \
-	-p $PIDFILE \
-	-cachedir $CACHEDIR \
-	-logfile $LOGFILE \
-	-statusfile $STATUSFILE
+"$SNAP/usr/bin/piaware" \
+	-p "$PIDFILE" \
+	-cachedir "$CACHEDIR" \
+	-logfile "$LOGFILE" \
+	-statusfile "$STATUSFILE"

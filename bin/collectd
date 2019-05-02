@@ -15,30 +15,31 @@ export PYTHONPATH=$SNAP/usr/lib/python2.7
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
-mkdir -p $BASEDIR $RRDDIR
+mkdir -p "$BASEDIR" "$RRDDIR"
 
-if [ -f $SNAP_COMMON/URL.conf ]; then
-	URL=`head -n 1 $SNAP_COMMON/URL.conf | tr -d '\n'`
+if [ -f "$SNAP_COMMON/URL.conf" ]; then
+	URL="$(head -n 1 "$SNAP_COMMON/URL.conf" | tr -d '\n')"
 else
 	URL="http://localhost:8080/dump1090"
 fi
 
 # always update the disk.conf
-if [ $(cat /etc/mtab | grep -c "\/dev\/loop0 \/ ") -eq 1 ]; then
+if [ "$(grep -c "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
 	# Ubuntu Core
-	BOOTDEV=$(cat /etc/mtab | sed -n 's/\ \/writable .*//p' | cut -c 6-)
+	BOOTDEV="$(sed -n 's/\ \/writable .*//p' < /etc/mtab | cut -c 6-)"
 	MOUNTPOINT="/writable"
 else
 	# Ubuntu Classic
-	BOOTDEV=$(cat /etc/mtab | sed -n 's/\ \/ .*//p' | cut -c 6-)
+	BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
 	MOUNTPOINT="/"
 fi
-DISK=$(echo $BOOTDEV | \
+# shellcheck disable=SC2001
+DISK=$(echo "$BOOTDEV" | \
 		sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
 echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
-echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > $DISKFILE
+echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > "$DISKFILE"
 
-cat << EOF >$CONF
+cat << EOF > "$CONF"
 # Config file for collectd(1).
 ##############################################################################
 # Global                                                                     #
@@ -165,13 +166,13 @@ LoadPlugin disk
 </Chain>
 EOF
 
-chmod 0600 $CONF
+chmod 0600 "$CONF"
 
 # rotate logs
-if [ -f "$LOGFILE" ] && [ $(stat -c "%s" $LOGFILE) -gt 67108864 ]; then
-	gzip -c $LOGFILE > $LOGFILE.1.gz.tmp
-	mv $LOGFILE.1.gz.tmp $LOGFILE.1.gz
-	cat /dev/null > $LOGFILE
+if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
+	gzip -c "$LOGFILE" > "$LOGFILE.1.gz.tmp"
+	mv "$LOGFILE.1.gz.tmp" "$LOGFILE.1.gz"
+	cat /dev/null > "$LOGFILE"
 fi
 
-$BIN -f -C $CONF -P $SNAP_DATA/collectd.pid $@
+$BIN -f -C "$CONF" -P "$SNAP_DATA/collectd.pid" "$@"

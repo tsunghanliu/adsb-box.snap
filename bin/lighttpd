@@ -1,6 +1,7 @@
 #! /bin/sh
 
-CONF=$SNAP_DATA/lighttpd.conf
+WORKDIR=$SNAP_DATA/lighttpd
+CONF=$WORKDIR/lighttpd.conf
 BIN=$SNAP/usr/sbin/lighttpd
 PORT=8080
 
@@ -17,16 +18,18 @@ LANG=C.UTF-8
 #        grep port:|sed "s:.*port\: ::")
 #fi
 
-ACCESS_LOG="$SNAP_DATA/lighttpd/access.log"
-ERROR_LOG="$SNAP_DATA/lighttpd/error.log"
+ACCESS_LOG="$WORKDIR/access.log"
+ERROR_LOG="$WORKDIR/error.log"
 
-cat << EOF >$CONF
+[ ! -d "$WORKDIR" ] || mkdir -p "$WORKDIR"
+
+cat << EOF > "$CONF"
 server.modules = (
     "mod_access",
     "mod_accesslog",
     "mod_alias",
     "mod_compress",
-    "mod_dirlisting",
+    #"mod_dirlisting",
     "mod_setenv",
     "mod_redirect",
 )
@@ -90,16 +93,16 @@ accesslog.filename          = "$ACCESS_LOG"
 }
 
 EOF
-chmod 0600 $CONF
+chmod 0600 "$CONF"
 
 [ -e "$COMPRESS_DIR" ] || mkdir -p "$COMPRESS_DIR"
 
 # rotate logs
 for logfile in $ACCESS_LOG $ERROR_LOG; do
-	if [ -f "$logfile" ] && [ $(stat -c "%s" $logfile) -gt 67108864 ]; then
-		gzip -c $logfile > $logfile.1.gz
-		cat /dev/null > $logfile
+	if [ -f "$logfile" ] && [ "$(stat -c "%s" "$logfile")" -gt 67108864 ]; then
+		gzip -c "$logfile" > "$logfile.1.gz"
+		cat /dev/null > "$logfile"
 	fi
 done
 
-$BIN -D -f $CONF -m $SNAP/usr/lib/lighttpd
+$BIN -D -f "$CONF" -m "$SNAP/usr/lib/lighttpd"

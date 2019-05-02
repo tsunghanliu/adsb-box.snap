@@ -8,9 +8,9 @@ if [ ! -f /etc/fr24feed.ini ]; then
 	touch /etc/fr24feed.ini
 fi
 
-if [ $(grep -c fr24key= /etc/fr24feed.ini) -ne 1 ]; then
+if [ "$(grep -c fr24key= /etc/fr24feed.ini)" -ne 1 ]; then
 	echo fr24feed is not configured yet ...
 	exit
 fi
 
-$SNAP/usr/bin/fr24feed
+"$SNAP/usr/bin/fr24feed"

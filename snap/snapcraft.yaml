@@ -120,7 +120,7 @@ parts:
     plugin: make
     source: https://github.com/flightaware/piaware.git
     source-type: git
-    source-branch: v3.6.3
+    source-branch: v3.7.0.1
     override-build: |
       echo 'patching piaware ...'
       patch -p1 < ../../../patches/piaware.patch

@@ -2,7 +2,7 @@ diff --git a/package/fa_piaware_config.tcl b/package/fa_piaware_config.tcl
 index fa0828d..31bc6f7 100644
 --- a/package/fa_piaware_config.tcl
 +++ b/package/fa_piaware_config.tcl
-@@ -418,7 +418,7 @@ namespace eval ::fa_piaware_config {
+@@ -514,7 +514,7 @@ namespace eval ::fa_piaware_config {
  				set f [open $temppath "w" [expr {$fpstat(mode) & 0777}]]
  
  				# fix the ownership to match the old file
@@ -11,53 +11,22 @@ index fa0828d..31bc6f7 100644
  			}
  
  			# write the new data
-@@ -936,22 +936,22 @@ namespace eval ::fa_piaware_config {
- 	#
- 	#  priority 100+:     any extra config file given as an argument (readonly)
- 	#  priority 100+:     any config files found in /media/usb/*/piaware-config.txt, ordered arbitrarily (readonly)
--	#  priority 50:       /boot/piaware-config.txt (readwrite)
--	#  priority 40:       /etc/piaware.conf (readwrite)
--	#  priority 30:       /usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
-+	#  priority 50:       $SNAP_DATA/piaware.conf (readwrite)
-+	#  priority 40:       $SNAP/etc/piaware.conf (readonly)
-+	#  priority 30:       $SNAP/usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
- 	#
--	# which means that in general changes will be written to /etc/piaware.conf where possible, or
--	# /boot/piaware-config.txt if the setting was set there.
-+	# which means that in general changes will be written to $SNAP_DATA/piaware.conf where possible
- 	#
- 	# Provide a itcl name pattern (e.g. #auto) as "name"
- 	proc piaware_combined_config {name {extraConfigFile ""}} {
- 		set metadata [piaware_standard_settings #auto]
- 		set combined [uplevel 1 ::fa_piaware_config::new ::fa_piaware_config::ConfigGroup $name -metadata $metadata]
- 
--		$combined add [new ConfigFile #auto -filename "/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
--		$combined add [new ConfigFile #auto -filename "/etc/piaware.conf" -metadata $metadata -priority 40 -writeHelper $::fa_piaware_config::helperPath]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/etc/piaware.conf" -metadata $metadata -priority 40 -readonly 1]
- 
- 		$combined add [new ConfigFile #auto -filename "/boot/piaware-config.txt" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware.conf" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
- 
- 		set prio 100
- 		foreach f [lsort [glob -nocomplain -types f "/media/usb/*/piaware-config.txt"]] {
 diff --git a/programs/piaware/faup1090.tcl b/programs/piaware/faup1090.tcl
-index dc979a4..04777a3 100644
+index 803404d..fc01909 100644
 --- a/programs/piaware/faup1090.tcl
 +++ b/programs/piaware/faup1090.tcl
-@@ -33,7 +33,11 @@ proc setup_faup1090_vars {} {
- 	set ::adsbDataProgram [receiver_description piawareConfig]
+@@ -63,6 +63,11 @@ proc connect_adsb_via_faup1090 {} {
+ 	}
  
  	# path to faup1090
--	set path "/usr/lib/piaware/helpers/faup1090"
 +	if {[info exists ::env(SNAP)]} {
 +		set path "$::env(SNAP)/usr/lib/piaware/helpers/faup1090"
 +	} else {
 +		set path "/usr/lib/piaware/helpers/faup1090"
 +	}
- 	if {[set ::faup1090Path [auto_execok $path]] eq ""} {
- 		logger "No faup1090 found at $path, cannot continue"
- 		exit 1
+ 	set path [auto_execok "/usr/lib/piaware/helpers/faup1090"]
+ 	if {$path eq ""} {
+ 		logger "No faup1090 found at $path, 1090ES support disabled"
 diff --git a/programs/piaware/mlat.tcl b/programs/piaware/mlat.tcl
 index c511c60..eadd04c 100644
 --- a/programs/piaware/mlat.tcl

@@ -41,5 +41,5 @@ fi
 "$SNAP/usr/bin/piaware" \
 	-p "$PIDFILE" \
 	-cachedir "$CACHEDIR" \
-	-logfile "$LOGFILE" \
+	-planlog \
 	-statusfile "$STATUSFILE"

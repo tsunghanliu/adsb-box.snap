@@ -31,7 +31,7 @@ apps:
     daemon: simple
     plugs: [network, network-bind, network-observe]
   fr24feedcli:
-    command: bin/fr24feed
+    command: bin/fr24feedcli
     plugs: [network, network-bind, network-observe]
   openskyd:
     command: bin/openskyd
@@ -273,6 +273,10 @@ passthrough:
   layout:
     /etc/fr24feed.ini:
       bind-file: $SNAP_DATA/fr24feed.ini
+    /etc/piaware.conf:
+      bind-file: $SNAP_DATA/piaware.conf
+    /etc/piaware.conf.new:
+      bind-file: $SNAP_DATA/piaware.conf.new
     /var/lib/openskyd:
       bind: $SNAP_DATA/openskyd
 

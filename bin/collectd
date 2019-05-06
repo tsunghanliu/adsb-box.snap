@@ -24,7 +24,7 @@ else
 fi
 
 # always update the disk.conf
-if [ "$(grep -c "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
+if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
 	# Ubuntu Core
 	BOOTDEV="$(sed -n 's/\ \/writable .*//p' < /etc/mtab | cut -c 6-)"
 	MOUNTPOINT="/writable"

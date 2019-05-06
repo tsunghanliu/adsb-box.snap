@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 set -x
 
@@ -16,4 +16,16 @@ if [ ! -f "$CONFIGFILE" ]; then
 	cp "$SNAP/etc/pfclient-config.json" "$CONFIGFILE"
 fi
 
-$BIN -i "$PIDFILE" -z "$CONFIGFILE" -y "$LOGDIR"
+ARGS=("-i" "$PIDFILE" "-z" "$CONFIGFILE")
+
+ENABLE_LOG=$(snapctl get plane-finder.enable-log)
+case "$ENABLE_LOG" in
+	1|on|ON|true|TRUE)
+		ARGS+=("-y" "$LOGDIR")
+		;;
+	*)
+		# disable log
+		;;
+esac
+
+$BIN "${ARGS[@]}"

@@ -24,9 +24,12 @@ else
 fi
 
 # always update the disk.conf
+## FIXME: what is the best way to determine
+##  1. core or classic
+##  2. main storage
 if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
 	# Ubuntu Core
-	BOOTDEV="$(sed -n 's/\ \/writable .*//p' < /etc/mtab | cut -c 6-)"
+	BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
 	MOUNTPOINT="/writable"
 else
 	# Ubuntu Classic

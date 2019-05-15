@@ -12,7 +12,7 @@ apps:
   dump1090:
     command: bin/dump1090
     daemon: simple
-    plugs: [network, network-bind, raw-usb, process-control]
+    plugs: [network, network-bind, raw-usb, process-control, hardware-observe]
   lighttpd:
     command: bin/lighttpd
     daemon: simple
@@ -43,7 +43,7 @@ apps:
     plugs: [network, network-bind]
   rtltest:
     command: usr/bin/rtl_test
-    plugs: [network, network-bind, raw-usb]
+    plugs: [network, network-bind, raw-usb, hardware-observe]
   collectd:
     command: bin/collectd
     daemon: simple

@@ -25,6 +25,14 @@ case "$ENABLE_LOG" in
 		;;
 	*)
 		# disable log
+		LOGDIR=/tmp/pfclient
+		if [ -d "$LOGDIR" ]; then
+			rm -f "$LOGDIR"/pfclient-log_*.log
+		else
+			mkdir -p "$LOGDIR"
+		fi
+		## FIXME: put logs to tmpfs might cause out-of-memory issue
+		ARGS+=("-y" "/tmp/pfclient")
 		;;
 esac
 

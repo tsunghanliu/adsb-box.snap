@@ -22,6 +22,10 @@ fi
 # overwrite $JSON_DIR defined in $CONF
 JSON_DIR="/tmp/dump1090-fa"
 
+# get location from snap settings
+[ -z "$LAT" ] && LAT="$(snapctl get receiver.latitude)"
+[ -z "$LON" ] && LON="$(snapctl get receiver.longitude)"
+
 # work out daemon args
 
 # sanitize missing settings

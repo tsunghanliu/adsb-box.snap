@@ -1,7 +1,9 @@
 #! /bin/bash
 
-CONF=$SNAP_DATA/collectd.conf
-LOGFILE=$SNAP_DATA/collectd.log
+WORKDIR=$SNAP_DATA/collectd
+CONF=$WORKDIR/collectd.conf
+LOGFILE=$WORKDIR/collectd.log
+PIDFILE=$WORKDIR/collectd.pid
 BIN=$SNAP/usr/sbin/collectd
 BASEDIR=$SNAP_COMMON/collectd
 RRDDIR=$BASEDIR/rrd
@@ -15,7 +17,12 @@ export PYTHONPATH=$SNAP/usr/lib/python2.7
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
-mkdir -p "$BASEDIR" "$RRDDIR"
+mkdir -p "$BASEDIR" "$RRDDIR" "$WORKDIR"
+
+# Migration
+[ -f "$SNAP_DATA/collectd.conf" ] && rm "$SNAP_DATA/collectd.conf"
+[ -f "$SNAP_DATA/collectd.log" ] && mv "$SNAP_DATA/collectd.log" "$LOGFILE"
+[ -f "$SNAP_DATA/collectd.pid" ] && rm "$SNAP_DATA/collectd.pid"
 
 if [ -f "$SNAP_COMMON/URL.conf" ]; then
 	URL="$(head -n 1 "$SNAP_COMMON/URL.conf" | tr -d '\n')"
@@ -30,7 +37,13 @@ fi
 if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
 	# Ubuntu Core
 	BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
-	MOUNTPOINT="/writable"
+	if [ "$(df | grep -c " \/writable")" -eq 1 ]; then
+		# UC16
+		MOUNTPOINT="/writable"
+	else
+		# UC18
+		MOUNTPOINT="/var/lib/snapd/hostfs/writable"
+	fi
 else
 	# Ubuntu Classic
 	BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
@@ -49,7 +62,7 @@ cat << EOF > "$CONF"
 ##############################################################################
 Hostname "localhost"
 BaseDir "$BASEDIR"
-PIDFile "$SNAP_DATA/collectd.pid"
+PIDFile "$PIDFILE"
 PluginDir "$SNAP/usr/lib/collectd"
 #----------------------------------------------------------------------------#
 # Added types for dump1090.                                                  #
@@ -178,4 +191,4 @@ if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 	cat /dev/null > "$LOGFILE"
 fi
 
-$BIN -f -C "$CONF" -P "$SNAP_DATA/collectd.pid" "$@"
+$BIN -f -C "$CONF" -P "$PIDFILE"

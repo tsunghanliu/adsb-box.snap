@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 set -x
 
@@ -38,8 +38,19 @@ if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 	cat /dev/null > "$LOGFILE"
 fi
 
-"$SNAP/usr/bin/piaware" \
-	-p "$PIDFILE" \
-	-cachedir "$CACHEDIR" \
-	-planlog \
-	-statusfile "$STATUSFILE"
+ARGS=("-p" "$PIDFILE"
+		"-cachedir" "$CACHEDIR"
+		"-statusfile" "$STATUSFILE")
+
+ENABLE_LOG=$(snapctl get piaware.enable-log)
+case "$ENABLE_LOG" in
+	1|on|ON|true|TRUE)
+		ARGS+=("-logfile" "$LOGFILE")
+		;;
+	*)
+		# use plainlog (stderr) instead of logfile
+		ARGS+=("-plainlog")
+		;;
+esac
+
+"$SNAP/usr/bin/piaware" "${ARGS[@]}"

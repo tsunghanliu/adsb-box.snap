@@ -69,7 +69,8 @@ parts:
     make-parameters: ['BLADERF=no', 'dump1090', 'faup1090']
     source: https://github.com/flightaware/dump1090.git
     source-type: git
-    source-branch: v3.6.3
+    # the branch should be the same with piaware
+    source-branch: v3.7.1
     override-build: |
       echo 'patching dump1090 ...'
       patch -p1 < ../../../patches/dump1090.patch
@@ -120,7 +121,8 @@ parts:
     plugin: make
     source: https://github.com/flightaware/piaware.git
     source-type: git
-    source-branch: v3.7.0.1
+    # the branch should be the same with dump1090-fa
+    source-branch: v3.7.1
     override-build: |
       echo 'patching piaware ...'
       patch -p1 < ../../../patches/piaware.patch
@@ -273,10 +275,6 @@ passthrough:
   layout:
     /etc/fr24feed.ini:
       bind-file: $SNAP_DATA/fr24feed.ini
-    /etc/piaware.conf:
-      bind-file: $SNAP_DATA/piaware.conf
-    /etc/piaware.conf.new:
-      bind-file: $SNAP_DATA/piaware.conf.new
     /var/lib/openskyd:
       bind: $SNAP_DATA/openskyd
 

@@ -23,6 +23,10 @@ ERROR_LOG="$WORKDIR/error.log"
 
 [ ! -d "$WORKDIR" ] || mkdir -p "$WORKDIR"
 
+# Migration
+[ -f "$SNAP_DATA/lighttpd.conf" ] && rm "$SNAP_DATA/lighttpd.conf"
+[ -f "$SNAP_DATA/lighttpd.pid" ] && rm "$SNAP_DATA/lighttpd.pid"
+
 cat << EOF > "$CONF"
 server.modules = (
     "mod_access",
@@ -38,7 +42,7 @@ server.modules = (
 server.document-root        = "$SNAP/var/www"
 #server.upload-dirs          = ( "$SNAP_DATA/lighttpd/uploads" )
 server.errorlog             = "$ERROR_LOG"
-server.pid-file             = "$SNAP_DATA/lighttpd.pid"
+server.pid-file             = "$WORKDIR/lighttpd.pid"
 server.port                 = $PORT
 
 index-file.names            = ( "index.html", "gmap.html" )
@@ -93,6 +97,22 @@ accesslog.filename          = "$ACCESS_LOG"
 }
 
 EOF
+
+ENABLE_LOG=$(snapctl get lighttpd.enable-localhost-log)
+case "$ENABLE_LOG" in
+	1|on|ON|true|TRUE)
+		# no restrictions of access logs
+		;;
+	*)
+		cat << EOF >> "$CONF"
+\$HTTP["host"] == "localhost" {
+    accesslog.filename = "/dev/null"
+}
+
+EOF
+		;;
+esac
+
 chmod 0600 "$CONF"
 
 [ -e "$COMPRESS_DIR" ] || mkdir -p "$COMPRESS_DIR"

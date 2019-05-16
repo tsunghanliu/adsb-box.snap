@@ -82,9 +82,11 @@ $ sudo snap connect adsb-box:raw-usb
 $ sudo snap connect adsb-box:process-control
 $ sudo snap connect adsb-box:system-observe
 $ sudo snap connect adsb-box:network-observe
+$ sudo snap connect adsb-box:hardware-observe
+$ sudo snap connect adsb-box:mount-observe
 $ sudo snap restart adsb-box.dump1090
 $ sudo snap restart adsb-box.piaware
-$ sudo snap restart adsb-box.mount-observe
+$ sudo snap restart adsb-box.collectd
 ```
 
 ## optional configuration
@@ -117,6 +119,8 @@ $ sudo adsb-box.piaware-config -showall
 $ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password <PASSWORD>
 $ sudo snap restart adsb-box.piaware
 ```
+
+The log of PiAware is disabled by default. Please use `snap set adsb-box piaware.enable-log=1` to enable it and use 0 instead of 1 to disable.
 
 ### FR24Feed
 
@@ -163,12 +167,18 @@ Username and serial of openskyd-feeder are optional. If you don't set them, you 
 $ sudo snap set adsb-box opensky-network.username=[USERNAME] opensky-network.serial=[SERIAL]
 ```
 
+Restart openskyd-feeder to apply the configurations
+```
+$ sudo snap restart adsb-box.openskyd
+```
+
 ### Plane Finder
 
 Due to the limitation of the configuration mechanism, users have to configure the Plane Finder client through its web interface.
 * After installation, open this URL: `http://your-device-ip:30035/` and follow the instructions to fill in fields.
 * Remember to set **Receiver data format** to `Beast`, receiver type to `Network`, **IP address** to `localhost` and **Port number** to `30005`.
 * For more details, please refer to the [document](https://planefinder.net/sharing/client).
+The logs are by default disabled. Use `sudo snap set adsb-box plane-finder.enable-log=1` to enable and change 1 to 0 to disable it.
 
 ## running status
 
@@ -180,10 +190,19 @@ There are two main pages: one is provided by dump1090 and another is for statist
 ### service status
 
 Use `adsb-box.piaware-status` to check the stuats of **dump1090**, **piaware**, **faup1090**, and **fa-mlat-client**. Due to the security limitations, the output result is not totally correct.
+Use `snap services adsb-box` to check the overview of adsb-box services.
 
 ### fr24feed status
 
 If fr24feed is configured correctly, you can find the web here `http://your-device-ip:8754/`.
+
+### pfclient status
+
+Check the pfclient built-in web at `http://your-device-ip:30053/`.
+
+## rtl-sdr tools.
+Use ` $ sudo adsb-box.rtltest` to run the rtl_test utility.
+You can use it to do PPM error measurement (`-p`) or other tests. Use `-h` to show the help messages.
 
 # Upgrade, backup and restore
 
@@ -200,13 +219,15 @@ Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To b
 # dump1090
 $ sudo cp /var/snap/adsb-box/<rev>/dump1090-fa.conf $HOME
 # piaware
-$ sudo cp /var/snap/adsb-box/<rev>/piaware.conf $HOME
+$ sudo cp -a /var/snap/adsb-box/<rev>/piaware $HOME
 # fr24feed
 $ sudo cp /var/snap/adsb-box/<rev>/fr24feed.ini $HOME
 # opensky feeder
 $ sudo cp -a /var/snap/adsb-box/<rev>/openskyd $HOME
 # plane finder
 $ sudo cp -a /var/snap/adsb-box/<rev>/pfclient/pfclient-config.json $HOME
+# collectd
+$ sudo cp -a /var/snap/adsb-box/common/collectd $HOME
 ```
 
 ## Restore configuration files
@@ -214,11 +235,12 @@ To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
 ```
 # restore configuration files
 $ sudo cp $HOME/dump1090-fa.conf /var/snap/adsb-box/<rev>/
-$ sudo cp $HOME/piaware.conf /var/snap/adsb-box/<rev>/
+$ sudo cp -a $HOME/piaware /var/snap/adsb-box/<rev>/
 $ sudo cp $HOME/fr24feed.ini /var/snap/adsb-box/<rev>/
 $ sudo cp -a $HOME/openskyd /var/snap/adsb-box/<rev>/
 $ sudo mkdir /var/snap/adsb-box/<rev>/pfclient
 $ sudo cp $HOME/pfclient-config.json /var/snap/adsb-box/<rev>/pfclient/
+$ sudo cp -a $HOME/collectd /var/snap/adsb-box/common/
 
 # restart services
 $ sudo snap restart adsb-box.dump1090 && sleep 5
@@ -248,6 +270,7 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 # Future plans
 
 * Add a configuration item to contorl PiAware service.
-* Support other feeders. It there any other public projects?!
-* Support other architectures. (x86/armhf/arm64) (on-going)
-* Include rtl-sdr tools.
+* Support other feeders. Is there any other public projects?!
+    * [ADS-B exchange](https://www.adsbexchange.com/)
+* Support other architectures. (x86/armhf/arm64)
+    adsb-box is available for x86/armhf/arm64, but it hasn't been fully verified.

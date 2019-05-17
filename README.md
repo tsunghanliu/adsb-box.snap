@@ -62,8 +62,10 @@ Each snap has a revision (`<rev>`). A snap installed from the store always has a
 ### Use the store
 
 ```
-$ sudo snap install --beta adsb-box
+$ sudo snap install adsb-box
 ```
+
+If you want to try the latest/development version, you can add `--edge` to the above command.
 
 ### Use local snap
 
@@ -84,21 +86,38 @@ $ sudo snap connect adsb-box:system-observe
 $ sudo snap connect adsb-box:network-observe
 $ sudo snap connect adsb-box:hardware-observe
 $ sudo snap connect adsb-box:mount-observe
-$ sudo snap restart adsb-box.dump1090
-$ sudo snap restart adsb-box.piaware
-$ sudo snap restart adsb-box.collectd
+$ sudo snap restart adsb-box
 ```
 
 ## optional configuration
+
+### snap settings
+
+There are some global settings which shared by several feeders. For now, it's the location of the receiver. Replace [LATITUDE], [LONGITUDE] and [ALTITUDE] with the real values.
+
+Note: unit of altitude is meter.
+```
+$ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
+```
+
+### logging
+
+By default, the log files are disabled or placed in tmpfs to reduce the writing of storage. Use the following commands to turn them on.
+
+```
+# lighttpd access log: local traffic
+$ snap set adsb-box lighttpd.enable-localhost-log=1
+# plane-finder
+$ snap set adsb-box plane-finder.enable-log=1
+# piaware
+$ snap set adsb-box piaware.enable-log=1
+```
+Use 0 instead of 1 to disable logging again.
 
 ### dump1090
 
 The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-fa.conf`.
 Change the items upon the requirements.
-
-To feed your data to FlightAware, set `BEAST_OUTPUT_PORT=30005`
-
-To enable show MLAT results, set `BEAST_INPUT_PORT=30104` and your location (*LAT*/*LON*)
 
 ### terrain-limit rings
 
@@ -109,8 +128,6 @@ Read `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`, and place the 
 It's not allow to change the configuration of lighttpd currently.
 
 ### PiAware
-
-See section **dump1090** to have a right configuration.
 
 Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware README](https://github.com/flightaware/piaware/blob/master/README.md) for the command usages.
 
@@ -157,11 +174,6 @@ $ sudo snap restart adsb-box.fr24feed
 
 ### OpenSky Network
 
-Before openskyd-feeder can run correctly, you need to set at least the GPS location of the receiver. Replace [LATITUDE], [LONGITUDE] and [ALTITUDE] with the real values
-```
-$ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
-```
-
 Username and serial of openskyd-feeder are optional. If you don't set them, you can change them later.
 ```
 $ sudo snap set adsb-box opensky-network.username=[USERNAME] opensky-network.serial=[SERIAL]
@@ -179,6 +191,22 @@ Due to the limitation of the configuration mechanism, users have to configure th
 * Remember to set **Receiver data format** to `Beast`, receiver type to `Network`, **IP address** to `localhost` and **Port number** to `30005`.
 * For more details, please refer to the [document](https://planefinder.net/sharing/client).
 The logs are by default disabled. Use `sudo snap set adsb-box plane-finder.enable-log=1` to enable and change 1 to 0 to disable it.
+
+### ADSB Exchange
+
+For BEAST/AVR/AVRMLAT, you have a costomized port, use the commands to set.
+
+```
+$ snap set adsb-box adsbexchange.receiverport=[PORTNUM]
+$ snap restart adsb-box.adsbexchange-netcat
+```
+
+For MLAT, you need to set the location (see the **snap settings** section) and feeder name.
+
+```
+$ snap set adsb-box adsbexchange.username=[FEEDER]
+$ snap restart adsb-box.adsbexchange-mlat
+```
 
 ## running status
 
@@ -216,6 +244,8 @@ When upgrading, snapd will clone the files, including configuration files and lo
 ## Backup configuration files
 Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To backup your configurations, you can archive the whole directory, or just pick some of files.
 ```
+# snap settings
+$ snap get -d adsb-box $HOME/snap-set.json
 # dump1090
 $ sudo cp /var/snap/adsb-box/<rev>/dump1090-fa.conf $HOME
 # piaware
@@ -233,6 +263,9 @@ $ sudo cp -a /var/snap/adsb-box/common/collectd $HOME
 ## Restore configuration files
 To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
 ```
+# snap settings. sorry, there's no easy way to restore them.
+$ cat $HOME/snap-set.json
+### use "$ snap set adsb-box KEY=value" to restore your settings then
 # restore configuration files
 $ sudo cp $HOME/dump1090-fa.conf /var/snap/adsb-box/<rev>/
 $ sudo cp -a $HOME/piaware /var/snap/adsb-box/<rev>/
@@ -243,11 +276,7 @@ $ sudo cp $HOME/pfclient-config.json /var/snap/adsb-box/<rev>/pfclient/
 $ sudo cp -a $HOME/collectd /var/snap/adsb-box/common/
 
 # restart services
-$ sudo snap restart adsb-box.dump1090 && sleep 5
-$ sudo snap restart adsb-box.piaware
-$ sudo snap restart adsb-box.fr24feed
-$ sudo snap restart adsb-box.openskyd
-$ sudo snap restart adsb-box.pfclient
+$ sudo snap restart adsb-box
 ```
 
 # Remove
@@ -271,6 +300,6 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 
 * Add a configuration item to contorl PiAware service.
 * Support other feeders. Is there any other public projects?!
-    * [ADS-B exchange](https://www.adsbexchange.com/)
+    * [RadarBox24](https://www.radarbox24.com/)
 * Support other architectures. (x86/armhf/arm64)
-    adsb-box is available for x86/armhf/arm64, but it hasn't been fully verified.
+    adsb-box is available for x86/armhf/arm64 as well, but it hasn't been fully verified.

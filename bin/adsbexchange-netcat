@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+set -x
+
+# re-use the mlat-client of piaware
+BIN="$SNAP/usr/bin/socat"
+
+RECEIVERPORT="$(snapctl get adsbexchange.receiverport)"
+
+[ -z "$RECEIVERPORT" ] && RECEIVERPORT=30005
+
+while true; do
+	sleep 30
+	if ping -q -c 1 -W 1 feed.adsbexchange.com >/dev/null 2>&1; then
+		$BIN -u TCP:localhost:30005 TCP:feed.adsbexchange.com:$RECEIVERPORT
+	fi
+done

@@ -1,5 +1,5 @@
 name: adsb-box
-version: '1.1'
+version: '1.2'
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -52,6 +52,14 @@ apps:
     command: bin/graphs-gend
     daemon: simple
     plugs: [process-control]
+  adsbexchange-netcat:
+    command: bin/adsbexchange-netcat
+    daemon: simple
+    plugs: [network, network-bind, network-observe]
+  adsbexchange-mlat:
+    command: bin/adsbexchange-mlat
+    daemon: simple
+    plugs: [network, network-bind, network-observe]
 
 parts:
   common:
@@ -63,6 +71,7 @@ parts:
       - bin
       - etc
       - var
+      - README.md
 
   dump1090:
     plugin: make
@@ -270,6 +279,11 @@ parts:
       cp -a build/portal/graphs $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
     stage:
       - -etc/fonts/fonts.conf
+
+  adsb-exchange:
+    plugin: nil
+    stage-packages:
+      - socat
 
 passthrough:
   layout:

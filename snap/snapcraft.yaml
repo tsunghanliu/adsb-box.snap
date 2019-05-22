@@ -73,6 +73,16 @@ parts:
       - var
       - README.md
 
+  customized-ppa:
+    plugin: nil
+    build-packages:
+      - software-properties-common
+    override-pull: |
+      sudo add-apt-repository \
+        --yes \
+        ppa:robertliu/packages-for-ubuntu-core
+      sudo apt update
+
   dump1090:
     plugin: make
     make-parameters: ['BLADERF=no', 'dump1090', 'faup1090']
@@ -255,6 +265,7 @@ parts:
 
   collectd:
     plugin: nil
+    after: [customized-ppa]
     stage-packages:
       - collectd
       - python2.7

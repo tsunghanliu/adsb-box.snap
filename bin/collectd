@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -x
+
 WORKDIR=$SNAP_DATA/collectd
 CONF=$WORKDIR/collectd.conf
 LOGFILE=$WORKDIR/collectd.log
@@ -29,6 +31,15 @@ if [ -f "$SNAP_COMMON/URL.conf" ]; then
 else
 	URL="http://localhost:8080/dump1090"
 fi
+
+RRD_WRITES_PER_SECOND=$(snapctl get collectd.rrd-writes-per-seoncd)
+RRD_WRITES_PER_SECOND=${RRD_WRITES_PER_SECOND:-50}
+RRD_CACHE_TIMEOUT=$(snapctl get collectd.rrd-cache-timeout)
+RRD_CACHE_TIMEOUT=${RRD_CACHE_TIMEOUT:-300}
+RRD_CACHE_FLUSH=$(snapctl get collectd.rrd-cache-flush)
+RRD_CACHE_FLUSH=${RRD_CACHE_FLUSH:-$((RRD_CACHE_TIMEOUT*10))}
+RRD_RANDOM_TIMEOUT=$(snapctl get collectd.rrd-random-timeout)
+RRD_RANDOM_TIMEOUT=${RRD_RANDOM_TIMEOUT:-0}
 
 # always update the disk.conf
 ## FIXME: what is the best way to determine
@@ -114,6 +125,10 @@ LoadPlugin disk
 ##############################################################################
 <Plugin rrdtool>
 	DataDir "$RRDDIR"
+	CacheFlush $RRD_CACHE_FLUSH
+	CacheTimeout $RRD_CACHE_TIMEOUT
+	WritesPerSecond $RRD_WRITES_PER_SECOND
+	RandomTimeout $RRD_RANDOM_TIMEOUT
 </Plugin>
 #----------------------------------------------------------------------------#
 # Configure the dump1090 python module.                                      #

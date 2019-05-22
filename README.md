@@ -20,7 +20,7 @@ This is a snap to establish a ADS-B receiver box.
 
 To build the snap, you have to use *snapcraft*. Read the official [document](http://snapcraft.io/docs/build-snaps/) for the details. This command will produce a file named `adsb-box_<ver>_<arch>.snap`. `<ver>` means the version number and `<arch>` stands for the architecture of target machines.
 
-```
+``` sh
 $ snapcraft snap
 ```
 
@@ -40,7 +40,7 @@ Please read the official [document](https://developer.ubuntu.com/core/get-starte
 
 The drivers have to be blacklisted, or the librtlsdr won't access the dongle.
 
-```
+``` sh
 $ cat << EOF | sudo tee /etc/modprobe.d/blacklist-rtl-sdr.conf
 blacklist dvb_usb_rtl28xxu
 blacklist e4000
@@ -51,7 +51,7 @@ $ sudo reboot
 
 ## enable experimental feature
 It's necessary to enable the layouts feature of the core snap.
-```
+``` sh
 $ sudo snap set core experimental.layouts=true
 ```
 
@@ -61,7 +61,7 @@ Each snap has a revision (`<rev>`). A snap installed from the store always has a
 
 ### Use the store
 
-```
+``` sh
 $ sudo snap install adsb-box
 ```
 
@@ -71,7 +71,7 @@ If you want to try the latest/development version, you can add `--edge` to the a
 
 Upload the snap file to your target machine then install it.
 
-```
+``` sh
 $ sudo snap install --dangerous adsb-box_<ver>_<arch>.snap
 ```
 
@@ -79,7 +79,7 @@ $ sudo snap install --dangerous adsb-box_<ver>_<arch>.snap
 
 These interfaces **MUST** be correctly configured, otherwise the services will not start successfully.
 
-```
+``` sh
 $ sudo snap connect adsb-box:raw-usb
 $ sudo snap connect adsb-box:process-control
 $ sudo snap connect adsb-box:system-observe
@@ -96,7 +96,7 @@ $ sudo snap restart adsb-box
 There are some global settings which shared by several feeders. For now, it's the location of the receiver. Replace [LATITUDE], [LONGITUDE] and [ALTITUDE] with the real values.
 
 Note: unit of altitude is meter.
-```
+``` sh
 $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
 ```
 
@@ -104,7 +104,7 @@ $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGIT
 
 By default, the log files are disabled or placed in tmpfs to reduce the writing of storage. Use the following commands to turn them on.
 
-```
+``` sh
 # lighttpd access log: local traffic
 $ snap set adsb-box lighttpd.enable-localhost-log=1
 # plane-finder
@@ -113,6 +113,24 @@ $ snap set adsb-box plane-finder.enable-log=1
 $ snap set adsb-box piaware.enable-log=1
 ```
 Use 0 instead of 1 to disable logging again.
+
+### lighttpd
+
+It's not allow to change the configuration of lighttpd currently.
+
+### collectd
+To reduce the number/overhead of rrd file updating, the cache mechanism of rrdtool plugin is enabled. _The trade off is that the graphs kind of "drag behind" and that more memory is used._ The [manual of collectd](https://collectd.org/documentation/manpages/collectd.conf.5.shtml#plugin_rrdtool) provides more explanations. To disable or adjust the settings, please refer to the following commands:
+``` sh
+## Read the manual before tuning the settings!
+# CacheTimeout, defulat - 300, 0 to disable cache
+snap set adsb-box.rrd-cache-timeout=0
+# CacheFlush, default - 10*CacheTimeout
+snap set adsb-box.rrd-cache-flush=0
+# RandomTimeout, default - 0
+snap set adsb-box.rrd-random-timeout=0
+# WritesPerSecond, default - 50
+snap set adsb-box.rrd-writes-per-second=80
+```
 
 ### dump1090
 
@@ -123,15 +141,11 @@ Change the items upon the requirements.
 
 Read `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`, and place the upintheair.json at `/var/snap/adsb-box/<rev>/`
 
-### lighttpd
-
-It's not allow to change the configuration of lighttpd currently.
-
 ### PiAware
 
 Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware README](https://github.com/flightaware/piaware/blob/master/README.md) for the command usages.
 
-```
+``` sh
 $ sudo adsb-box.piaware-config -showall
 $ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password <PASSWORD>
 $ sudo snap restart adsb-box.piaware
@@ -143,7 +157,7 @@ The log of PiAware is disabled by default. Please use `snap set adsb-box piaware
 
 Use `adsb-box.fr24feedcli` to sign-up or reconfigure the system.
 People who don't setup the feeder before, please use
-```
+``` sh
 $ sudo adsb-box.fr24feedcli --signup
 ```
 fr24feed will ask serval questions and here are the recommended answers for the questions.
@@ -163,24 +177,24 @@ enable Basestation data feed | yes |
 logfile mode | 0 | disable
 
 If you want to modify the configurations later, please use:
-```
+``` sh
 $ sudo adsb-box.fr24feedcli --reconfigure
 ```
 
 After finished the setup, restart the service
-```
+``` sh
 $ sudo snap restart adsb-box.fr24feed
 ```
 
 ### OpenSky Network
 
 Username and serial of openskyd-feeder are optional. If you don't set them, you can change them later.
-```
+``` sh
 $ sudo snap set adsb-box opensky-network.username=[USERNAME] opensky-network.serial=[SERIAL]
 ```
 
 Restart openskyd-feeder to apply the configurations
-```
+``` sh
 $ sudo snap restart adsb-box.openskyd
 ```
 
@@ -196,19 +210,19 @@ The logs are by default disabled. Use `sudo snap set adsb-box plane-finder.enabl
 
 For BEAST/AVR/AVRMLAT, you have a costomized port, use the commands to set.
 
-```
+``` sh
 $ snap set adsb-box adsbexchange.receiverport=[PORTNUM]
 $ snap restart adsb-box.adsbexchange-netcat
 ```
 
 For MLAT, you need to set the location (see the **snap settings** section) and feeder name.
 
-```
+``` sh
 $ snap set adsb-box adsbexchange.username=[FEEDER]
 $ snap restart adsb-box.adsbexchange-mlat
 ```
 
-## running status
+## Running Status
 
 ### web interface
 
@@ -228,7 +242,7 @@ If fr24feed is configured correctly, you can find the web here `http://your-devi
 
 Check the pfclient built-in web at `http://your-device-ip:30053/`.
 
-## rtl-sdr tools.
+## rtl-sdr tools
 Use ` $ sudo adsb-box.rtltest` to run the rtl_test utility.
 You can use it to do PPM error measurement (`-p`) or other tests. Use `-h` to show the help messages.
 
@@ -236,14 +250,14 @@ You can use it to do PPM error measurement (`-p`) or other tests. Use `-h` to sh
 
 ## Upgrade this snap
 Snapd will refresh snaps automatically by default. If you want to do it manually, use this command:
-```
+``` sh
 $ sudo snap refresh adsb-box
 ```
 When upgrading, snapd will clone the files, including configuration files and logs, for the new revision. It's not necessary to perform *backup* or *restore* operations for upgrading.
  
 ## Backup configuration files
 Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To backup your configurations, you can archive the whole directory, or just pick some of files.
-```
+``` sh
 # snap settings
 $ snap get -d adsb-box $HOME/snap-set.json
 # dump1090
@@ -262,7 +276,7 @@ $ sudo cp -a /var/snap/adsb-box/common/collectd $HOME
 
 ## Restore configuration files
 To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
-```
+``` sh
 # snap settings. sorry, there's no easy way to restore them.
 $ cat $HOME/snap-set.json
 ### use "$ snap set adsb-box KEY=value" to restore your settings then
@@ -283,7 +297,7 @@ $ sudo snap restart adsb-box
 
 To remove this snap
 
-```
+``` sh
 $ sudo snap remove adsb-box
 ```
 

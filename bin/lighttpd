@@ -21,7 +21,7 @@ LANG=C.UTF-8
 ACCESS_LOG="$WORKDIR/access.log"
 ERROR_LOG="$WORKDIR/error.log"
 
-[ ! -d "$WORKDIR" ] || mkdir -p "$WORKDIR"
+[ ! -d "$WORKDIR" ] && mkdir -p "$WORKDIR"
 
 # Migration
 [ -f "$SNAP_DATA/lighttpd.conf" ] && rm "$SNAP_DATA/lighttpd.conf"

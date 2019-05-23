@@ -201,7 +201,7 @@ $ sudo snap restart adsb-box.openskyd
 ### Plane Finder
 
 Due to the limitation of the configuration mechanism, users have to configure the Plane Finder client through its web interface.
-* After installation, open this URL: `http://your-device-ip:30035/` and follow the instructions to fill in fields.
+* After installation, open this URL: `http://your-device-ip:30053/` and follow the instructions to fill in fields.
 * Remember to set **Receiver data format** to `Beast`, receiver type to `Network`, **IP address** to `localhost` and **Port number** to `30005`.
 * For more details, please refer to the [document](https://planefinder.net/sharing/client).
 The logs are by default disabled. Use `sudo snap set adsb-box plane-finder.enable-log=1` to enable and change 1 to 0 to disable it.
@@ -273,6 +273,12 @@ $ sudo cp -a /var/snap/adsb-box/<rev>/pfclient/pfclient-config.json $HOME
 # collectd
 $ sudo cp -a /var/snap/adsb-box/common/collectd $HOME
 ```
+
+Alternatively, create a snapshot of the snap data and configuration with:
+``` sh
+$ sudo snap save adsb-box
+```
+This creates a new snapshot (zip archive) under `/var/lib/snapd/snapshots/` directory. It can be restored at any time with `snap restore <id>` command. Existing snapshots can be listed with `snap saved`.
 
 ## Restore configuration files
 To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`

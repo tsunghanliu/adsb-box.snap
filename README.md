@@ -135,6 +135,7 @@ snap set adsb-box.rrd-writes-per-second=80
 ### dump1090
 
 The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-fa.conf`.
+By default, the port of BEAST-format output is `30005` and the port of BEAST-format input is `30104`.
 Change the items upon the requirements.
 
 ### terrain-limit rings

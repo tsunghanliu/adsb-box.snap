@@ -61,10 +61,10 @@ RAW_OUTPUT_PORT=
 SBS_OUTPUT_PORT=
 
 # Port to listen on for Beast-format input connections. 0 disables.
-BEAST_INPUT_PORT=
+BEAST_INPUT_PORT=30104
 
 # Port to listen on for Beast-format output connections. 0 disables.
-BEAST_OUTPUT_PORT=
+BEAST_OUTPUT_PORT=30005
 
 # TCP heartbeat interval in seconds. 0 disables.
 NET_HEARTBEAT=

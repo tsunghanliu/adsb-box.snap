@@ -10,12 +10,27 @@ CONFFILE=$CACHEDIR/piaware.conf
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
 
+case $SNAP_ARCH in
+	amd64)
+		ARCH_TRIPLET="x86_64-linux-gnu"
+		;;
+	armhf)
+		ARCH_TRIPLET="arm-linux-gnueabihf"
+		;;
+	arm64)
+		ARCH_TRIPLET="aarch64-linux-gnu"
+		;;
+	*)
+		ARCH_TRIPLET="$SNAP_ARCH-linux-gnu"
+		;;
+esac
+
 TCL_LIBRARY="$SNAP/usr/share/tcltk/tcl8.6:$TCL_LIBRARY"
 TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tcl8.6"
 TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tcllib1.17"
 TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/itcl3.4"
 TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tls1.6.7"
-TCLLIBPATH="$TCLLIBPATH $SNAP/usr/lib/tcltk/x86_64-linux-gnu/itcl3.4"
+TCLLIBPATH="$TCLLIBPATH $SNAP/usr/lib/tcltk/$ARCH_TRIPLET/itcl3.4"
 ITCL_LIBRARY="$SNAP/usr/share/tcltk/itcl3.4"
 
 export TCL8_6_TM_PATH="$SNAP/usr/share/tcltk/tcl8.6/tcl8"

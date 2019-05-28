@@ -165,11 +165,14 @@ parts:
 
   mlat-client:
     plugin: python
+    python-packages: [python-prctl]
     source: https://github.com/mutability/mlat-client.git
     source-type: git
+    build-packages:
+      - libcap-dev # for python-prctl
     override-build: |
-      echo 'Replacing distutils with setuptools ...'
-      sed -i 's/distutils\.core/setuptools/g' setup.py
+      echo 'Patching mlat-client ...'
+      patch -p1 < ../../../patches/mlat-client.patch
       echo 'Building mlat-client ...'
       snapcraftctl build
     organize:

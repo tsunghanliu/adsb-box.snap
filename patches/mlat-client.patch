@@ -1,0 +1,55 @@
+diff --git a/fa-mlat-client b/fa-mlat-client
+index 47e1da1..87273aa 100755
+--- a/fa-mlat-client
++++ b/fa-mlat-client
+@@ -11,8 +11,13 @@ from mlat.client.coordinator import Coordinator
+ from mlat.client.util import log, log_exc
+ from mlat.client import options
+ 
++import sys
++from os.path import basename
++from prctl import set_name
+ 
+ def main():
++    set_name(basename(sys.argv[0]))
++
+     # piaware will timestamp our log messages itself, suppress the normal logging timestamps
+     mlat.client.util.suppress_log_timestamps = True
+ 
+diff --git a/mlat-client b/mlat-client
+index 859529e..2dd6cac 100755
+--- a/mlat-client
++++ b/mlat-client
+@@ -27,8 +27,13 @@ from mlat.client.jsonclient import JsonServerConnection
+ from mlat.client.coordinator import Coordinator
+ from mlat.client import options
+ 
++import sys
++from os.path import basename
++from prctl import set_name
+ 
+ def main():
++    set_name(basename(sys.argv[0]))
++
+     parser = argparse.ArgumentParser(description="Client for multilateration.")
+ 
+     options.make_inputs_group(parser)
+diff --git a/setup.py b/setup.py
+index 92de640..207bf35 100755
+--- a/setup.py
++++ b/setup.py
+@@ -16,7 +16,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-from distutils.core import setup, Extension
++from setuptools import setup, Extension
+ from distutils.ccompiler import get_default_compiler
+ 
+ # get the version from the source
+@@ -40,4 +40,5 @@ setup(name='MlatClient',
+       author_email='oliver@mutability.co.uk',
+       packages=['mlat', 'mlat.client', 'flightaware', 'flightaware.client'],
+       ext_modules=[modes_ext],
++      install_requires=['python-prctl'],
+       scripts=['mlat-client', 'fa-mlat-client'])

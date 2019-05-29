@@ -144,11 +144,16 @@ Read `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`, and place the 
 
 ### PiAware
 
+If piaware is working, you can associate the feeder with your account by opening the [URL](https://flightaware.com/adsb/piaware/claim) to claim your new feeder on the FlightAware.
+
 Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware README](https://github.com/flightaware/piaware/blob/master/README.md) for the command usages.
 
 ``` sh
+# display all configuration items
 $ sudo adsb-box.piaware-config -showall
+# set your account. This step isn't madatoried.
 $ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password <PASSWORD>
+# restart the piaware to apply the new configuration
 $ sudo snap restart adsb-box.piaware
 ```
 

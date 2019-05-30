@@ -8,7 +8,11 @@ CONF="$SNAP_DATA/dump1090-fa.conf"
 
 # migration for config file
 if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
-	cp "$SNAP_DATA/dump1090-mutability.conf" "$CONF"
+	if [ -f "$CONF" ]; then
+		mv "$SNAP_DATA/dump1090-mutability.conf" "$SNAP_DATA/dump1090-mutability.conf.bak"
+	else
+		mv "$SNAP_DATA/dump1090-mutability.conf" "$CONF"
+	fi
 fi
 
 if [ ! -f "$CONF" ]; then
@@ -25,6 +29,7 @@ JSON_DIR="/tmp/dump1090-fa"
 # get location from snap settings
 [ -z "$LAT" ] && LAT="$(snapctl get receiver.latitude)"
 [ -z "$LON" ] && LON="$(snapctl get receiver.longitude)"
+[ -z "$JSON_LOCATION_ACCURACY" ] && JSON_LOCATION_ACCURACY="$(snapctl get dump1090.location-accuracy)"
 
 # work out daemon args
 

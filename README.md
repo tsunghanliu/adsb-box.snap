@@ -123,13 +123,13 @@ To reduce the number/overhead of rrd file updating, the cache mechanism of rrdto
 ``` sh
 ## Read the manual before tuning the settings!
 # CacheTimeout, defulat - 300, 0 to disable cache
-snap set adsb-box.rrd-cache-timeout=0
+$ snap set adsb-box.rrd-cache-timeout=0
 # CacheFlush, default - 10*CacheTimeout
-snap set adsb-box.rrd-cache-flush=0
+$ snap set adsb-box.rrd-cache-flush=0
 # RandomTimeout, default - 0
-snap set adsb-box.rrd-random-timeout=0
+$ snap set adsb-box.rrd-random-timeout=0
 # WritesPerSecond, default - 50
-snap set adsb-box.rrd-writes-per-second=80
+$ snap set adsb-box.rrd-writes-per-second=80
 ```
 
 ### dump1090
@@ -138,9 +138,50 @@ The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-fa.conf`.
 By default, the port of BEAST-format output is `30005` and the port of BEAST-format input is `30104`.
 Change the items upon the requirements.
 
+If you want to have range circles on the dump1090 webpage and graphs of the maximum range, change the accuracy of location to `approximate` or `exact`.
+
+``` sh
+# enable locationing in dump1090
+$ snap set adsb-box dump1090.location-accuracy=<approximate|exact>
+# disable it
+$ snap set adsb-box dump1090.location-accuracy=
+
+# restart dump1090 to apply
+$ snap restart adsb-box.dump1090
+```
+
 ### terrain-limit rings
 
-Read `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`, and place the upintheair.json at `/var/snap/adsb-box/<rev>/`
+Read the following code block or `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`. Get your upintheair.json and place it at `/var/snap/adsb-box/<rev>/`.
+
+``` javascript
+        // Add terrain-limit rings. To enable this:
+        //
+        //  create a panorama for your receiver location on heywhatsthat.com
+        //
+        //  note the "view" value from the URL at the top of the panorama
+        //    i.e. the XXXX in http://www.heywhatsthat.com/?view=XXXX
+        //
+        // fetch a json file from the API for the altitudes you want to see:
+        //
+        //  wget -O /usr/share/dump1090-mutability/html/upintheair.json \
+        //    'http://www.heywhatsthat.com/api/upintheair.json?id=XXXX&refraction=0.25&alts=3048,9144'
+        //
+        // NB: altitudes are in _meters_, you can specify a list of altitudes
+```
+
+If you are using Ubuntu Core, there is no wget command available. Please do this on another machine. For instnace:
+
+``` sh
+# create a panorama on heywhatsthat.com and get the view value on the webpage.
+
+# on your Linux PC:
+$ wget -O upintheair.json 'http://www.heywhatsthat.com/api/upintheair.json?id=XXXX&refraction=0.25&alts=3048,9144'
+$ scp upintheair.json YOUR-UBUNTU-CORE-IP-ADDRESS:
+
+# on your ubuntu core system:
+$ sudo cp upintheair.json /var/snap/adsb-box/current/
+```
 
 ### PiAware
 

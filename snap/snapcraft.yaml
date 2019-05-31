@@ -33,6 +33,8 @@ apps:
   fr24feedcli:
     command: bin/fr24feedcli
     plugs: [network, network-bind, network-observe]
+  fr24feed-status:
+    command: bin/fr24feed-status
   openskyd:
     command: bin/openskyd
     daemon: simple
@@ -302,7 +304,7 @@ parts:
 passthrough:
   layout:
     /etc/fr24feed.ini:
-      bind-file: $SNAP_DATA/fr24feed.ini
+      bind-file: $SNAP_DATA/fr24feed/fr24feed.ini
     /var/lib/openskyd:
       bind: $SNAP_DATA/openskyd
 

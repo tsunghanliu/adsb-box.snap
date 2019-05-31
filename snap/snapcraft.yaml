@@ -302,7 +302,7 @@ parts:
 passthrough:
   layout:
     /etc/fr24feed.ini:
-      bind-file: $SNAP_DATA/fr24feed.ini
+      bind-file: $SNAP_DATA/fr24feed/fr24feed.ini
     /var/lib/openskyd:
       bind: $SNAP_DATA/openskyd
 

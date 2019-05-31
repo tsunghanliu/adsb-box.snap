@@ -1,8 +1,18 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 set -x
 
+BIN="$SNAP/usr/bin/fr24feed"
+
+WORKDIR="$SNAP_DATA/fr24feed"
+PIDFILE="$WORKDIR/fr24feed.pid"
+MONITORFILE="/tmp/fr24feed.txt"
+
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
+
+[ ! -d "$WORKDIR" ] && mkdir "$WORKDIR"
+# fr24feed.ini migration
+[ -f "$SNAP_DATA/fr24feed.ini" ] && mv "$SNAP_DATA/fr24feed.ini" "$WORKDIR/fr24feed.ini"
 
 if [ ! -f /etc/fr24feed.ini ]; then
 	touch /etc/fr24feed.ini
@@ -13,4 +23,16 @@ if [ "$(grep -c fr24key= /etc/fr24feed.ini)" -ne 1 ]; then
 	exit
 fi
 
-"$SNAP/usr/bin/fr24feed"
+ARGS=("--monitor-file=$MONITORFILE" "--write-pid=$PIDFILE")
+
+ENABLE_LOG=$(snapctl get fr24feed.enable-log)
+case "$ENABLE_LOG" in
+	1|[Oo][Nn]|[Tt][Rr][Uu][Ee])
+		;;
+	*)
+		# disable log
+		ARGS+=("--quiet")
+		;;
+esac
+
+$BIN "${ARGS[@]}"

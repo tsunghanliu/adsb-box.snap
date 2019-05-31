@@ -283,7 +283,17 @@ Use `snap services adsb-box` to check the overview of adsb-box services.
 
 ### fr24feed status
 
-If fr24feed is configured correctly, you can find the web here `http://your-device-ip:8754/`.
+If fr24feed is configured correctly, you can find the web here `http://your-device-ip:8754/`. Another CLI tool `fr24feed-status` can show a summary. Here is an example output.
+
+``` sh
+$ adsb-box.fr24feedcli
+FR24 Feeder/Decoder Process is running
+FR24 Stats Timestamp: 2019-05-31 00:00:00
+FR24 Link: connected [UDP]
+FR24 Radar: T-RXYZ99
+FR24 Tracked AC: 1
+Receiver: connected (813 MSGS/0 SYNC)
+```
 
 ### pfclient status
 

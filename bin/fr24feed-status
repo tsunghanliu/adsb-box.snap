@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# ported from /etc/init.d/fr24feed carried in fr24feed.deb
+
+set -e
+#set -x
+
+# From bin/fr24feed
+WORKDIR="$SNAP_DATA/fr24feed"
+PIDFILE="$WORKDIR/fr24feed.pid"
+MONITORFILE="/tmp/fr24feed.txt"
+
+FR24PID=$(cat "$PIDFILE" 2>/dev/null)
+
+if [ "$FR24PID" = "" ] || [ ! -d "/proc/${FR24PID}" ]; then
+	 "FR24 Feeder/Decoder Process is not running"
+	exit 1
+else
+	echo "FR24 Feeder/Decoder Process is running"
+fi
+
+DATE=$(grep time_update_utc_s= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+echo "FR24 Stats Timestamp: $DATE"
+
+FEED=$(grep 'feed_status=' $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+[ "$FEED" = "" ] && FEED="unknown"
+
+if [ "$FEED" = "connected" ]; then
+	MODE=$(grep feed_current_mode= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+	echo "FR24 Link: $FEED [$MODE]"
+	FEED=$(grep feed_alias= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+	echo "FR24 Radar: $FEED"
+	FEED=$(grep feed_num_ac_tracked= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+	FEED=${FEED:-0}
+	echo "FR24 Tracked AC: ${FEED}"
+else
+	echo "FR24 Link: $FEED"
+fi
+
+RX=$(grep rx_connected= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+
+if [ "$RX" = "1" ]; then
+	RX1=$(grep num_messages= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+	RX1=${RX1:-0}
+	RX2=$(grep num_resyncs= $MONITORFILE 2>/dev/null | cut -d'=' -f2)
+	RX2=${RX2:-0}
+	echo "Receiver: connected ($RX1 MSGS/$RX2 SYNC)"
+else
+	echo "Receiver: down"
+fi
+

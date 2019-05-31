@@ -12,7 +12,10 @@ MONITORFILE="/tmp/fr24feed.txt"
 
 [ ! -d "$WORKDIR" ] && mkdir "$WORKDIR"
 # fr24feed.ini migration
-[ -f "$SNAP_DATA/fr24feed.ini" ] && mv "$SNAP_DATA/fr24feed.ini" "$WORKDIR/fr24feed.ini"
+if [ -f "$SNAP_DATA/fr24feed.ini" ]; then
+	cp "$SNAP_DATA/fr24feed.ini" "$WORKDIR/fr24feed.ini"
+	rm "$SNAP_DATA/fr24feed.ini"
+fi
 
 if [ ! -f /etc/fr24feed.ini ]; then
 	touch /etc/fr24feed.ini

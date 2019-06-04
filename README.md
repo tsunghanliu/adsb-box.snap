@@ -102,7 +102,16 @@ $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGIT
 
 ### logging
 
-By default, the log files are disabled or placed in tmpfs to reduce the writing of storage. Use the following commands to turn them on.
+On Ubuntu Core 16, the rsyslog service is default enabled. If you are using SD card or USB disk as the primary storage, to avoid the wearing, it would be better to disable rsyslog. For Ubuntu Core 18, this operation is not necessary, since the rsyslog service is disabled by default.
+
+``` sh
+$ snap set system service.rsyslog.disable=true
+
+# to enable it again
+$ snap set system service.rsyslog.disable=false
+```
+
+For the same reason, by default, the log files of the feeders are disabled or placed in tmpfs to reduce the writing of storage. Use the following commands to turn them on.
 
 ``` sh
 # lighttpd access log: local traffic
@@ -111,6 +120,8 @@ $ snap set adsb-box lighttpd.enable-localhost-log=1
 $ snap set adsb-box plane-finder.enable-log=1
 # piaware
 $ snap set adsb-box piaware.enable-log=1
+# fr24feed
+$ snap set adsb-box fr24feed.enable-log=1
 ```
 Use 0 instead of 1 to disable logging again.
 

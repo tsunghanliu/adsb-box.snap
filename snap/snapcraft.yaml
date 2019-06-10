@@ -85,9 +85,20 @@ parts:
         ppa:robertliu/packages-for-ubuntu-core
       sudo apt update
 
+  blade-rf:
+    plugin: cmake
+    configflags: ['-DENABLE_HOST_BUILD=ON', '-DENABLE_FX3_BUILD=OFF']
+    source: https://github.com/Nuand/bladeRF.git
+    source-type: git
+    build-packages:
+      - libusb-1.0-0-dev
+    stage-packages:
+      - libusb-1.0-0
+
   dump1090:
+    after: [blade-rf]
     plugin: make
-    make-parameters: ['BLADERF=no', 'dump1090', 'faup1090']
+    make-parameters: ['dump1090', 'faup1090']
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware

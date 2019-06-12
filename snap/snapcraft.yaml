@@ -184,84 +184,50 @@ parts:
       - -usr/share/man
 
   fr24feed:
-    plugin: nil
+    plugin: dump
+    source:
+      - on amd64: https://repo-feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.18-5_amd64.tgz
+      - else:
+        - on i386: https://repo-feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.18-5_i386.tgz
+      - else:
+        - on armhf: https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
+      - else:
+        - on arm64: https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
+      - else fail
     build-packages:
       - wget
-    override-pull: |
-      env | sort
-      case $SNAPCRAFT_ARCH_TRIPLET in
-        x86_64-*)
-          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.18-5_amd64.tgz
-          ;;
-        i386-*)
-          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.18-5_i386.tgz
-          ;;
-        arm-*|aarch64-*)
-          wget -O fr24feed.tgz https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
-          ;;
-        *)
-          echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"
-          exit 1
-          ;;
-      esac
-    override-build: |
-      # build
-      tar zxf $SNAPCRAFT_PART_SRC/fr24feed.tgz
-      # install
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/bin $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
-      cp fr24feed_*/fr24feed $SNAPCRAFT_PART_INSTALL/usr/bin
-      cp -a fr24feed_*/* $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed
-      rm $SNAPCRAFT_PART_INSTALL/usr/share/fr24feed/fr24feed
+    organize:
+      fr24feed: usr/bin/
+      LICENSE.fr24feed: usr/share/fr24feed/
+      version.txt: usr/share/fr24feed/
 
   opensky-feeder:
-    plugin: nil
+    plugin: dump
     build-packages:
       - wget
-    override-pull: |
-      env | sort
-      case $SNAPCRAFT_ARCH_TRIPLET in
-        x86_64-*)
-          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_amd64.deb
-          ;;
-        i386-*)
-          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_i386.deb
-          ;;
-        arm-*)
-          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_armhf.deb
-          ;;
-        aarch64-*)
-          wget -O opensky-feeder.deb https://opensky-network.org/files/firmware/opensky-feeder_latest_arm64.deb
-          ;;
-        *)
-          echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"
-          exit 1
-          ;;
-      esac
-    override-build: |
-      # build & install (extract to $SNAPCRAFT_PART_INSTALL)
-      dpkg -x $SNAPCRAFT_PART_SRC/opensky-feeder.deb $SNAPCRAFT_PART_INSTALL
+    source:
+      - on amd64: https://opensky-network.org/files/firmware/opensky-feeder_latest_amd64.deb
+      - else:
+        - on i386: https://opensky-network.org/files/firmware/opensky-feeder_latest_i386.deb
+      - else:
+        - on armhf: https://opensky-network.org/files/firmware/opensky-feeder_latest_armhf.deb
+      - else:
+        - on arm64: https://opensky-network.org/files/firmware/opensky-feeder_latest_arm64.deb
+      - else fail
 
   pfclient:
-    plugin: nil
+    plugin: dump
     build-packages:
       - wget
-    override-pull: |
-      env | sort
-      case $SNAPCRAFT_ARCH_TRIPLET in
-        x86_64-*|i386-*)
-          wget -O pfclient.deb http://client.planefinder.net/pfclient_4.1.1_i386.deb
-          ;;
-        arm-*|aarch64-*)
-          wget -O pfclient.deb http://client.planefinder.net/pfclient_4.1.1_armhf.deb
-          ;;
-        *)
-          echo "Unknown architecture: $SNAPCRAFT_ARCH_TRIPLET"
-          exit 1
-          ;;
-      esac
-    override-build: |
-      # build & install (extract to $SNAPCRAFT_PART_INSTALL)
-      dpkg -x $SNAPCRAFT_PART_SRC/pfclient.deb $SNAPCRAFT_PART_INSTALL
+    source:
+      - on amd64: http://client.planefinder.net/pfclient_4.1.1_i386.deb
+      - else:
+        - on i386: http://client.planefinder.net/pfclient_4.1.1_i386.deb
+      - else:
+        - on armhf: http://client.planefinder.net/pfclient_4.1.1_armhf.deb
+      - else:
+        - on arm64: http://client.planefinder.net/pfclient_4.1.1_armhf.deb
+      - else fail
 
   rtlsdr:
     plugin: nil

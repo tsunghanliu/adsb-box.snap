@@ -1,5 +1,6 @@
 name: adsb-box
 version: '1.2'
+version-script: git describe --tags --always --dirty
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their

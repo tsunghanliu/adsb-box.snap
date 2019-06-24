@@ -8,6 +8,7 @@ description: |
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
+base: core
 
 apps:
   dump1090:
@@ -109,8 +110,13 @@ parts:
     source-branch: v3.7.1
     override-build: |
       echo 'patching dump1090 ...'
-      patch -p1 < ../../../patches/dump1090.patch
-      cp ../../../patches/dump1090/Taiwan.png public_html/flags-tiny/
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
+      patch -p1 < "$PATCHES_DIR/dump1090.patch"
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html/flags-tiny/
       sed -i '/RTLSDR ?= yes/ i DUMP1090_VERSION ?= \$\(shell git describe --always --tags --match=v\*\)' Makefile
       echo 'building dump1090 ...'
       snapcraftctl build
@@ -145,8 +151,13 @@ parts:
     source: https://github.com/flightaware/tcllauncher.git
     source-type: git
     override-build: |
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
       echo 'patching tcllauncher ...'
-      patch -p1 < ../../../patches/tcllauncher.patch
+      patch -p1 < "$PATCHES_DIR/tcllauncher.patch"
       snapcraftctl build
     configflags: ['--with-tcl=/usr/lib/tcl8.6']
     build-packages:
@@ -161,7 +172,12 @@ parts:
     source-branch: v3.7.1
     override-build: |
       echo 'patching piaware ...'
-      patch -p1 < ../../../patches/piaware.patch
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
+      patch -p1 < "$PATCHES_DIR/piaware.patch"
       snapcraftctl build
       echo 'patching pkgIndex.tcl files ...'
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
@@ -189,7 +205,12 @@ parts:
       - libcap-dev # for python-prctl
     override-build: |
       echo 'Patching mlat-client ...'
-      patch -p1 < ../../../patches/mlat-client.patch
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
+      patch -p1 < "$PATCHES_DIR/mlat-client.patch"
       echo 'Building mlat-client ...'
       snapcraftctl build
     organize:
@@ -268,7 +289,12 @@ parts:
     override-build: |
       # patch
       echo 'patching adsb-receiver scripts ...'
-      patch -p1 < ../../../patches/graphs-gend.patch
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
+      patch -p1 < "$PATCHES_DIR/graphs-gend.patch"
       # no build process is required
       # install
       pwd

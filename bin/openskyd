@@ -2,6 +2,9 @@
 set -e
 set -x
 
+# delay for dump1090
+sleep 3
+
 BIN="$SNAP/usr/bin/openskyd-dump1090"
 DAEMON_HOME="$SNAP_DATA/openskyd"
 CONF_DIR="$DAEMON_HOME/conf.d"

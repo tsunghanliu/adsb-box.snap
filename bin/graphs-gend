@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# delay for dump1090 and collectd
+sleep 3
+
 export XDG_DATA_HOME=$SNAP/usr/share
 export FONTCONFIG_PATH=$SNAP/etc/fonts/config.d
 export FONTCONFIG_FILE=$SNAP/etc/fonts/fonts.conf

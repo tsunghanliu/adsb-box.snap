@@ -8,7 +8,7 @@ description: |
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
-#base: core
+base: core
 
 apps:
   dump1090:

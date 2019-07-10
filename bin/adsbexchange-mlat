@@ -15,7 +15,7 @@ USERNAME="$(snapctl get adsbexchange.username)"
 
 if [ -z "$LAT" ] || [ -z "$LON" ] || [ -z "$ALT" ] || [ -z "$USERNAME" ]; then
 	echo "Location of receiver or username of ADS-B Exchange is not properly configured"
-	exit 1
+	exit 0
 fi
 
 while true; do

@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+set -x
+
+if [ ! -f "$SNAP/usr/bin/rbfeeder" ]; then
+	echo "The rbfeeder does not exist. Maybe the architecture($SNAP_ARCH) is not supported."
+	exit 0
+fi
+
+# delay for dump1090
+sleep 3
+
+# re-use the mlat-client of piaware
+BIN="$SNAP/bin/mlat-client"
+
+LAT="$(snapctl get receiver.latitude)"
+LON="$(snapctl get receiver.longitude)"
+ALT="$(snapctl get receiver.altitude)"
+# rbfeeder uses the station id as the name.
+USERNAME="$(grep sn "$SNAP_DATA/rbfeeder/rbfeeder.ini" | cut -d '=' -f 2)"
+
+if [ -z "$LAT" ] || [ -z "$LON" ] || [ -z "$ALT" ] || [ -z "$USERNAME" ]; then
+	echo "Location of receiver or username of ADS-B Exchange is not properly configured"
+	exit 0
+fi
+
+while true; do
+	sleep 30
+	$BIN --input-type dump1090 --input-connect localhost:30005 \
+		--lat "$LAT" --lon "$LON" --alt "$ALT" \
+		--user "$USERNAME" --server mlat1.rb24.com:40900 \
+		--no-udp --results beast,connect,localhost:30104 \
+		--results basestation,listen,31003
+done

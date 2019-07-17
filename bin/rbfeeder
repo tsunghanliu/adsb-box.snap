@@ -1,0 +1,26 @@
+#!/bin/bash
+set -e
+set -x
+
+BIN="$SNAP/usr/bin/rbfeeder"
+
+if [ ! -f "$BIN" ]; then
+	echo "The rbfeeder does not exist. Maybe the architecture($SNAP_ARCH) is not supported."
+	exit 0
+fi
+
+# delay for dump1090
+sleep 3
+
+WORKDIR="$SNAP_DATA/rbfeeder"
+RBFEEDER_INI="$WORKDIR/rbfeeder.ini"
+
+[ ! -d "$WORKDIR" ] && mkdir "$WORKDIR"
+[ ! -d "/var/run/snap.$SNAP_NAME" ] && mkdir -p "/var/run/snap.$SNAP_NAME"
+
+if [ ! -f "$RBFEEDER_INI" ]; then
+	cp "$SNAP/etc/rbfeeder.ini" "$RBFEEDER_INI"
+	sed -i 's/\/var\/log\/rbfeeder.log/\/dev\/null/' "$RBFEEDER_INI"
+fi
+
+$BIN --config "$RBFEEDER_INI"

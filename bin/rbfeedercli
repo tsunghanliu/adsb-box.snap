@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+set -x
+
+BIN="$SNAP/usr/bin/rbfeeder"
+
+if [ ! -f "$BIN" ]; then
+	echo "The rbfeeder does not exist. Maybe the architecture($SNAP_ARCH) is not supported."
+	exit 0
+fi
+
+RBFEEDER_INI="$SNAP_DATA/rbfeeder/rbfeeder.ini"
+
+$BIN --config "$RBFEEDER_INI" --no-start "$@"

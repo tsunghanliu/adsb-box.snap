@@ -20,7 +20,7 @@ if [ ! -f "$CONF_FILE" ]; then
 	ALT="$(snapctl get receiver.altitude)"
 	if [ -z "$LAT" ] || [ -z "$LONG" ] || [ -z "$ALT" ]; then
 		echo "Receiver does not have valid settings of its position"
-		exit 1
+		exit 0
 	fi
 
 	DEVTYPE="default"

@@ -78,6 +78,16 @@ apps:
     plugs: [network, network-bind, network-observe]
     passthrough:
       after: [dump1090]
+  rbfeeder:
+    command: bin/snapcraft-preload $SNAP/bin/rbfeeder
+    daemon: simple
+    plugs: [network, network-bind, network-observe, hardware-observe]
+  rbfeeder-mlat:
+    command: bin/rbfeeder-mlat
+    daemon: simple
+    plugs: [network, network-bind, network-observe]
+  rbfeedercli:
+    command: bin/snapcraft-preload $SNAP/bin/rbfeedercli
 
 parts:
   common:
@@ -308,10 +318,47 @@ parts:
     stage-packages:
       - socat
 
+  rbfeeder:
+    plugin: nil
+    build-packages:
+      - wget
+    # rb24.com doesn't accept the default python client of snapcraft,
+    # so, we need to pull the source by ourselves
+    override-pull: |
+      env | sort
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        arm-*|aarch64-*)
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.19-20190226175114_armhf.deb
+          ;;
+        *)
+          echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
+          ;;
+      esac
+    override-build: |
+      env | sort
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        arm-*|aarch64-*)
+          dpkg -x $SNAPCRAFT_PART_SRC/rbfeeder.deb $SNAPCRAFT_PART_INSTALL
+          # accessing files in /var/run is not allowed, so hack the path in the rbfeeder binary file.
+          #sed -i 's/\/var\/run\/rbfeeder\.pid/\/var\/log\/rbfeeder\.pid/' $SNAPCRAFT_PART_INSTALL/usr/bin/rbfeeder
+          ;;
+        *)
+          echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
+          ;;
+      esac
+    stage-packages:
+      - to armhf: [libcurl3-gnutls, libglib2.0-0]
+      - to arm64: [libcurl3-gnutls, libglib2.0-0]
+
+  snapcraft-preload:
+    source: https://github.com/tsunghanliu/snapcraft-preload.git
+    plugin: cmake
+    build-packages:
+      - on amd64: [gcc-multilib, g++-multilib]
+
 passthrough:
   layout:
     /etc/fr24feed.ini:
       bind-file: $SNAP_DATA/fr24feed/fr24feed.ini
     /var/lib/openskyd:
       bind: $SNAP_DATA/openskyd
-

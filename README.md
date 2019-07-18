@@ -12,6 +12,7 @@ This is a snap to establish a ADS-B receiver box.
 * [fr24feed](https://www.flightradar24.com/share-your-data)
 * [opensky-network](https://opensky-network.org/contribute/improve-coverage)
 * [plane finder](https://planefinder.net/sharing/)
+* [RadarBox](https://www.radarbox24.com/)
 * [collectd](https://collectd.org)
 * graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
 * other base tools and libraries, e.g python and tcl
@@ -280,6 +281,22 @@ $ snap set adsb-box adsbexchange.username=[FEEDER]
 $ snap restart adsb-box.adsbexchange-mlat
 ```
 
+### RadarBox
+
+RadarBox only provides the feeder for Raspberry Pi platform (armhf) officially. So, it's not available on x86/amd64 platforms.
+Before setup, make sure the service is running correctly, then claim your station at the [webpage](https://www.radarbox.com/raspberry-pi/claim)
+``` sh
+$ snap services adsb-box.rbfeeder
+Service            Startup  Current  Notes
+adsb-box.rbfeeder  enabled  active   -
+$ adsb-box.rbfeedercli --showkey
+```
+Copy your `sharing key` to the field and claim it.
+
+To enable MLAT client, you need to set the location (see the **snap settings** section). The program will get the feeder name from the configuration file of rbfeeder.
+
+Read the [document](https://www.radarbox24.com/sharing-data) for more information.
+
 ## Running Status
 
 ### web interface
@@ -388,6 +405,6 @@ Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap
 
 * Add a configuration item to contorl PiAware service.
 * Support other feeders. Is there any other public projects?!
-    * [RadarBox24](https://www.radarbox24.com/)
+    * [RadarBox24](https://www.radarbox24.com/) (in-progress)
 * Support other architectures. (x86/armhf/arm64)
     adsb-box is available for x86/armhf/arm64 as well, but it hasn't been fully verified.

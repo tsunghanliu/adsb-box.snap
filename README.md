@@ -135,13 +135,13 @@ To reduce the number/overhead of rrd file updating, the cache mechanism of rrdto
 ``` sh
 ## Read the manual before tuning the settings!
 # CacheTimeout, defulat - 300, 0 to disable cache
-$ snap set adsb-box.rrd-cache-timeout=0
+$ snap set adsb-box collectd.rrd-cache-timeout=0
 # CacheFlush, default - 10*CacheTimeout
-$ snap set adsb-box.rrd-cache-flush=0
+$ snap set adsb-box collectd.rrd-cache-flush=0
 # RandomTimeout, default - 0
-$ snap set adsb-box.rrd-random-timeout=0
+$ snap set adsb-box collectd.rrd-random-timeout=0
 # WritesPerSecond, default - 50
-$ snap set adsb-box.rrd-writes-per-second=80
+$ snap set adsb-box collectd.rrd-writes-per-second=80
 ```
 
 ### dump1090

@@ -8,7 +8,8 @@ LOGFILE=$WORKDIR/collectd.log
 PIDFILE=$WORKDIR/collectd.pid
 BIN=$SNAP/usr/sbin/collectd
 BASEDIR=$SNAP_COMMON/collectd
-RRDDIR=$BASEDIR/rrd
+RRDDIR_DISK="$BASEDIR/rrd"
+RRDDIR_RAM=/tmp/rrd
 DISKFILE=$SNAP_DATA/disk.conf
 DISK=
 MOUNTPOINT=
@@ -19,7 +20,25 @@ export PYTHONPATH=$SNAP/usr/lib/python2.7
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
-mkdir -p "$BASEDIR" "$RRDDIR" "$WORKDIR"
+trap 'rrd-op backup' EXIT
+
+[ ! -d "$BASEDIR" ] && mkdir -p "$BASEDIR"
+[ ! -d "$WORKDIR" ] && mkdir -p "$WORKDIR"
+
+PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
+PERIOD_BACKUP=${PERIOD_BACKUP:-0}
+if [ "$PERIOD_BACKUP" -ne 0 ]; then
+	# Restore RRD files from disk
+	rrd-op restore
+	RRDDIR="$RRDDIR_RAM"
+else
+	# Move files on RAM back to disk
+	if [ -d "$RRDDIR_RAM" ]; then
+		rrd-op backup
+		rm -rf "$RRDDIR_RAM"
+	fi
+	RRDDIR="$RRDDIR_DISK"
+fi
 
 # Migration
 [ -f "$SNAP_DATA/collectd.conf" ] && rm "$SNAP_DATA/collectd.conf"

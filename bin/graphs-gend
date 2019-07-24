@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -x
 
 # delay for dump1090 and collectd
 sleep 3
@@ -21,6 +23,7 @@ TIMEOUT_24h=0
 TIMEOUT_7d=0
 TIMEOUT_30d=0
 TIMEOUT_365d=0
+TIMEOUT_BACKUP=0
 
 PERIOD_1h=300
 PERIOD_6h=600
@@ -34,12 +37,15 @@ OFFSET_7d=240
 OFFSET_30d=360
 OFFSET_365d=480
 
+PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
+PERIOD_BACKUP=${PERIOD_BACKUP:-0}
+
 # create output directory which is defined in make-collectd-graphs.sh
 mkdir -p /tmp/graphs
 
 gen_graphs()
 {
-	echo ["$(date +"%Y%m%d%H%M%S")"] run cmd, arg="$*"
+	echo "[$(date +"%F %T")] run cmd, arg=$*"
 	nice -n 5 "$SNAP/usr/share/adsb-receiver/graphs/make-collectd-graphs.sh" "$@" >/dev/null 2>&1
 }
 
@@ -59,6 +65,10 @@ init_timeouts()
 	TIMEOUT_30d=$((now-mod+OFFSET_30d))
 	mod=$((now%PERIOD_365d))
 	TIMEOUT_365d=$((now-mod+OFFSET_365d))
+	if [ "$PERIOD_BACKUP" -ne 0 ]; then
+		# backup is not necessary at the beginning
+		TIMEOUT_BACKUP=$((now+PERIOD_BACKUP))
+	fi
 }
 
 init_timeouts
@@ -100,6 +110,12 @@ while true; do
 	if [ "$now" -ge "$TIMEOUT_365d" ]; then
 		gen_graphs 365d &
 		TIMEOUT_365d=$((TIMEOUT_365d+PERIOD_365d))
+	fi
+
+	## Backup work
+	if [ "$PERIOD_BACKUP" -ne 0 ] && [ "$now" -ge "$TIMEOUT_BACKUP" ]; then
+		rrd-op backup &
+		TIMEOUT_BACKUP=$((TIMEOUT_BACKUP+PERIOD_BACKUP))
 	fi
 
 	sleep 30

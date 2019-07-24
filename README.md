@@ -144,6 +144,20 @@ $ snap set adsb-box collectd.rrd-random-timeout=0
 $ snap set adsb-box collectd.rrd-writes-per-second=80
 ```
 
+Another method to reduce the number of Disk I/O is moving the rrd files to tmpfs. This implementation will:
+1. when collectd starts, copy rrd files from `$SNAP_COMMON/collectd/rrd` to `/tmp/rrd` which is located on tmpfs.
+2. periodically sync the rrd files back to `$SNAP_COMMON/collectd/rrd` according to the config value.
+3. when collectd shuts down, sync the rrd files again.
+The method has a drawback. If the system does not shut down properly (e.g. power outage), the records will be lost. Maximum duration is equal to the period configured.
+To enable this feature:
+``` sh
+# unit of period is second
+$ snap set adsb-box collectd.rrd-backup-period=1800
+# restart related services
+$ snap restart adsb-box.collectd
+$ snap restart adsb-box.graphs-gend
+```
+
 ### dump1090
 
 The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-fa.conf`.

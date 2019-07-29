@@ -16,7 +16,7 @@ WORKDIR="$SNAP_DATA/rbfeeder"
 RBFEEDER_INI="$WORKDIR/rbfeeder.ini"
 
 [ ! -d "$WORKDIR" ] && mkdir "$WORKDIR"
-[ ! -d "/var/run/snap.$SNAP_NAME" ] && mkdir -p "/var/run/snap.$SNAP_NAME"
+[ ! -d "/run/snap.$SNAP_NAME" ] && mkdir "/run/snap.$SNAP_NAME"
 
 if [ ! -f "$RBFEEDER_INI" ]; then
 	cp "$SNAP/etc/rbfeeder.ini" "$RBFEEDER_INI"

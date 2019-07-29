@@ -1,0 +1,56 @@
+#!/bin/bash
+
+set -ex
+
+BASEDIR="$SNAP_COMMON/collectd/rrd"
+RRDDIR="/tmp/rrd"
+
+restore()
+{
+	TS="$SECONDS"
+	echo "[$(date +"%F %T")] restore started."
+	if [ ! -d "$RRDDIR" ]; then
+		mkdir -p "$RRDDIR"
+		if [ -d "$BASEDIR/localhost" ]; then
+			cp -a "$BASEDIR"/localhost "$RRDDIR/"
+		fi
+	else
+		echo "Restoration is skipped."
+	fi
+	echo "[$(date +"%F %T")] restore done. duration=$((SECONDS-TS))sec"
+}
+
+backup()
+{
+	TS="$SECONDS"
+	echo "[$(date +"%F %T")] backup started."
+	cd /tmp/rrd || return
+	while IFS= read -r -d '' ent; do
+		if [ -d "$ent" ]; then
+			mkdir -p "/tmp/rrd.new/$ent"
+		elif [ "${ent: -4}" = ".rrd" ]; then
+			#rrdtool dump "$ent" | rrdtool restore - "/tmp/rrd.new/$ent"
+			cp "$ent" "/tmp/rrd.new/$ent"
+		fi
+	done <  <(find . -print0)
+	cp -a /tmp/rrd.new/localhost "$BASEDIR/"
+	rm -rf /tmp/rrd.new
+	echo "[$(date +"%F %T")] backup done. duration=$((SECONDS-TS))sec"
+}
+
+usage()
+{
+	echo "Usage: $0 [backup|restore]"
+}
+
+case "$1" in
+	"restore")
+		restore
+		;;
+	"backup")
+		backup
+		;;
+	*)
+		usage
+		exit 1
+esac

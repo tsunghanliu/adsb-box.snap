@@ -1,8 +1,8 @@
 diff --git a/build/portal/graphs/make-collectd-graphs.sh b/build/portal/graphs/make-collectd-graphs.sh
-index 6094805..0bb5119 100755
+index 6094805..bfcf5bc 100755
 --- a/build/portal/graphs/make-collectd-graphs.sh
 +++ b/build/portal/graphs/make-collectd-graphs.sh
-@@ -1,16 +1,35 @@
+@@ -1,16 +1,45 @@
  #!/bin/bash
  
 +export XDG_DATA_HOME=$SNAP/usr/share
@@ -29,6 +29,16 @@ index 6094805..0bb5119 100755
 -RAWDOCUMENTROOT=`/usr/sbin/lighttpd -f /etc/lighttpd/lighttpd.conf -p | grep server.document-root`
 -DOCUMENTROOT=`sed 's/.*"\(.*\)"[^"]*$/\1/' <<< $RAWDOCUMENTROOT`
 +DOCUMENTROOT=/tmp
++
++RRDDIR_DISK="$BASEDIR/rrd"
++RRDDIR_RAM=/tmp/rrd
++PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
++PERIOD_BACKUP=${PERIOD_BACKUP:-0}
++if [ "$PERIOD_BACKUP" -ne 0 ]; then
++	RRDDIR="$RRDDIR_RAM"
++else
++	RRDDIR="$RRDDIR_DISK"
++fi
  
 -renice -n 5 -p $$
 +#renice -n 5 -p $$
@@ -42,7 +52,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -32,12 +51,13 @@ aircraft_graph() {
+@@ -32,12 +61,13 @@ aircraft_graph() {
    "LINE1:pos#0000FF:w/ Positions" \
    "LINE1:noloc#FF0000:w/o Positions" \
    "LINE1:mlat#000000:mlat" \
@@ -58,7 +68,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -62,12 +82,13 @@ aircraft_message_rate_graph() {
+@@ -62,12 +92,13 @@ aircraft_message_rate_graph() {
    "LINE1:maxrate#FF0000:Maximum" \
    "GPRINT:maxrate:%3.1lf\c" \
    "LINE1:aircrafts10#990000:Aircraft Seen / Tracked (RHS) \c" \
@@ -74,7 +84,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -86,12 +107,13 @@ cpu_graph_dump1090() {
+@@ -86,12 +117,13 @@ cpu_graph_dump1090() {
    "AREA:backgroundp#00C000:Other:STACK" \
    "AREA:demodp#00FF00:Demodulator\c:STACK" \
    "COMMENT: \n" \
@@ -90,7 +100,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -107,14 +129,15 @@ tracks_graph() {
+@@ -107,14 +139,15 @@ tracks_graph() {
    "AREA:hsingle#FF0000:Tracks with single message" \
    "AREA:hall#00FF00:Unique tracks\c:STACK" \
    "COMMENT: \n" \
@@ -108,7 +118,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 1010 \
    --height 200 \
-@@ -147,12 +170,13 @@ cpu_graph() {
+@@ -147,12 +180,13 @@ cpu_graph() {
    "AREA:psystem#FF0000:sys:STACK" \
    "AREA:puser#40FF40:user:STACK" \
    "AREA:pnice#008000:nice\c:STACK" \
@@ -124,7 +134,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 496 \
    --height 200 \
-@@ -168,12 +192,13 @@ df_root_graph() {
+@@ -168,12 +202,13 @@ df_root_graph() {
    "AREA:totalused#4169E1:Used:STACK" \
    "AREA:free#32C734:Free\c:STACK" \
    "COMMENT: \n" \
@@ -140,7 +150,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -195,12 +220,13 @@ disk_io_iops_graph() {
+@@ -195,12 +230,13 @@ disk_io_iops_graph() {
    "GPRINT:write:MAX:Max\:%4.1lf iops" \
    "GPRINT:write:AVERAGE:Avg\:%4.1lf iops" \
    "GPRINT:write:LAST:Current\:%4.1lf iops\c" \
@@ -156,7 +166,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -222,12 +248,13 @@ disk_io_octets_graph() {
+@@ -222,12 +258,13 @@ disk_io_octets_graph() {
    "GPRINT:write:MAX:Max\: %4.1lf %sB/sec" \
    "GPRINT:write:AVERAGE:Avg\: %4.1lf %SB/sec" \
    "GPRINT:write:LAST:Current\: %4.1lf %SB/sec\c" \
@@ -172,7 +182,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -248,12 +275,13 @@ eth0_graph() {
+@@ -248,12 +285,13 @@ eth0_graph() {
    "GPRINT:tx:MAX:Max\:%8.1lf %S" \
    "GPRINT:tx:AVERAGE:Avg\:%8.1lf %S" \
    "GPRINT:tx:LAST:Current\:%8.1lf %Sbytes/sec\c" \
@@ -188,7 +198,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 496 \
    --height 200 \
-@@ -271,12 +299,13 @@ memory_graph() {
+@@ -271,12 +309,13 @@ memory_graph() {
    "AREA:cached#00FF00:Cached:STACK" \
    "AREA:free#FFFFFF:Free\c:STACK" \
    "COMMENT: \n" \
@@ -204,7 +214,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -294,12 +323,13 @@ temp_graph_imperial() {
+@@ -294,12 +333,13 @@ temp_graph_imperial() {
    "AREA:ttc#ffcc00" \
    "COMMENT: \n" \
    "COMMENT: \n" \
@@ -220,7 +230,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -315,12 +345,13 @@ temp_graph_metric() {
+@@ -315,12 +355,13 @@ temp_graph_metric() {
    "AREA:tfin#ffcc00" \
    "COMMENT: \n" \
    "COMMENT: \n" \
@@ -236,7 +246,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -341,14 +372,15 @@ wlan0_graph() {
+@@ -341,14 +382,15 @@ wlan0_graph() {
    "GPRINT:tx:MAX:Max\:%8.1lf %S" \
    "GPRINT:tx:AVERAGE:Avg\:%8.1lf %S" \
    "GPRINT:tx:LAST:Current\:%8.1lf %Sbytes/sec\c" \
@@ -254,7 +264,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 429 \
    --height 200 \
-@@ -367,12 +399,13 @@ local_rate_graph() {
+@@ -367,12 +409,13 @@ local_rate_graph() {
    "AREA:y2strong#FF0000:Messages > -3dBFS / 10min (RHS)" \
    "LINE1:y2positions#00c0FF:Positions / Hr (RHS)\c" \
    "COMMENT: \n" \
@@ -270,7 +280,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 959 \
    --height 200 \
-@@ -480,12 +513,13 @@ local_trailing_rate_graph() {
+@@ -480,12 +523,13 @@ local_trailing_rate_graph() {
    "AREA:y2strong#FF0000:Messages > -3dBFS/10min (RHS)\g" \
    "GPRINT:strong_percent_vdef: (%1.1lf<span font='2'> </span>%% of messages)" \
    "LINE1:y2positions#00c0FF:Positions/Hr (RHS)\c" \
@@ -286,7 +296,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -506,12 +540,13 @@ range_graph_imperial_nautical(){
+@@ -506,12 +550,13 @@ range_graph_imperial_nautical(){
    "LINE1:peakrange#FF0000:Peak Range\\:" \
    "GPRINT:peakrange:%1.1lf NM\c" \
    "COMMENT: \n" \
@@ -302,7 +312,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -532,12 +567,13 @@ range_graph_imperial_statute(){
+@@ -532,12 +577,13 @@ range_graph_imperial_statute(){
    "LINE1:peakrange#FF0000:Peak Range\\:" \
    "GPRINT:peakrange:%1.1lf SM\c" \
    "COMMENT: \n" \
@@ -318,7 +328,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 428 \
    --height 200 \
-@@ -557,12 +593,13 @@ range_graph_metric() {
+@@ -557,12 +603,13 @@ range_graph_metric() {
    "LINE1:peakrange#FF0000:Peak Range\\:" \
    "GPRINT:peakrange:%1.1lf km\c" \
    "COMMENT: \n" \
@@ -334,7 +344,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 186 \
-@@ -589,14 +626,15 @@ signal_graph() {
+@@ -589,14 +636,15 @@ signal_graph() {
    "GPRINT:noise:AVERAGE:Avg\: %4.1lf\c" \
    "LINE1:0#000000:Zero dBFS" \
    "LINE1:-3#FF0000:-3 dBFS\c" \
@@ -352,7 +362,7 @@ index 6094805..0bb5119 100755
    --start end-$4 \
    --width 480 \
    --height 200 \
-@@ -611,44 +649,45 @@ remote_rate_graph() {
+@@ -611,44 +659,45 @@ remote_rate_graph() {
    "CDEF:y2positions=positions,10,*" \
    "LINE1:messages#0000FF:messages received" \
    "LINE1:y2positions#00c0FF:position / hr (RHS)" \
@@ -367,10 +377,10 @@ index 6094805..0bb5119 100755
 -  aircraft_message_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft_message_rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
 -  cpu_graph_dump1090 ${DOCUMENTROOT}/graphs/dump1090-$2-cpu-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
 -  tracks_graph ${DOCUMENTROOT}/graphs/dump1090-$2-tracks-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5" 
-+  aircraft_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  aircraft_message_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft_message_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  cpu_graph_dump1090 ${DOCUMENTROOT}/graphs/dump1090-$2-cpu-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  tracks_graph ${DOCUMENTROOT}/graphs/dump1090-$2-tracks-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  aircraft_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  aircraft_message_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-aircraft_message_rate-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  cpu_graph_dump1090 ${DOCUMENTROOT}/graphs/dump1090-$2-cpu-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  tracks_graph ${DOCUMENTROOT}/graphs/dump1090-$2-tracks-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
  }
  
  system_graphs() {
@@ -383,15 +393,15 @@ index 6094805..0bb5119 100755
 -  temp_graph_imperial ${DOCUMENTROOT}/graphs/system-$2-temperature_imperial-$4.png /var/lib/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
 -  temp_graph_metric ${DOCUMENTROOT}/graphs/system-$2-temperature_metric-$4.png /var/lib/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
 -  wlan0_graph ${DOCUMENTROOT}/graphs/system-$2-wlan0_bandwidth-$4.png /var/lib/collectd/rrd/$1/interface-wlan0 "$3" "$4" "$5"
-+  cpu_graph ${DOCUMENTROOT}/graphs/system-$2-cpu-$4.png $SNAP_COMMON/collectd/rrd/$1/aggregation-cpu-average "$3" "$4" "$5"
-+  df_root_graph ${DOCUMENTROOT}/graphs/system-$2-df_root-$4.png $SNAP_COMMON/collectd/rrd/$1/df-$MOUNTPOINT "$3" "$4" "$5"
-+  disk_io_iops_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_iops-$4.png $SNAP_COMMON/collectd/rrd/$1/disk-$DISK "$3" "$4" "$5"
-+  disk_io_octets_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_octets-$4.png $SNAP_COMMON/collectd/rrd/$1/disk-$DISK "$3" "$4" "$5"
-+  eth0_graph ${DOCUMENTROOT}/graphs/system-$2-eth0_bandwidth-$4.png $SNAP_COMMON/collectd/rrd/$1/interface-eth0 "$3" "$4" "$5"
-+  memory_graph ${DOCUMENTROOT}/graphs/system-$2-memory-$4.png $SNAP_COMMON/collectd/rrd/$1/memory "$3" "$4" "$5"
-+  temp_graph_imperial ${DOCUMENTROOT}/graphs/system-$2-temperature_imperial-$4.png $SNAP_COMMON/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
-+  temp_graph_metric ${DOCUMENTROOT}/graphs/system-$2-temperature_metric-$4.png $SNAP_COMMON/collectd/rrd/$1/table-$2 "$3" "$4" "$5"
-+  wlan0_graph ${DOCUMENTROOT}/graphs/system-$2-wlan0_bandwidth-$4.png $SNAP_COMMON/collectd/rrd/$1/interface-wlan0 "$3" "$4" "$5"
++  cpu_graph ${DOCUMENTROOT}/graphs/system-$2-cpu-$4.png ${RRDDIR}/$1/aggregation-cpu-average "$3" "$4" "$5"
++  df_root_graph ${DOCUMENTROOT}/graphs/system-$2-df_root-$4.png ${RRDDIR}/$1/df-$MOUNTPOINT "$3" "$4" "$5"
++  disk_io_iops_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_iops-$4.png ${RRDDIR}/$1/disk-$DISK "$3" "$4" "$5"
++  disk_io_octets_graph ${DOCUMENTROOT}/graphs/system-$2-disk_io_octets-$4.png ${RRDDIR}/$1/disk-$DISK "$3" "$4" "$5"
++  eth0_graph ${DOCUMENTROOT}/graphs/system-$2-eth0_bandwidth-$4.png ${RRDDIR}/$1/interface-eth0 "$3" "$4" "$5"
++  memory_graph ${DOCUMENTROOT}/graphs/system-$2-memory-$4.png ${RRDDIR}/$1/memory "$3" "$4" "$5"
++  temp_graph_imperial ${DOCUMENTROOT}/graphs/system-$2-temperature_imperial-$4.png ${RRDDIR}/$1/table-$2 "$3" "$4" "$5"
++  temp_graph_metric ${DOCUMENTROOT}/graphs/system-$2-temperature_metric-$4.png ${RRDDIR}/$1/table-$2 "$3" "$4" "$5"
++  wlan0_graph ${DOCUMENTROOT}/graphs/system-$2-wlan0_bandwidth-$4.png ${RRDDIR}/$1/interface-wlan0 "$3" "$4" "$5"
  }
  
  dump1090_receiver_graphs() {
@@ -403,19 +413,19 @@ index 6094805..0bb5119 100755
 -  range_graph_imperial_statute ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_statute-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
 -  range_graph_metric ${DOCUMENTROOT}/graphs/dump1090-$2-range_metric-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
 -  signal_graph ${DOCUMENTROOT}/graphs/dump1090-$2-signal-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  local_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  local_trailing_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_trailing_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  range_graph_imperial_nautical ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_nautical-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  range_graph_imperial_statute ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_statute-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  range_graph_metric ${DOCUMENTROOT}/graphs/dump1090-$2-range_metric-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  signal_graph ${DOCUMENTROOT}/graphs/dump1090-$2-signal-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  local_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_rate-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  local_trailing_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-local_trailing_rate-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  range_graph_imperial_nautical ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_nautical-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  range_graph_imperial_statute ${DOCUMENTROOT}/graphs/dump1090-$2-range_imperial_statute-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  range_graph_metric ${DOCUMENTROOT}/graphs/dump1090-$2-range_metric-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
++  signal_graph ${DOCUMENTROOT}/graphs/dump1090-$2-signal-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
  }
  
  dump1090_hub_graphs() {
    dump1090_graphs "$1" "$2" "$3" "$4" "$5"
    system_graphs "$1" "$2" "$3" "$4" "$5"
 -  remote_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-remote_rate-$4.png /var/lib/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
-+  remote_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-remote_rate-$4.png $SNAP_COMMON/collectd/rrd/$1/dump1090-$2 "$3" "$4" "$5"
++  remote_rate_graph ${DOCUMENTROOT}/graphs/dump1090-$2-remote_rate-$4.png ${RRDDIR}/$1/dump1090-$2 "$3" "$4" "$5"
  }
  
  period="$1"

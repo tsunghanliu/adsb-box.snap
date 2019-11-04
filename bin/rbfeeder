@@ -23,4 +23,11 @@ if [ ! -f "$RBFEEDER_INI" ]; then
 	sed -i 's/\/var\/log\/rbfeeder.log/\/dev\/null/' "$RBFEEDER_INI"
 fi
 
+if [ "$SNAP_ARCH" = "arm64" ]; then
+	export LD_LIBRARY_PATH="$SNAP/usr/lib/arm-linux-gnueabihf:$SNAP/lib/arm-linux-gnueabihf:$SNAP_COMMON/arm-linux-gnueabihf:$LD_LIBRARY_PATH"
+fi
+
+export SNAPCRAFT_PRELOAD=$SNAP
+export LD_PRELOAD="$SNAP/lib/libsnapcraft-preload.so"
+
 $BIN --config "$RBFEEDER_INI"

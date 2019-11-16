@@ -1,5 +1,5 @@
 name: adsb-box
-version: '1.2'
+version: set-by-version-script
 version-script: git describe --tags --always --dirty
 summary: ADS-B tools
 description: |

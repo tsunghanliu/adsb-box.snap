@@ -79,7 +79,7 @@ apps:
     passthrough:
       after: [dump1090]
   rbfeeder:
-    command: bin/snapcraft-preload $SNAP/bin/rbfeeder
+    command: bin/rbfeeder
     daemon: simple
     plugs: [network, network-bind, network-observe, hardware-observe]
   rbfeeder-mlat:
@@ -87,7 +87,7 @@ apps:
     daemon: simple
     plugs: [network, network-bind, network-observe]
   rbfeedercli:
-    command: bin/snapcraft-preload $SNAP/bin/rbfeedercli
+    command: bin/rbfeedercli
 
 parts:
   common:
@@ -350,11 +350,51 @@ parts:
       - to armhf: [libcurl3-gnutls, libglib2.0-0]
       - to arm64: [libcurl3-gnutls, libglib2.0-0]
 
+  enable-foreign-arch:
+    plugin: nil
+    override-build: |
+      set -x
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        aarch64-*)
+          sudo dpkg --add-architecture armhf
+          sudo apt update
+          ;;
+      esac
+
+  non-native-debs:
+    plugin: nil
+    after: [enable-foreign-arch]
+    stage-packages:
+      - to arm64:
+        - libcurl3-gnutls:armhf
+        - libglib2.0-0:armhf
+        - librtlsdr0:armhf
+        - libusb-1.0-0:armhf
+        - libstdc++6:armhf
+        - netbase
+
   snapcraft-preload:
     source: https://github.com/tsunghanliu/snapcraft-preload.git
-    plugin: cmake
+    plugin: nil
     build-packages:
+      - cmake
       - on amd64: [gcc-multilib, g++-multilib]
+      - on arm64: [crossbuild-essential-armhf]
+    override-build: |
+      set -x
+      case $SNAPCRAFT_ARCH_TRIPLET in
+        aarch64-*)
+          export CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++
+          ;;
+      esac
+      export DESTDIR=${SNAPCRAFT_PART_INSTALL}
+      export CMAKE_PREFIX_PATH=${SNAPCRAFT_STAGE}
+      export CMAKE_INCLUDE_PATH="${SNAPCRAFT_STAGE}/include:${SNAPCRAFT_STAGE}/usr/include:${SNAPCRAFT_STAGE}/include/${SNAPCRAFT_ARCH_TRIPLET}:${SNAPCRAFT_STAGE}/usr/include/${SNAPCRAFT_ARCH_TRIPLET}
+      export CMAKE_LIBRARY_PATH="${SNAPCRAFT_STAGE}/lib:${SNAPCRAFT_STAGE}/usr/lib:${SNAPCRAFT_STAGE}/lib/${SNAPCRAFT_ARCH_TRIPLET}:${SNAPCRAFT_STAGE}/usr/lib/${SNAPCRAFT_ARCH_TRIPLET}
+      cmake ${SNAPCRAFT_PART_SRC} -DCMAKE_INSTALL_PREFIX=
+      cmake --build . -- -j$(nproc)
+      cmake --build . --target install
+
 
 passthrough:
   layout:

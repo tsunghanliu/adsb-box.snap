@@ -117,7 +117,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v3.7.1
+    source-branch: v3.7.2
     override-build: |
       echo 'patching dump1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
@@ -179,7 +179,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v3.7.1
+    source-branch: v3.7.2
     override-build: |
       echo 'patching piaware ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
@@ -232,13 +232,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: https://repo-feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.18-5_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.24-5_amd64.tgz
       - else:
-        - on i386: https://repo-feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.18-5_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.24-5_i386.tgz
       - else:
-        - on armhf: https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.24-7_armhf.tgz
       - else:
-        - on arm64: https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.24-7_armhf.tgz
       - else fail
     build-packages:
       - wget
@@ -328,7 +328,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.19-20190226175114_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.21-20191004004313_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"

@@ -239,15 +239,17 @@ Question | Answer | Note
 -|-|-
 email address | email_address | your email address on FR24
 sharing key | sharying_key | If you ever share your day, find it on FR24 web
-participate MLAT | yes_or_no (up to you) | If yes, need to specify your coordinates
+participate MLAT | yes_or_no (up to you) | On amd64/i386, MLAT is not supported, please answer **no**. If yes, need to specify your coordinates
 automatically configure dump1090 | no |
 receiver type | 4 | ModeS Beast
 connection type | 1 | network connection
-receiver address | localhost |
+receiver address | 127.0.0.1 | On amd64/i386, please don't use _localhost_
 receiver port | 30005 |
 enable RAW data feed | yes |
 enable Basestation data feed | yes |
 logfile mode | 0 | disable
+
+There are some known issues on amd64/i386 platform, see the [post](https://forum.flightradar24.com/forum/radar-forums/flightradar24-feeding-data-to-flightradar24/12639-1-0-24-5-amd64-error) for detail.
 
 If you want to modify the configurations later, please use:
 ``` sh

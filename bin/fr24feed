@@ -10,6 +10,7 @@ BIN="$SNAP/usr/bin/fr24feed"
 WORKDIR="$SNAP_DATA/fr24feed"
 PIDFILE="$WORKDIR/fr24feed.pid"
 MONITORFILE="/tmp/fr24feed.txt"
+CONF="/etc/fr24feed.ini"
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
 
@@ -20,13 +21,35 @@ if [ -f "$SNAP_DATA/fr24feed.ini" ]; then
 	rm "$SNAP_DATA/fr24feed.ini"
 fi
 
-if [ ! -f /etc/fr24feed.ini ]; then
-	touch /etc/fr24feed.ini
+if [ ! -f "$CONF" ]; then
+	touch "$CONF"
 fi
 
-if [ "$(grep -c fr24key= /etc/fr24feed.ini)" -ne 1 ]; then
+if [ "$(grep -c fr24key= "$CONF")" -ne 1 ]; then
 	echo fr24feed is not configured yet ...
 	exit
+fi
+
+# on amd64 and i386, not use localhost as hostname and no mlat
+if [ "$SNAP_ARCH" = "amd64" ] || [ "$SNAP_ARCH" = "i386" ]; then
+	UPDATE_CONF=0
+	NEW_CONF="/tmp/fr24feed.ini.tmp"
+	cp "$CONF" "$NEW_CONF"
+	if [ "$(grep -c "host=\"localhost:" "$NEW_CONF")" != 0 ]; then
+		sed -i 's/host="localhost:/host="127.0.0.1:/g' "$NEW_CONF"
+		UPDATE_CONF=1
+	fi
+	if [ "$(grep -c "mlat=\"yes\"" "$NEW_CONF")" != 0 ]; then
+		sed -i 's/mlat="yes"/mlat="no"/g' "$NEW_CONF"
+		UPDATE_CONF=1
+	fi
+	if [ "$(grep -c "mlat-without-gps=\"yes\"" "$NEW_CONF")" != 0 ]; then
+		sed -i 's/mlat-without-gps="yes"/mlat-without-gps="no"/g' "$NEW_CONF"
+		UPDATE_CONF=1
+	fi
+	if [ "$UPDATE_CONF" -eq 1 ]; then
+		cp "$NEW_CONF" "$CONF"
+	fi
 fi
 
 ARGS=("--monitor-file=$MONITORFILE" "--write-pid=$PIDFILE")
@@ -40,5 +63,7 @@ case "$ENABLE_LOG" in
 		ARGS+=("--quiet")
 		;;
 esac
+
+export TZ=GMT
 
 $BIN "${ARGS[@]}"

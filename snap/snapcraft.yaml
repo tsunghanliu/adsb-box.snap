@@ -238,7 +238,7 @@ parts:
       - else:
         - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.24-7_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.24-7_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.23-8_armhf.tgz
       - else fail
     build-packages:
       - wget

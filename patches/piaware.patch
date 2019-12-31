@@ -1,8 +1,8 @@
 diff --git a/package/fa_piaware_config.tcl b/package/fa_piaware_config.tcl
-index 7afeadf..1907f88 100644
+index 4f06160..f82d3f1 100644
 --- a/package/fa_piaware_config.tcl
 +++ b/package/fa_piaware_config.tcl
-@@ -534,7 +534,7 @@ namespace eval ::fa_piaware_config {
+@@ -518,7 +518,7 @@ namespace eval ::fa_piaware_config {
  				set f [open $temppath "w" [expr {$fpstat(mode) & 0777}]]
  
  				# fix the ownership to match the old file
@@ -11,7 +11,7 @@ index 7afeadf..1907f88 100644
  			}
  
  			# write the new data
-@@ -1065,30 +1065,22 @@ namespace eval ::fa_piaware_config {
+@@ -1048,26 +1048,24 @@ namespace eval ::fa_piaware_config {
  	# (starting from the highest priority):
  	#
  	#  priority 100+:     any extra config file given as an argument (readonly)
@@ -33,22 +33,19 @@ index 7afeadf..1907f88 100644
  		set combined [uplevel 1 ::fa_piaware_config::new ::fa_piaware_config::ConfigGroup $name -metadata $metadata]
  
 -		$combined add [new ConfigFile #auto -filename "/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
--		$combined add [new ConfigFile #auto -filename "/etc/piaware.conf" -metadata $metadata -priority 40 -writeHelper $::fa_piaware_config::helperPath]
--
--		$combined add [new ConfigFile #auto -filename "/boot/piaware-config.txt" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
 +		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/etc/piaware.conf" -metadata $metadata -priority 40 -readonly 1]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware/piaware.conf" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath]
  
- 		set prio 100
--		foreach f [lsort [glob -nocomplain -types f "/media/usb/*/piaware-config.txt"]] {
--			$combined add [new ConfigFile #auto -filename $f -metadata $metadata -priority $prio -readonly 1]
--			incr prio
--		}
--
  		if {$extraConfigFile ne ""} {
- 			$combined add [new ConfigFile #auto -filename $extraConfigFile -metadata $metadata -priority $prio -readonly 1]
+-			$combined add [new ConfigFile #auto -filename $extraConfigFile -metadata $metadata -priority 100]
++			$combined add [new ConfigFile #auto -filename $extraConfigFile -metadata $metadata -priority 100 -readonly 1]
+ 		} else {
+-			$combined add [new ConfigFile #auto -filename "/etc/piaware.conf" -metadata $metadata -priority 40 -writeHelper $::fa_piaware_config::helperPath]
+-			$combined add [new ConfigFile #auto -filename "/boot/piaware-config.txt" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
++			$combined add [new ConfigFile #auto -filename "$::env(SNAP)/etc/piaware.conf" -metadata $metadata -priority 40 -readonly 1]
++			$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware/piaware.conf" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath]
  		}
+ 
+ 		return $combined
 diff --git a/package/fa_sudo.tcl b/package/fa_sudo.tcl
 index 60f748e..086f9e1 100644
 --- a/package/fa_sudo.tcl
@@ -66,7 +63,7 @@ index 60f748e..086f9e1 100644
  		set path [auto_execok $::fa_sudo::dropRootHelper]
  		if {$path ne ""} {
 diff --git a/package/piaware.tcl b/package/piaware.tcl
-index 6eff4fc..b9be60e 100644
+index 1e1f340..0f9acd5 100644
 --- a/package/piaware.tcl
 +++ b/package/piaware.tcl
 @@ -11,7 +11,11 @@ package require Itcl
@@ -83,7 +80,7 @@ index 6eff4fc..b9be60e 100644
  
  #
 diff --git a/programs/piaware-config/main.tcl b/programs/piaware-config/main.tcl
-index 3688753..858a71f 100644
+index e2c9c35..a39fd97 100644
 --- a/programs/piaware-config/main.tcl
 +++ b/programs/piaware-config/main.tcl
 @@ -19,7 +19,11 @@ source $::launchdir/helpers.tcl

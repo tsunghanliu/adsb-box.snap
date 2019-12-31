@@ -218,8 +218,7 @@ Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware
 ``` sh
 # display all configuration items
 $ sudo adsb-box.piaware-config -showall
-# set your account. This step isn't madatoried.
-$ sudo adsb-box.piaware-config flightaware-user <USERNAME> flightaware-password <PASSWORD>
+## update the configurations accordingly
 # restart the piaware to apply the new configuration
 $ sudo snap restart adsb-box.piaware
 ```

@@ -14,6 +14,7 @@ This is a snap to establish a ADS-B receiver box.
 * [plane finder](https://planefinder.net/sharing/)
 * [RadarBox](https://www.radarbox24.com/)
 * [collectd](https://collectd.org)
+* [rtl_biast](https://github.com/rtlsdrblog/rtl_biast)
 * graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
 * other base tools and libraries, e.g python and tcl
 
@@ -343,8 +344,16 @@ Receiver: connected (813 MSGS/0 SYNC)
 Check the pfclient built-in web at `http://your-device-ip:30053/`.
 
 ## rtl-sdr tools
-Use ` $ sudo adsb-box.rtltest` to run the rtl_test utility.
+Use ` $ sudo adsb-box.rtltest` to run the rtl_test utility.  
 You can use it to do PPM error measurement (`-p`) or other tests. Use `-h` to show the help messages.
+
+Use ` $ sudo adsb-box.rtlbiast -b [1/0]` for turning the RTL-SDR.com biast on/off.  
+**Note:** You must stop dump1090 in order to change the biast settings:  
+```
+$ sudo snap stop adsb-box.dump1090
+$ sudo adsb-box.rtlbiast -b 1
+$ sudo snap start adsb-box.dump1090
+```
 
 # Upgrade, backup and restore
 

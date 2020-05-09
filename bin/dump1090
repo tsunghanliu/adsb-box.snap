@@ -6,6 +6,8 @@ BIN="$SNAP/usr/bin/dump1090-fa"
 ARGS=()
 CONF="$SNAP_DATA/dump1090-fa.conf"
 
+BIAST_BIN="$SNAP/bin/rtl_biast"
+
 # migration for config file
 if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
 	if [ -f "$CONF" ]; then
@@ -100,6 +102,10 @@ if [ -n "$EXTRA_ARGS" ]; then
 fi
 
 mkdir -p $JSON_DIR
+
+# Enable Bias-T for RTL-SDR v3
+[ -z "$BIAST" ] && BIAST="$(snapctl get biast)"
+[ "$BIAST" = "1" ] && $BIAST_BIN -b 1
 
 if [ -n "$NICE_LEVEL" ]; then
 	nice -n $NICE_LEVEL "$BIN" "${ARGS[@]}"

@@ -349,12 +349,17 @@ You can use it to do PPM error measurement (`-p`) or other tests. Use `-h` to sh
 
 Use ` $ sudo adsb-box.rtlbiast -b [1/0]` for turning the RTL-SDR.com biast on/off.  
 **Note:** You must stop dump1090 in order to change the biast settings:  
-```
+```sh
 $ sudo snap stop adsb-box.dump1090
 $ sudo adsb-box.rtlbiast -b 1
 $ sudo snap start adsb-box.dump1090
 ```
-
+  
+To automatically turn on rtl-sdr biast when dump1090 is starting:  
+``` sh
+$ sudo snap set adsb-box biast=1
+```
+  
 # Upgrade, backup and restore
 
 ## Upgrade this snap

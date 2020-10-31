@@ -225,13 +225,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: http://repo.feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.25-2_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_x86_64_binaries/fr24feed_1.0.25-3_amd64.tgz
       - else:
-        - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.25-1_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.25-3_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.25-3_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.26-9_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.25-3_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.26-9_armhf.tgz
       - else fail
     build-packages:
       - wget

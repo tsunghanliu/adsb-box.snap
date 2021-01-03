@@ -81,6 +81,9 @@ apps:
     plugs: [network, network-bind, network-observe]
   rbfeedercli:
     command: bin/rbfeedercli
+  rtlbiast:
+    command: bin/rtl_biast
+    plugs: [raw-usb, hardware-observe]
 
 parts:
   common:
@@ -272,6 +275,12 @@ parts:
     plugin: nil
     stage-packages:
       - rtl-sdr
+
+  rtlbiast:
+    plugin: cmake
+    configflags: ['-DDETACH_KERNEL_DRIVER=ON']
+    source: https://github.com/rtlsdrblog/rtl_biast
+    source-type: git
 
   collectd:
     plugin: nil

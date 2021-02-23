@@ -15,6 +15,7 @@ if [ "$L_VERSION" != "$R_VERSION" ]; then
 fi
 
 # fr24feed (amd64)
+wget -q -O fr24feed_versions.json https://repo-feed.flightradar24.com/fr24feed_versions.json
 R_VERSION=$(python -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_x86_64_tgz"]["url"]["software"]);' < fr24feed_versions.json)
 L_VERSION=$(grep "fr24feed_.*_amd64.tgz" snap/snapcraft.yaml | sed 's/.*on amd64: //')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
@@ -29,7 +30,6 @@ if [ "$L_VERSION" != "$R_VERSION" ]; then
 fi
 
 # fr24feed (armhf)
-wget -q -O fr24feed_versions.json https://repo-feed.flightradar24.com/fr24feed_versions.json
 R_VERSION=$(python -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_arm_tgz"]["url"]["software"]);' < fr24feed_versions.json)
 L_VERSION=$(grep "fr24feed_.*_armhf.tgz" snap/snapcraft.yaml | grep "on armhf" | sed 's/.*on armhf: //')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
@@ -43,7 +43,8 @@ echo "Check https://opensky-network.org/community/projects/30-dump1090-feeder"
 echo "Check https://planefinder.net/sharing/client, current version is $(grep "pfclient_.*_armhf.deb" snap/snapcraft.yaml | grep "on armhf:" | sed 's/.*\.net\///')"
 
 # radarbox feeder
-R_VERSION=$(wget -qO - http://apt.rb24.com/dists/rpi-stable/main/binary-armhf/Packages | grep -A 10 "Package: rbfeeder" | grep "Filename: " | cut -c 11-)
+#R_VERSION=$(wget -qO - http://apt.rb24.com/dists/rpi-stable/main/binary-armhf/Packages | grep -A 10 "Package: rbfeeder" | grep "Filename: " | cut -c 11-)
+R_VERSION=$(wget -qO - http://apt.rb24.com/dists/buster/main/binary-armhf/Packages | grep -A 10 "Package: rbfeeder" | grep "Filename: " | cut -c 11-)
 L_VERSION=$(grep "rbfeeder_.*_armhf.deb" snap/snapcraft.yaml | sed 's/.*\.com\///')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade rbfeeder to $R_VERSION"

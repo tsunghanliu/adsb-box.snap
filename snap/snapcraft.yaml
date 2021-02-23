@@ -259,13 +259,13 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: http://client.planefinder.net/pfclient_5.0.148_i386.deb
+      - on amd64: http://client.planefinder.net/pfclient_5.0.152_i386.deb
       - else:
-        - on i386: http://client.planefinder.net/pfclient_5.0.148_i386.deb
+        - on i386: http://client.planefinder.net/pfclient_5.0.152_i386.deb
       - else:
-        - on armhf: http://client.planefinder.net/pfclient_5.0.148_armhf.deb
+        - on armhf: http://client.planefinder.net/pfclient_5.0.152_armhf.deb
       - else:
-        - on arm64: http://client.planefinder.net/pfclient_5.0.148_armhf.deb
+        - on arm64: http://client.planefinder.net/pfclient_5.0.152_armhf.deb
       - else fail
 
   rtlsdr:

@@ -110,7 +110,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v4.0
+    source-branch: v5.0
     override-build: |
       echo 'patching dump1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
@@ -172,7 +172,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v4.0
+    source-branch: v5.0
     override-build: |
       echo 'patching piaware ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then

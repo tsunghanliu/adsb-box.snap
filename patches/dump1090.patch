@@ -41,3 +41,18 @@ index d312adc..c8c8811 100644
  
  generated/flavor.generic.o: generated/flavor.generic.c impl/subtract_n.c
  	$(STARCH_COMPILE) $(STARCH_CFLAGS)  generated/flavor.generic.c -o generated/flavor.generic.o
+diff --git a/Makefile.cpufeatures b/Makefile.cpufeatures
+index 099714e..88774e2 100644
+--- a/Makefile.cpufeatures
++++ b/Makefile.cpufeatures
+@@ -21,6 +21,10 @@ ifeq ($(CPUFEATURES_ARCH), x86_64)
+   CPUFEATURES_OBJS += cpu_features/src/cpuinfo_x86.o
+ endif
+ 
++ifneq (,$(filter $(CPUFEATURES_ARCH), i386 i686))
++  CPUFEATURES_OBJS += cpu_features/src/cpuinfo_x86.o
++endif
++
+ ifneq (,$(findstring arm,$(CPUFEATURES_ARCH)))
+   CPUFEATURES_OBJS += cpu_features/src/cpuinfo_arm.o
+ endif

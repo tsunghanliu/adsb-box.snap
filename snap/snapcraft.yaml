@@ -328,7 +328,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.21-20191004004313_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.3.5-20200727132301_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"

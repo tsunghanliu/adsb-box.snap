@@ -90,6 +90,7 @@ accesslog.filename          = "$ACCESS_LOG"
 }
 
 \$HTTP["url"] =~ "^/(dump1090\/data\/.*\.json\$|graphs\/.*\.png\$)" {
+    setenv.set-response-header = ( "Access-Control-Allow-Origin" => "*" )
     setenv.add-response-header = ( "Cache-Control" => "no-store, no-cache, must-revalidate, post-check=0, pre-check=0" )
     etag.use-inode = "disable"
     etag.use-mtime = "disable"

@@ -56,3 +56,37 @@ index 099714e..88774e2 100644
  ifneq (,$(findstring arm,$(CPUFEATURES_ARCH)))
    CPUFEATURES_OBJS += cpu_features/src/cpuinfo_arm.o
  endif
+diff --git a/dsp-types.h b/dsp-types.h
+index a3ef98d..962b608 100644
+--- a/dsp-types.h
++++ b/dsp-types.h
+@@ -16,6 +16,6 @@ typedef union {
+ typedef struct {
+     int16_t I;
+     int16_t Q;
+-} __attribute__((__packed__)) sc16_t;
++} __attribute__((__packed__, __aligned__(2))) sc16_t;
+ 
+ #endif
+diff --git a/debian/generate-wisdom b/debian/generate-wisdom
+index dc98d72..ef3dffa 100755
+--- a/debian/generate-wisdom
++++ b/debian/generate-wisdom
+@@ -9,12 +9,11 @@ echo "Benchmarking .. this will take a while." >&2
+ 
+ # generate initial wisdom so that twopass implementations have something to work with
+ echo "First pass: generating $WORKDIR/wisdom.initial" >&2
+-/usr/lib/dump1090-fa/starch-benchmark -i 5 -o $WORKDIR/wisdom.initial magnitude_uc8 magnitude_uc8_aligned mean_power_u16 mean_power_u16_aligned
++starch-benchmark -i 5 -o $WORKDIR/wisdom.initial magnitude_uc8 magnitude_uc8_aligned mean_power_u16 mean_power_u16_aligned
+ 
+ # generate the real wisdom
+-echo "Second pass: generating $WORKDIR/wisdom.local" >&2
+-/usr/lib/dump1090-fa/starch-benchmark -i 5 -r $WORKDIR/wisdom.initial -o $WORKDIR/wisdom.local
++echo "Second pass: generating $SNAP_COMMON/wisdom.local" >&2
++starch-benchmark -i 5 -r $WORKDIR/wisdom.initial -o $SNAP_COMMON/wisdom.local
+ 
+-echo "Wisdom written to $WORKDIR/wisdom.local" >&2
+-echo "Copy this file to /etc/dump1090-fa/wisdom.local" >&2
+-echo "(and restart dump1090-fa) to start using it." >&2
++echo "Wisdom written to $SNAP_COMMON/wisdom.local" >&2
++echo "run 'snap restart adsb-box.dump1090' to start using it." >&2

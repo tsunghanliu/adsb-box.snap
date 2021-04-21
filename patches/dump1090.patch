@@ -11,3 +11,82 @@ index c813c09..4c8704f 100644
          { start: 0xF09000, end: 0xF093FF, country: "ICAO (special use)", flag_image: "blank.png" },
  
          // Block assignments mentioned in Chapter 9 section 4, at the end so they are only used if
+diff --git a/dsp/generated/makefile.arm b/dsp/generated/makefile.arm
+index 58eaf5b..5145c5b 100644
+--- a/dsp/generated/makefile.arm
++++ b/dsp/generated/makefile.arm
+@@ -22,7 +22,7 @@ STARCH_CFLAGS := -DSTARCH_MIX_ARM
+ 
+ 
+ dsp/generated/flavor.armv7a_neon_vfpv4.o: dsp/generated/flavor.armv7a_neon_vfpv4.c dsp/impl/mean_power_u16.c dsp/impl/magnitude_power_uc8.c dsp/impl/magnitude_uc8.c dsp/impl/magnitude_sc16q11.c dsp/impl/magnitude_sc16.c
+-	$(STARCH_COMPILE) $(STARCH_CFLAGS) -march=armv7-a+neon-vfpv4 -mfpu=neon-vfpv4 -ffast-math dsp/generated/flavor.armv7a_neon_vfpv4.c -o dsp/generated/flavor.armv7a_neon_vfpv4.o
++	$(STARCH_COMPILE) $(STARCH_CFLAGS) -march=armv7-a -mfpu=neon-vfpv4 -ffast-math dsp/generated/flavor.armv7a_neon_vfpv4.c -o dsp/generated/flavor.armv7a_neon_vfpv4.o
+ 
+ dsp/generated/flavor.generic.o: dsp/generated/flavor.generic.c dsp/impl/mean_power_u16.c dsp/impl/magnitude_power_uc8.c dsp/impl/magnitude_uc8.c dsp/impl/magnitude_sc16q11.c dsp/impl/magnitude_sc16.c
+ 	$(STARCH_COMPILE) $(STARCH_CFLAGS)  dsp/generated/flavor.generic.c -o dsp/generated/flavor.generic.o
+diff --git a/starch/example/generated/makefile.arm b/starch/example/generated/makefile.arm
+index d312adc..c8c8811 100644
+--- a/starch/example/generated/makefile.arm
++++ b/starch/example/generated/makefile.arm
+@@ -22,10 +22,10 @@ STARCH_CFLAGS := -DSTARCH_MIX_ARM
+ 
+ 
+ generated/flavor.armv7a_vfpv4.o: generated/flavor.armv7a_vfpv4.c impl/subtract_n.c
+-	$(STARCH_COMPILE) $(STARCH_CFLAGS) -march=armv7-a+neon-vfpv4 -mfpu=neon-vfpv4 -ffast-math generated/flavor.armv7a_vfpv4.c -o generated/flavor.armv7a_vfpv4.o
++	$(STARCH_COMPILE) $(STARCH_CFLAGS) -march=armv7-a -mfpu=neon-vfpv4 -ffast-math generated/flavor.armv7a_vfpv4.c -o generated/flavor.armv7a_vfpv4.o
+ 
+ generated/flavor.armv7a_vfpv3.o: generated/flavor.armv7a_vfpv3.c impl/subtract_n.c
+-	$(STARCH_COMPILE) $(STARCH_CFLAGS) -march=armv7-a+neon-vfpv3 -mfpu=neon-vfpv3 -ffast-math generated/flavor.armv7a_vfpv3.c -o generated/flavor.armv7a_vfpv3.o
++	$(STARCH_COMPILE) $(STARCH_CFLAGS) -march=armv7-a -mfpu=neon-vfpv3 -ffast-math generated/flavor.armv7a_vfpv3.c -o generated/flavor.armv7a_vfpv3.o
+ 
+ generated/flavor.generic.o: generated/flavor.generic.c impl/subtract_n.c
+ 	$(STARCH_COMPILE) $(STARCH_CFLAGS)  generated/flavor.generic.c -o generated/flavor.generic.o
+diff --git a/Makefile.cpufeatures b/Makefile.cpufeatures
+index 099714e..88774e2 100644
+--- a/Makefile.cpufeatures
++++ b/Makefile.cpufeatures
+@@ -21,6 +21,10 @@ ifeq ($(CPUFEATURES_ARCH), x86_64)
+   CPUFEATURES_OBJS += cpu_features/src/cpuinfo_x86.o
+ endif
+ 
++ifneq (,$(filter $(CPUFEATURES_ARCH), i386 i686))
++  CPUFEATURES_OBJS += cpu_features/src/cpuinfo_x86.o
++endif
++
+ ifneq (,$(findstring arm,$(CPUFEATURES_ARCH)))
+   CPUFEATURES_OBJS += cpu_features/src/cpuinfo_arm.o
+ endif
+diff --git a/dsp-types.h b/dsp-types.h
+index a3ef98d..962b608 100644
+--- a/dsp-types.h
++++ b/dsp-types.h
+@@ -16,6 +16,6 @@ typedef union {
+ typedef struct {
+     int16_t I;
+     int16_t Q;
+-} __attribute__((__packed__)) sc16_t;
++} __attribute__((__packed__, __aligned__(2))) sc16_t;
+ 
+ #endif
+diff --git a/debian/generate-wisdom b/debian/generate-wisdom
+index dc98d72..ef3dffa 100755
+--- a/debian/generate-wisdom
++++ b/debian/generate-wisdom
+@@ -9,12 +9,11 @@ echo "Benchmarking .. this will take a while." >&2
+ 
+ # generate initial wisdom so that twopass implementations have something to work with
+ echo "First pass: generating $WORKDIR/wisdom.initial" >&2
+-/usr/lib/dump1090-fa/starch-benchmark -i 5 -o $WORKDIR/wisdom.initial magnitude_uc8 magnitude_uc8_aligned mean_power_u16 mean_power_u16_aligned
++starch-benchmark -i 5 -o $WORKDIR/wisdom.initial magnitude_uc8 magnitude_uc8_aligned mean_power_u16 mean_power_u16_aligned
+ 
+ # generate the real wisdom
+-echo "Second pass: generating $WORKDIR/wisdom.local" >&2
+-/usr/lib/dump1090-fa/starch-benchmark -i 5 -r $WORKDIR/wisdom.initial -o $WORKDIR/wisdom.local
++echo "Second pass: generating $SNAP_COMMON/wisdom.local" >&2
++starch-benchmark -i 5 -r $WORKDIR/wisdom.initial -o $SNAP_COMMON/wisdom.local
+ 
+-echo "Wisdom written to $WORKDIR/wisdom.local" >&2
+-echo "Copy this file to /etc/dump1090-fa/wisdom.local" >&2
+-echo "(and restart dump1090-fa) to start using it." >&2
++echo "Wisdom written to $SNAP_COMMON/wisdom.local" >&2
++echo "run 'snap restart adsb-box.dump1090' to start using it." >&2

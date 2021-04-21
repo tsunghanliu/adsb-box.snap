@@ -81,6 +81,8 @@ apps:
     plugs: [network, network-bind, network-observe]
   rbfeedercli:
     command: bin/rbfeedercli
+  generate-wisdom:
+    command: bin/generate-wisdom
 
 parts:
   common:
@@ -106,11 +108,11 @@ parts:
 
   dump1090:
     plugin: make
-    make-parameters: ['BLADERF=no', 'dump1090', 'faup1090']
+    make-parameters: ['BLADERF=no', 'dump1090', 'faup1090', 'starch-benchmark']
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v4.0
+    source-branch: v5.0
     override-build: |
       echo 'patching dump1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
@@ -120,18 +122,23 @@ parts:
       fi
       patch -p1 < "$PATCHES_DIR/dump1090.patch"
       cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html/flags-tiny/
-      sed -i '/RTLSDR ?= yes/ i DUMP1090_VERSION ?= \$\(shell git describe --always --tags --match=v\*\)' Makefile
+      DUMP1090_VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
+      sed -i "1i DUMP1090_VERSION ?= $DUMP1090_VERSION" Makefile
       echo 'building dump1090 ...'
       snapcraftctl build
     artifacts:
       - dump1090
       - faup1090
-      - public_html
+      - starch-benchmark
+      - debian/generate-wisdom
+      - public_html_merged
       - COPYING
     organize:
       dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
-      public_html: usr/share/dump1090-fa/html
+      starch-benchmark: usr/bin/starch-benchmark
+      debian/generate-wisdom: bin/generate-wisdom
+      public_html_merged: usr/share/dump1090-fa/html
       COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
       - pkg-config
@@ -172,7 +179,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v4.0
+    source-branch: v5.0
     override-build: |
       echo 'patching piaware ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then

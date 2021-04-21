@@ -176,6 +176,20 @@ $ snap set adsb-box dump1090.location-accuracy=
 $ snap restart adsb-box.dump1090
 ```
 
+#### Wisdom file support
+
+Since dump1090-fa v5.0, it supports [wisdom files](https://github.com/flightaware/dump1090#generating-wisdom-files). It has several built-in versions for various hardware to utilize their FPU/DSP unit. If you consider to have a local version. Run these commands:
+
+```sh
+$ sudo snap stop adsb-box
+$ sudo adsb-box.generate-wisdom
+$ sudo snap start adsb-box
+```
+
+Please note:
+
+> Ideally, to get stable results, you want to do this on an idle system with CPU frequency scaling disabled. Running the benchmarks will takesome time (10s of minutes).
+
 ### terrain-limit rings
 
 Read the following code block or `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`. Get your upintheair.json and place it at `/var/snap/adsb-box/<rev>/`.

@@ -5,6 +5,7 @@ set -e
 BIN="$SNAP/usr/bin/dump1090-fa"
 ARGS=()
 CONF="$SNAP_DATA/dump1090-fa.conf"
+WISDOM="$SNAP_COMMON/wisdom.local"
 
 # migration for config file
 if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
@@ -92,6 +93,8 @@ case "x$JSON_LOCATION_ACCURACY" in
 esac
 
 if [ "x$LOG_DECODED_MESSAGES" != "xyes" ]; then ARGS+=("--quiet"); fi
+
+if [ -f "$WISDOM" ]; then ARGS+=("--wisdom" "$WISDOM"); fi
 
 if [ -n "$EXTRA_ARGS" ]; then
 	for a in $EXTRA_ARGS; do

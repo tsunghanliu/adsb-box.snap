@@ -126,12 +126,12 @@ parts:
     artifacts:
       - dump1090
       - faup1090
-      - public_html
+      - public_html_merged
       - COPYING
     organize:
       dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
-      public_html: usr/share/dump1090-fa/html
+      public_html_merged: usr/share/dump1090-fa/html
       COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
       - pkg-config

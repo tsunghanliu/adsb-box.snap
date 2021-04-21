@@ -75,6 +75,7 @@ alias.url += (
     "/dump1090/" => "$SNAP/usr/share/dump1090-fa/html/",
     #"/data/" => "$JSON_DIR/",
     "/graphs/" => "/tmp/graphs/",
+    "/status.json" => "/tmp/status.json",
 )
 
 # The stat cache must be disabled, as aircraft.json changes

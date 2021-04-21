@@ -236,9 +236,9 @@ parts:
       - else:
         - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.25-3_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.26-9_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.27-2_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.26-9_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.27-2_armhf.tgz
       - else fail
     build-packages:
       - wget
@@ -266,13 +266,13 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: http://client.planefinder.net/pfclient_5.0.152_i386.deb
+      - on amd64: http://client.planefinder.net/pfclient_5.0.162_amd64.deb
       - else:
-        - on i386: http://client.planefinder.net/pfclient_5.0.152_i386.deb
+        - on i386: http://client.planefinder.net/pfclient_5.0.161_i386.deb
       - else:
-        - on armhf: http://client.planefinder.net/pfclient_5.0.152_armhf.deb
+        - on armhf: http://client.planefinder.net/pfclient_5.0.161_armhf.deb
       - else:
-        - on arm64: http://client.planefinder.net/pfclient_5.0.152_armhf.deb
+        - on arm64: http://client.planefinder.net/pfclient_5.0.161_armhf.deb
       - else fail
 
   rtlsdr:
@@ -328,7 +328,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.21-20191004004313_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.3.5-20200727132301_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"

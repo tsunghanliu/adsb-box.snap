@@ -8,7 +8,7 @@ description: |
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
-base: core
+base: core20
 
 apps:
   dump1090:
@@ -96,16 +96,6 @@ parts:
       - var
       - README.md
 
-  customized-ppa:
-    plugin: nil
-    build-packages:
-      - software-properties-common
-    override-pull: |
-      sudo add-apt-repository \
-        --yes \
-        ppa:robertliu/packages-for-ubuntu-core
-      sudo apt update
-
   dump1090:
     plugin: make
     make-parameters: ['BLADERF=no', 'dump1090', 'faup1090', 'starch-benchmark']
@@ -125,19 +115,14 @@ parts:
       DUMP1090_VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
       sed -i "1i DUMP1090_VERSION ?= $DUMP1090_VERSION" Makefile
       echo 'building dump1090 ...'
-      snapcraftctl build
-    artifacts:
-      - dump1090
-      - faup1090
-      - starch-benchmark
-      - debian/generate-wisdom
-      - public_html_merged
-      - COPYING
+      make -j$(nproc) BLADERF=no dump1090 faup1090 starch-benchmark
+      echo 'installing dump1090 ...'
+      cp -a dump1090 faup1090 starch-benchmark debian/generate-wisdom public_html_merged COPYING $SNAPCRAFT_PART_INSTALL
     organize:
       dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
       starch-benchmark: usr/bin/starch-benchmark
-      debian/generate-wisdom: bin/generate-wisdom
+      generate-wisdom: bin/generate-wisdom
       public_html_merged: usr/share/dump1090-fa/html
       COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
@@ -169,7 +154,7 @@ parts:
       echo 'patching tcllauncher ...'
       patch -p1 < "$PATCHES_DIR/tcllauncher.patch"
       snapcraftctl build
-    configflags: ['--with-tcl=/usr/lib/tcl8.6']
+    autotools-configure-parameters: ['--with-tcl=/usr/lib/tcl8.6']
     build-packages:
       - tcl8.6-dev
 
@@ -193,7 +178,7 @@ parts:
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/itcl3.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl \
-        $SNAPCRAFT_PART_INSTALL/usr/share/tcltk/tls1.6.7/pkgIndex.tcl \
+        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/tcltls1.7.20/pkgIndex.tcl \
         || \
         exit 1
     stage-packages:
@@ -282,7 +267,6 @@ parts:
 
   collectd:
     plugin: nil
-    after: [customized-ppa]
     stage-packages:
       - collectd
       - python2.7

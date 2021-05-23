@@ -83,6 +83,8 @@ apps:
     command: bin/rbfeedercli
   generate-wisdom:
     command: bin/generate-wisdom
+  dump978:
+    command: bin/dump978
 
 parts:
   common:
@@ -381,6 +383,36 @@ parts:
       cmake ${SNAPCRAFT_PART_SRC} -DCMAKE_INSTALL_PREFIX=
       cmake --build . -- -j$(nproc)
       cmake --build . --target install
+
+  dump978:
+    plugin: make
+    source: https://github.com/flightaware/dump978.git
+    source-type: git
+    # the branch should be the same with piaware
+    source-branch: v5.0
+    override-build: |
+      VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
+      sed -i "1i VERSION ?= $VERSION" Makefile
+      echo 'building dump978 ...'
+      #snapcraftctl build
+      make -j$(nproc) dump978-fa faup978 skyaware978
+      echo 'installing dump978 ...'
+      cp -a dump978-fa faup978 skyaware978 debian/copyright $SNAPCRAFT_PART_INSTALL
+    organize:
+      dump978-fa: usr/bin/dump978-fa
+      faup978: usr/lib/piaware/helpers/faup978
+      copyright: usr/share/dump978-fa/copyright
+    build-packages:
+      - libboost-system-dev
+      - libboost-program-options-dev
+      - libboost-regex-dev
+      - libboost-filesystem-dev
+      - libsoapysdr-dev
+    stage-packages:
+      - libboost-filesystem1.71.0
+      - libboost-program-options1.71.0
+      - libboost-regex1.71.0
+      - soapysdr-module-rtlsdr
 
 
 layout:

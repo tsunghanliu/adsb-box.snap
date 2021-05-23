@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+#set -x
+
+BIN="$SNAP/usr/bin/dump978-fa"
+
+$BIN $@
+

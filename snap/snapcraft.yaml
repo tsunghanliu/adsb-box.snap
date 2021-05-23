@@ -1,6 +1,5 @@
 name: adsb-box
-version: set-by-version-script
-version-script: git describe --tags --always --dirty
+#version: set-by-adopt-info
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -9,6 +8,7 @@ description: |
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
 base: core20
+adopt-info: common
 
 apps:
   dump1090:
@@ -88,6 +88,9 @@ parts:
   common:
     plugin: dump
     source: .
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version "$(git describe --tags --always --dirty)"
     organize:
       www: var/www
     prime:

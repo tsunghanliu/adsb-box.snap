@@ -135,16 +135,15 @@ parts:
       - libusb-1.0-0-dev
       - librtlsdr-dev
       - libncurses5-dev
+    stage-packages:
+      - librtlsdr0
+      - libusb-1.0-0
 
   lighttpd:
     plugin: nil
     stage-packages:
       - lighttpd
-    prime:
-      - usr/sbin/lighttpd
-      - usr/lib/libfam*
-      - usr/lib/lighttpd
-      - usr/share/doc/lighttpd/copyright
+      - libfam0
 
   tcllauncher:
     plugin: autotools
@@ -162,6 +161,8 @@ parts:
     autotools-configure-parameters: ['--with-tcl=/usr/lib/tcl8.6']
     build-packages:
       - tcl8.6-dev
+    stage-packages:
+      - libtcl8.6
 
   piaware:
     after: [tcllauncher]
@@ -276,6 +277,27 @@ parts:
       - collectd
       - python2.7
       - libpython2.7
+      - python3.8
+      - libpython3.8
+      - python3-urllib3
+      - libasn1-8-heimdal
+      - libbrotli1
+      - libcurl3-gnutls
+      - libgssapi3-heimdal
+      - libhcrypto4-heimdal
+      - libheimbase1-heimdal
+      - libheimntlm0-heimdal
+      - libhx509-5-heimdal
+      - libkrb5-26-heimdal
+      - libldap-2.4-2
+      - libnghttp2-14
+      - libperl5.30
+      - libpsl5
+      - libroken18-heimdal
+      - librtmp1
+      - libsasl2-2
+      - libssh-4
+      - libwind0-heimdal
     stage:
       - -etc/fonts/fonts.conf
 

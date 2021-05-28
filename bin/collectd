@@ -14,9 +14,6 @@ DISKFILE=$SNAP_DATA/disk.conf
 DISK=
 MOUNTPOINT=
 
-export PYTHONHOME=$SNAP/usr
-export PYTHONPATH=$SNAP/usr/lib/python2.7
-
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
@@ -98,7 +95,7 @@ PluginDir "$SNAP/usr/lib/collectd"
 # Added types for dump1090.                                                  #
 # Make sure the path to dump1090.db is correct.                              #
 #----------------------------------------------------------------------------#
-TypesDB "$SNAP/usr/share/adsb-receiver/graphs/dump1090.db" "$SNAP/usr/share/collectd/types.db"
+TypesDB "$SNAP/usr/share/graphs1090/dump1090.db" "$SNAP/usr/share/collectd/types.db"
 #----------------------------------------------------------------------------#
 # Interval at which to query values. This may be overwritten on a per-plugin #
 # base by using the 'Interval' option of the LoadPlugin block:               #
@@ -148,6 +145,13 @@ LoadPlugin disk
 	CacheTimeout $RRD_CACHE_TIMEOUT
 	WritesPerSecond $RRD_WRITES_PER_SECOND
 	RandomTimeout $RRD_RANDOM_TIMEOUT
+	RRARows 3000
+	RRATimespan 174000
+	RRATimespan 696000
+	RRATimespan 2784000
+	RRATimespan 16008000
+	RRATimespan 96048000
+	XFF 0.8
 </Plugin>
 #----------------------------------------------------------------------------#
 # Configure the dump1090 python module.                                      #
@@ -157,14 +161,19 @@ LoadPlugin disk
 # statistics will be loaded from http://localhost/dump1090/data/stats.json   #
 #----------------------------------------------------------------------------#
 <Plugin python>
-	ModulePath "$SNAP/usr/share/adsb-receiver/graphs"
+	ModulePath "$SNAP/usr/share/graphs1090"
 	LogTraces true
 	Interactive false
 	Import "dump1090"
 	<Module dump1090>
 		<Instance localhost>
 			URL "$URL"
+			URL_978 "http://localhost/skyaware978"
 		</Instance>
+	</Module>
+	Import "system_stats"
+	<Module system_stats>
+		placeholder "true"
 	</Module>
 </Plugin>
 <Plugin table>
@@ -225,4 +234,6 @@ if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 	cat /dev/null > "$LOGFILE"
 fi
 
-$BIN -f -C "$CONF" -P "$PIDFILE"
+# workaround for collectd bug (LP: #1872281)
+LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/libpython3.8.so \
+	$BIN -f -C "$CONF" -P "$PIDFILE"

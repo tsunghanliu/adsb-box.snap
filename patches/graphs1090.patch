@@ -1,0 +1,198 @@
+diff --git a/boot.sh b/boot.sh
+index 1a0f197..b31103f 100755
+--- a/boot.sh
++++ b/boot.sh
+@@ -1,7 +1,12 @@
+-#!/bin/bash
++#!/bin/bash -e
+ 
+-source /etc/default/graphs1090
++source $SNAP/etc/default/graphs1090
+ 
++if [ -f "$SNAP_DATA/graphs1090.conf" ]; then
++	source $SNAP_DATA/graphs1090.conf
++fi
++
++disable() {
+ if [ -f /var/lib/collectd/rrd/localhost/dump1090-localhost/dump1090_messages-messages_978.rrd ] \
+     || [ -f /var/lib/collectd/rrd/localhost/dump1090-localhost/dump1090_messages-messages_978.rrd.gz ] \
+     || [ -f /run/collectd/localhost/dump1090-localhost/dump1090_messages-messages_978.rrd ]
+@@ -19,6 +24,7 @@ else
+ 	sed -i -e 's?flex: 100%; // all_large?flex: 50%; // all_large?' /usr/share/graphs1090/html/portal.css
+ 	sed -i -e 's?display: inline; // all_large2?display: flex; // all_large2?' /usr/share/graphs1090/html/portal.css
+ fi
++}
+ 
+ if [[ $1 == "nographs" ]]; then
+ 	exit 0
+@@ -37,5 +43,5 @@ done
+ 
+ for i in 24h 8h 2h 48h 7d 14d 30d 90d 180d 365d 730d 1095d
+ do
+-	/usr/share/graphs1090/graphs1090.sh $i $1 &>/dev/null
++	$SNAP/usr/share/graphs1090/graphs1090.sh $i $1 &>/dev/null
+ done
+diff --git a/default b/default
+index 141c9d6..573a74f 100644
+--- a/default
++++ b/default
+@@ -59,4 +59,4 @@ lr_rate_per_aircraft=
+ # leave blank for a default of 0.1
+ position_scaling=
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/collectd/rrd
+diff --git a/graphs1090.sh b/graphs1090.sh
+index 356b4da..d64e956 100755
+--- a/graphs1090.sh
++++ b/graphs1090.sh
+@@ -1,6 +1,10 @@
+-#!/bin/bash
++#!/bin/bash -e
+ 
+-DOCUMENTROOT=/run/graphs1090
++DOCUMENTROOT=/tmp/graphs1090
++
++if [ ! -d ${DOCUMENTROOT} ]; then
++	mkdir -p ${DOCUMENTROOT}
++fi
+ 
+ renice -n 19 -p $$
+ 
+@@ -32,13 +36,13 @@ RED=E30022
+ DRED=990000
+ LRED=FFCCCB
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/collectd/rrd
+ # settings in /etc/default/graphs1090 will overwrite the DB directory
+ 
+-source /etc/default/graphs1090
++source $SNAP/etc/default/graphs1090
+ 
+-ether="$(ls ${DB}/localhost | grep interface -m1)"
+-wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1)"
++ether="$(ls ${DB}/localhost | grep interface -m1 || true)"
++wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1 || true)"
+ 
+ disk="$(ls ${DB}/localhost | grep disk -m1)"
+ 
+@@ -455,6 +459,10 @@ memory_graph() {
+ 
+ 
+ network_graph() {
++	if [ -z $ether ] && [ -z $wifi ]
++	then
++		return
++	fi
+ 	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
+ 	then
+ 		interfaces=(\
+@@ -794,6 +802,20 @@ local_trailing_rate_graph() {
+ 	mv "$1.tmp" "$1"
+ 	}
+ 
++# TODO: should set these parameters from command line or web
++range_graph_wrapper() {
++	range2=leftaxis
++
++	range=nautical
++	range_graph $@
++
++	range=statute
++	range_graph $@
++
++	range=metric
++	range_graph $@
++	}
++
+ range_graph(){
+ 	label="Nautical Miles"
+ 	unitconv=0.000539956803
+@@ -1002,13 +1024,13 @@ dump1090_graphs() {
+ 	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 
+-	range_graph ${DOCUMENTROOT}/dump1090-$2-range-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
++	range_graph_wrapper ${DOCUMENTROOT}/dump1090-$2-range-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 
+ 	signal_graph ${DOCUMENTROOT}/dump1090-$2-signal-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 	if [ -f ${DB}/$1/dump1090-$2/dump1090_messages-messages_978.rrd ]
+ 	then
+ 		sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
+-		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
++		range_graph_wrapper ${DOCUMENTROOT}/dump1090-$2-range_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+ 		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+ 		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+ 		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+@@ -1022,12 +1044,10 @@ system_graphs() {
+ 	disk_io_octets_graph ${DOCUMENTROOT}/system-$2-disk_io_octets-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
+ 	memory_graph ${DOCUMENTROOT}/system-$2-memory-$4.png ${DB}/$1/system_stats "$3" "$4" "$5"
+ 	network_graph ${DOCUMENTROOT}/system-$2-network_bandwidth-$4.png ${DB}/$1 "$3" "$4" "$5"
+-	if [[ $farenheit == 1 ]]
+-	then
+-		temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
+-	else
+-		temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
+-	fi
++
++	temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature_imperial-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
++	temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature_metric-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
++
+ 	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
+ 	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
+ }
+diff --git a/scatter.sh b/scatter.sh
+index f231ae9..0264870 100755
+--- a/scatter.sh
++++ b/scatter.sh
+@@ -1,14 +1,14 @@
+ #!/bin/bash
+ 
+ # Fetch a day worth of data from the rrds
+-data_dir=/var/lib/graphs1090/scatter
+-tmp=/run/graphs1090/scatter
++data_dir=$SNAP_COMMON/graphs1090/scatter
++tmp=/tmp/graphs1090/scatter
+ mkdir -p ${tmp}
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/collectd/rrd
+ # settings in /etc/default/graphs1090 will overwrite the DB directory
+ 
+-source /etc/default/graphs1090
++source $SNAP/etc/default/graphs1090
+ 
+ if [[ -z "$enable_scatter" ]] || [[ "enable_scatter" == "no" ]]; then
+     exit 0
+diff --git a/service-graphs1090.sh b/service-graphs1090.sh
+index 2631300..6959562 100755
+--- a/service-graphs1090.sh
++++ b/service-graphs1090.sh
+@@ -1,11 +1,15 @@
+-#!/bin/bash
++#!/bin/bash -e
++
++export XDG_DATA_HOME=$SNAP/usr/share
++export FONTCONFIG_PATH=$SNAP/etc/fonts/config.d
++export FONTCONFIG_FILE=$SNAP/etc/fonts/fonts.conf
+ 
+ echo "Generating all graphs"
+-/usr/share/graphs1090/boot.sh 0.4
++$SNAP/usr/share/graphs1090/boot.sh 0.4
+ 
+ graphs() {
+ 	#echo "Generating $1 graphs"
+-	/usr/share/graphs1090/graphs1090.sh $1 0.7 &>/dev/null
++	$SNAP/usr/share/graphs1090/graphs1090.sh $1 0.7 &>/dev/null
+ }
+ counter=0
+ hour_done=0
+@@ -51,6 +55,6 @@ do
+ 
+     if [[ $(date +%H:%M) == 00:07 ]]; then
+         echo running scatter.sh
+-        /usr/share/graphs1090/scatter.sh
++        $SNAP/usr/share/graphs1090/scatter.sh
+     fi
+ done

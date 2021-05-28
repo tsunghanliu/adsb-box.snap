@@ -56,8 +56,8 @@ apps:
     command: bin/collectd
     daemon: simple
     plugs: [network, system-observe, network-observe, mount-observe, hardware-observe]
-  graphs-gend:
-    command: bin/graphs-gend
+  graphs1090:
+    command: bin/graphs1090
     daemon: simple
     plugs: [process-control]
     after: [dump1090, collectd, lighttpd]
@@ -275,8 +275,6 @@ parts:
     plugin: nil
     stage-packages:
       - collectd
-      - python2.7
-      - libpython2.7
       - python3.8
       - libpython3.8
       - python3-urllib3
@@ -301,26 +299,32 @@ parts:
     stage:
       - -etc/fonts/fonts.conf
 
-  graphs-gend:
+  graphs1090:
     plugin: nil
-    source: https://github.com/jprochazka/adsb-receiver.git
+    source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
     stage-packages:
       - rrdtool
     override-build: |
+      set -x
       # patch
-      echo 'patching adsb-receiver scripts ...'
+      echo 'patching graphs1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
         PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
       else
         PATCHES_DIR="../../../patches"
       fi
-      patch -p1 < "$PATCHES_DIR/graphs-gend.patch"
+      patch -p1 < "$PATCHES_DIR/graphs1090.patch"
       # no build process is required
       # install
       pwd
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
-      cp -a build/portal/graphs $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/graphs1090
+      cp -a * $SNAPCRAFT_PART_INSTALL/usr/share/graphs1090
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp service-graphs1090.sh $SNAPCRAFT_PART_INSTALL/bin/graphs1090
+      mkdir -p $SNAPCRAFT_PART_INSTALL/etc/default
+      cp default $SNAPCRAFT_PART_INSTALL/etc/default/graphs1090
+
     stage:
       - -etc/fonts/fonts.conf
 

@@ -423,6 +423,7 @@ parts:
     organize:
       dump978-fa: usr/bin/dump978-fa
       faup978: usr/lib/piaware/helpers/faup978
+      skaware978: usr/share/dump978-fa/html
       copyright: usr/share/dump978-fa/copyright
     build-packages:
       - libboost-system-dev

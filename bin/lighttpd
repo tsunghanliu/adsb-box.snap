@@ -6,8 +6,8 @@ BIN=$SNAP/usr/sbin/lighttpd
 PORT=8080
 
 ## defined in bin/dump1090
-JSON_DIR=/tmp/dump1090-fa
-
+JSON_1090_DIR=/tmp/dump1090-fa
+JSON_978_DIR=/tmp/skyaware978
 COMPRESS_DIR=/tmp/lighttpd/compress
 
 LC_ALL=C.UTF-8
@@ -65,18 +65,28 @@ url.redirect += (
     #"^/data$" => "/data/",
     "^/dump1090$" => "/dump1090/",
     "^/dump1090/data$" => "/dump1090/data/",
+    "^/skyaware978$" => "/skyaware978/",
     "^/graphs$" => "/graphs/",
 )
 
 # child directory should be prior of parent directory
 alias.url += (
-    "/dump1090/data/" => "$JSON_DIR/",
+    "/dump1090/data/" => "$JSON_1090_DIR/",
     "/dump1090/upintheair.json" => "$SNAP_DATA/upintheair.json",
     "/dump1090/" => "$SNAP/usr/share/dump1090-fa/html/",
-    #"/data/" => "$JSON_DIR/",
+    #"/data/" => "$JSON_1090_DIR/",
+    "/skyaware978/data/" => "$JSON_978_DIR/",
+    "/skyaware978/" => "$SNAP/usr/share/dump978-fa/html/",
     "/graphs/" => "/tmp/graphs/",
     "/status.json" => "/tmp/status.json",
 )
+
+\$SERVER["socket"] == ":8978" {
+    alias.url += (
+        "/data/" => "$JSON_978_DIR/",
+        "/" => "$SNAP/usr/share/dump978-fa/html/",
+    )
+}
 
 # The stat cache must be disabled, as aircraft.json changes
 # frequently and lighttpd's stat cache often ends up with the

@@ -143,7 +143,7 @@ parts:
     plugin: nil
     stage-packages:
       - lighttpd
-      - libfam0
+      - libgamin0
 
   tcllauncher:
     plugin: autotools

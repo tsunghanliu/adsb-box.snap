@@ -12,7 +12,10 @@ if [ -z "$dev_index" ] && [ -z "$dev_serial" ]; then
 fi
 
 BIN="$SNAP/usr/bin/skyaware978-fa"
+JSON_DIR="/tmp/skyaware978"
 ARGS=()
+
+mkdir -p "$JSON_DIR"
 
 # net options
 ARGS+=("--connect" "localhost:30978")
@@ -23,7 +26,7 @@ ARGS+=("--history-count" "120")
 ARGS+=("--history-interval" "30")
 
 # json options
-ARGS+=("--json-dir" "/tmp/skyaware978")
+ARGS+=("--json-dir" "$JSON_DIR")
 
 # get location from snap settings
 LAT="$(snapctl get receiver.latitude)"

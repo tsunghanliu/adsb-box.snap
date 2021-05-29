@@ -124,7 +124,7 @@ parts:
         PATCHES_DIR="../../../patches"
       fi
       patch -p1 < "$PATCHES_DIR/dump1090.patch"
-      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html/flags-tiny/
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html_merged/flags-tiny/
       DUMP1090_VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
       sed -i "1i DUMP1090_VERSION ?= $DUMP1090_VERSION" Makefile
       echo 'building dump1090 ...'

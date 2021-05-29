@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+#set -x
+
+# get index/serial of receiver
+dev_index=$(snapctl get receiver.dump978.index)
+dev_serial=$(snapctl get receiver.dump978.serial)
+
+if [ -z "$dev_index" ] && [ -z "$dev_serial" ]; then
+	echo "set index or serial of receiver to enable $(basename "$0") service"
+	exit 0
+fi
+
+BIN="$SNAP/usr/bin/skyaware978-fa"
+ARGS=()
+
+# net options
+ARGS+=("--connect" "localhost:30978")
+ARGS+=("--reconnect-interval" "30")
+
+# history_options
+ARGS+=("--history-count" "120")
+ARGS+=("--history-interval" "30")
+
+# json options
+ARGS+=("--json-dir" "/tmp/skyaware978")
+
+# get location from snap settings
+LAT="$(snapctl get receiver.latitude)"
+LON="$(snapctl get receiver.longitude)"
+
+# position options
+if [ -n "$LAT" ] && [ -n "$LON" ]; then
+	ARGS+=("--lat" "$LAT" "--lon" "$LON")
+fi
+
+$BIN "${ARGS[@]}"
+

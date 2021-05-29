@@ -85,6 +85,14 @@ apps:
     command: bin/generate-wisdom
   dump978:
     command: bin/dump978
+    #daemon: simple
+    plugs: [network, network-bind, network-observe, raw-usb]
+    #after: [dump1090]
+  skyaware978:
+    command: bin/skyaware978
+    #daemon: simple
+    plugs: [network, network-bind, network-observe]
+    #after: [dump978]
 
 parts:
   common:
@@ -417,17 +425,26 @@ parts:
     # the branch should be the same with piaware
     source-branch: v5.0
     override-build: |
+      echo 'patching dump1090 ...'
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
+      patch -p1 < "$PATCHES_DIR/dump978-fa.patch"
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" skyaware/flags-tiny/
       VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
       sed -i "1i VERSION ?= $VERSION" Makefile
       echo 'building dump978 ...'
       #snapcraftctl build
       make -j$(nproc) dump978-fa faup978 skyaware978
       echo 'installing dump978 ...'
-      cp -a dump978-fa faup978 skyaware978 debian/copyright $SNAPCRAFT_PART_INSTALL
+      cp -a dump978-fa faup978 skyaware978 skyaware debian/copyright $SNAPCRAFT_PART_INSTALL
     organize:
       dump978-fa: usr/bin/dump978-fa
       faup978: usr/lib/piaware/helpers/faup978
-      skaware978: usr/share/dump978-fa/html
+      skyaware978: usr/bin/skyaware978-fa
+      skyaware: usr/share/dump978-fa/html
       copyright: usr/share/dump978-fa/copyright
     build-packages:
       - libboost-system-dev

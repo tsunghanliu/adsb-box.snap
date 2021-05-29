@@ -2,7 +2,35 @@
 set -e
 #set -x
 
-BIN="$SNAP/usr/bin/dump978-fa"
+# get index/serial of receiver
+dev_index=$(snapctl get receiver.dump978.index)
+dev_serial=$(snapctl get receiver.dump978.serial)
 
-$BIN $@
+if [ -z "$dev_index" ] && [ -z "$dev_serial" ]; then
+	echo "set index or serial of receiver to enable $(basename "$0") service"
+	exit 0
+fi
+
+BIN="$SNAP/usr/bin/dump978-fa"
+NICE_LEVEL=-5
+ARGS=()
+
+# receiver options
+if [ -n "$dev_index" ]; then
+	ARGS+=("--sdr" "driver=rtlsdr,rtl=$dev_index")
+else
+	ARGS+=("--sdr" "driver=rtlsdr,serial=$dev_serial")
+fi
+ARGS+=("--format" "CS8")
+
+# decoder_options
+# N/A
+
+# net options
+ARGS+=("--raw-port" "localhost:30978")
+ARGS+=("--json-port" "localhost:30979")
+
+export SOAPY_SDR_PLUGIN_PATH=$SNAP/usr/lib/x86_64-linux-gnu/SoapySDR/modules0.7
+
+nice -n $NICE_LEVEL "$BIN" "${ARGS[@]}"
 

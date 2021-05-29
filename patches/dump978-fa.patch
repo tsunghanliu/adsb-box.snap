@@ -1,0 +1,13 @@
+diff --git a/skyaware/flags.js b/skyaware/flags.js
+index fb40163..442ac1c 100644
+--- a/skyaware/flags.js
++++ b/skyaware/flags.js
+@@ -195,7 +195,7 @@ var ICAO_Ranges = [
+         { start: 0x004000, end: 0x0043FF, country: "Zimbabwe", flag_image: "Zimbabwe.png" },
+ 
+         { start: 0xF00000, end: 0xF07FFF, country: "ICAO (temporary assignments)", flag_image: "blank.png" },
+-        { start: 0x899000, end: 0x8993FF, country: "ICAO (special use)", flag_image: "blank.png" },
++        { start: 0x899000, end: 0x8993FF, country: "Taiwan", flag_image: "Taiwan.png" },
+         { start: 0xF09000, end: 0xF093FF, country: "ICAO (special use)", flag_image: "blank.png" },
+ 
+         // Block assignments mentioned in Chapter 9 section 4, at the end so they are only used if

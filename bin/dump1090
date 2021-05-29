@@ -16,6 +16,10 @@ if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
 	fi
 fi
 
+# get index/serial of receiver
+dev_index=$(snapctl get receiver.dump1090.index)
+dev_serial=$(snapctl get receiver.dump1090.serial)
+
 if [ ! -f "$CONF" ]; then
 	cp "$SNAP/etc/dump1090-fa/config-template" "$CONF"
 fi
@@ -95,6 +99,12 @@ esac
 if [ "x$LOG_DECODED_MESSAGES" != "xyes" ]; then ARGS+=("--quiet"); fi
 
 if [ -f "$WISDOM" ]; then ARGS+=("--wisdom" "$WISDOM"); fi
+
+if [ -n "$dev_index" ]; then
+	ARGS+=("--device" "$dev_index")
+elif [ -n "$dev_serial" ]; then
+	ARGS+=("--device" "$dev_serial")
+fi
 
 if [ -n "$EXTRA_ARGS" ]; then
 	for a in $EXTRA_ARGS; do

@@ -96,11 +96,11 @@ server.stat-cache-engine    = "disable"
 accesslog.filename          = "$ACCESS_LOG"
 
 #dir-listing.activate = "disable"
-\$HTTP["url"] =~ "^/(graphs|dump1090\/data)(\$|/)" {
+\$HTTP["url"] =~ "^/(graphs|dump1090\/data|dump978\/data)(\$|/)" {
     dir-listing.activate = "enable"
 }
 
-\$HTTP["url"] =~ "^/(dump1090\/data\/.*\.json\$|graphs\/.*\.png\$)" {
+\$HTTP["url"] =~ "^/(dump1090\/data\/.*\.json\$|dump978\/data\/.*\.json\$|graphs\/.*\.png\$)" {
     setenv.set-response-header = ( "Access-Control-Allow-Origin" => "*" )
     setenv.add-response-header = ( "Cache-Control" => "no-store, no-cache, must-revalidate, post-check=0, pre-check=0" )
     etag.use-inode = "disable"

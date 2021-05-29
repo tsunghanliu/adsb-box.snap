@@ -43,10 +43,11 @@ fi
 [ -f "$SNAP_DATA/collectd.pid" ] && rm "$SNAP_DATA/collectd.pid"
 
 if [ -f "$SNAP_COMMON/URL.conf" ]; then
-	URL="$(head -n 1 "$SNAP_COMMON/URL.conf" | tr -d '\n')"
+	URL_1090="$(head -n 1 "$SNAP_COMMON/URL.conf" | tr -d '\n')"
 else
-	URL="http://localhost:8080/dump1090"
+	URL_1090="http://localhost:8080/dump1090"
 fi
+URL_978="http://localhost:8080/skyaware978"
 
 RRD_WRITES_PER_SECOND=$(snapctl get collectd.rrd-writes-per-seoncd)
 RRD_WRITES_PER_SECOND=${RRD_WRITES_PER_SECOND:-50}
@@ -167,8 +168,8 @@ LoadPlugin disk
 	Import "dump1090"
 	<Module dump1090>
 		<Instance localhost>
-			URL "$URL"
-			URL_978 "http://localhost/skyaware978"
+			URL "$URL_1090"
+			URL_978 "$URL_978"
 		</Instance>
 	</Module>
 	Import "system_stats"

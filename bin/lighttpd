@@ -72,6 +72,7 @@ url.redirect += (
 # child directory should be prior of parent directory
 alias.url += (
     "/dump1090/data/" => "$JSON_1090_DIR/",
+    "/dump1090/data-978/" => "$JSON_978_DIR/",
     "/dump1090/upintheair.json" => "$SNAP_DATA/upintheair.json",
     "/dump1090/" => "$SNAP/usr/share/dump1090-fa/html/",
     #"/data/" => "$JSON_1090_DIR/",

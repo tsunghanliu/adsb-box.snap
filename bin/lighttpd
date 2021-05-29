@@ -78,7 +78,7 @@ alias.url += (
     #"/data/" => "$JSON_1090_DIR/",
     "/skyaware978/data/" => "$JSON_978_DIR/",
     "/skyaware978/" => "$SNAP/usr/share/dump978-fa/html/",
-    "/graphs/" => "/tmp/graphs/",
+    "/graphs/" => "/tmp/graphs1090/",
     "/status.json" => "/tmp/status.json",
 )
 

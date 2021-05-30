@@ -46,7 +46,7 @@ mkdir -p /tmp/graphs
 gen_graphs()
 {
 	echo "[$(date +"%F %T")] run cmd, arg=$*"
-	nice -n 5 "$SNAP/usr/share/adsb-receiver/graphs/make-collectd-graphs.sh" "$@" >/dev/null 2>&1
+	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" 0.7 >/dev/null 2>&1
 }
 
 init_timeouts()
@@ -118,6 +118,6 @@ while true; do
 		TIMEOUT_BACKUP=$((TIMEOUT_BACKUP+PERIOD_BACKUP))
 	fi
 
-	sleep 30
+	sleep 60
 done
 

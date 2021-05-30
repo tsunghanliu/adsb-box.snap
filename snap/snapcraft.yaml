@@ -85,14 +85,14 @@ apps:
     command: bin/generate-wisdom
   dump978:
     command: bin/dump978
-    #daemon: simple
+    daemon: simple
     plugs: [network, network-bind, network-observe, raw-usb]
-    #after: [dump1090]
+    after: [dump1090]
   skyaware978:
     command: bin/skyaware978
-    #daemon: simple
+    daemon: simple
     plugs: [network, network-bind, network-observe]
-    #after: [dump978]
+    after: [dump978]
 
 parts:
   common:

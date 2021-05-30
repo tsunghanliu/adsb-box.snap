@@ -56,8 +56,8 @@ apps:
     command: bin/collectd
     daemon: simple
     plugs: [network, system-observe, network-observe, mount-observe, hardware-observe]
-  graphs1090:
-    command: bin/graphs1090
+  graphs-gend:
+    command: bin/graphs-gend
     daemon: simple
     plugs: [process-control]
     after: [dump1090, collectd, lighttpd]
@@ -328,8 +328,6 @@ parts:
       pwd
       mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/graphs1090
       cp -a * $SNAPCRAFT_PART_INSTALL/usr/share/graphs1090
-      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
-      cp service-graphs1090.sh $SNAPCRAFT_PART_INSTALL/bin/graphs1090
       mkdir -p $SNAPCRAFT_PART_INSTALL/etc/default
       cp default $SNAPCRAFT_PART_INSTALL/etc/default/graphs1090
 

@@ -27,6 +27,13 @@ ERROR_LOG="$WORKDIR/error.log"
 [ -f "$SNAP_DATA/lighttpd.conf" ] && rm "$SNAP_DATA/lighttpd.conf"
 [ -f "$SNAP_DATA/lighttpd.pid" ] && rm "$SNAP_DATA/lighttpd.pid"
 
+# config.js
+if [ -n "$(snapctl get receiver.dump978.index)" ] || [ -n "$(snapctl get receiver.dump978.serial)" ]; then
+	echo "has_uat=true;" > /tmp/config.js
+else
+	echo "has_uat=false;" > /tmp/config.js
+fi
+
 cat << EOF > "$CONF"
 server.modules = (
     "mod_access",
@@ -80,6 +87,7 @@ alias.url += (
     "/skyaware978/" => "$SNAP/usr/share/dump978-fa/html/",
     "/graphs/" => "/tmp/graphs1090/",
     "/status.json" => "/tmp/status.json",
+    "/js/config.js" => "/tmp/config.js",
 )
 
 \$SERVER["socket"] == ":8978" {

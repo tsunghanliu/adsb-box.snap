@@ -43,6 +43,14 @@ $(document).ready(function () {
 		$(".navbar-menu").toggleClass("is-active");
 	});
 
+	// UAT978 block
+	if (has_uat == true) {
+		$('#uat978-block').show();
+	}
+	else {
+		$('#uat978-block').hide();
+	}
+
 	// Set default values for graphs
 	var cval;
 	cval = getCookie('range_unit');
@@ -189,6 +197,13 @@ function switchRangeGraph(unit) {
 				"	</figure>" +
 				"</a>"
 				);
+		$("#range-graph_978").html(
+				"<a id =\"dump1090-range_978_imperial_nautical-link\" class=\"graph-link\">" +
+				"	<figure class=\"image\">" +
+				"		<img id=\"dump1090-range_978_imperial_nautical-image\" src=\"#\" alt=\"UAT Max Range (Nautical Miles)\">" +
+				"	</figure>" +
+				"</a>"
+				);
 	}
 	else if (unit == "Statute Miles") {
 		$("#range-graph").html(
@@ -198,12 +213,26 @@ function switchRangeGraph(unit) {
 				"	</figure>" +
 				"</a>"
 				);
+		$("#range-graph_978").html(
+				"<a id =\"dump1090-range_978_imperial_statute-link\" class=\"graph-link\">" +
+				"	<figure class=\"image\">" +
+				"		<img id=\"dump1090-range_978_imperial_statute-image\" src=\"#\" alt=\"UAT Max Range (Statute Miles)\">" +
+				"	</figure>" +
+				"</a>"
+				);
 	}
 	else if (unit == "Kilometers") {
 		$("#range-graph").html(
 				"<a id =\"dump1090-range_metric-link\" class=\"graph-link\">" +
 				"	<figure class=\"image\">" +
 				"		<img id=\"dump1090-range_metric-image\" src=\"#\" alt=\"Max Range (Kilometers)\">" +
+				"	</figure>" +
+				"</a>"
+				);
+		$("#range-graph_978").html(
+				"<a id =\"dump1090-range_978_metric-link\" class=\"graph-link\">" +
+				"	<figure class=\"image\">" +
+				"		<img id=\"dump1090-range_978_metric-image\" src=\"#\" alt=\"Max Range (Kilometers)\">" +
 				"	</figure>" +
 				"</a>"
 				);
@@ -307,6 +336,29 @@ function switchView(newTimeFrame) {
 	$("#dump1090-signal-image").attr("src", "graphs/dump1090-" + $hostName + "-signal-" + $timeFrame + ".png?time=" + $timestamp);
 
 	$("#dump1090-cpu-image").attr("src", "graphs/dump1090-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
+
+	if (has_uat == true) {
+		$("#dump1090-messages_978-image").attr("src", "graphs/dump1090-" + $hostName + "-messages_978-" + $timeFrame + ".png?time=" + $timestamp);
+
+		$("#dump1090-aircraft_978-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft_978-" + $timeFrame + ".png?time=" + $timestamp);
+
+		element =  document.getElementById('dump1090-range_978_imperial_nautical-image');
+		if (typeof(element) != 'undefined' && element != null) {
+			$("#dump1090-range_978_imperial_nautical-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
+		}
+
+		element =  document.getElementById('dump1090-range_978_imperial_statute-image');
+		if (typeof(element) != 'undefined' && element != null) {
+			$("#dump1090-range_978_imperial_statute-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
+		}
+
+		element =  document.getElementById('dump1090-range_978_metric-image');
+		if (typeof(element) != 'undefined' && element != null) {
+			$("#dump1090-range_978_metric-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_metric-" + $timeFrame + ".png?time=" + $timestamp);
+		}
+
+		$("#dump1090-signal_978-image").attr("src", "graphs/dump1090-" + $hostName + "-signal_978-" + $timeFrame + ".png?time=" + $timestamp);
+	}
 
 	$("#system-cpu-image").attr("src", "graphs/system-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 

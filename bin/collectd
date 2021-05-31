@@ -87,6 +87,21 @@ else
 	source "$DISKFILE"
 fi
 
+case $SNAP_ARCH in
+	amd64)
+		ARCH_TRIPLET="x86_64-linux-gnu"
+		;;
+	armhf)
+		ARCH_TRIPLET="arm-linux-gnueabihf"
+		;;
+	arm64)
+		ARCH_TRIPLET="aarch64-linux-gnu"
+		;;
+	*)
+		ARCH_TRIPLET="$SNAP_ARCH-linux-gnu"
+		;;
+esac
+
 cat << EOF > "$CONF"
 # Config file for collectd(1).
 ##############################################################################
@@ -240,14 +255,15 @@ if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
 		cd "$RRDDIR"
 
 		TMPDIR=/tmp/rrd-migration
+		BACKUPDIR="$RRDDIR_DISK/localhost-$(date -I)"
 
-		cp -T -r -n localhost "$RRDDIR_DISK/localhost-$(date -I)"
+		[ ! -d "$BACKUPDIR" ] && cp -T -r -n localhost "$BACKUPDIR"
 		mv localhost/memory localhost/system_stats
 		cp -T -r localhost $TMPDIR
 		rm -r localhost
 
 		# collect data for 7 mins
-		export LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/libpython3.8.so
+		export LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so
 		timeout 420 $BIN -f -C "$CONF" -P "$PIDFILE"
 
 		# migrate DB one by one
@@ -277,5 +293,5 @@ if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 fi
 
 # workaround for collectd bug (LP: #1872281)
-LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/libpython3.8.so \
+LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
 	$BIN -f -C "$CONF" -P "$PIDFILE"

@@ -58,30 +58,34 @@ RRD_CACHE_FLUSH=${RRD_CACHE_FLUSH:-$((RRD_CACHE_TIMEOUT*10))}
 RRD_RANDOM_TIMEOUT=$(snapctl get collectd.rrd-random-timeout)
 RRD_RANDOM_TIMEOUT=${RRD_RANDOM_TIMEOUT:-0}
 
-# always update the disk.conf
-## FIXME: what is the best way to determine
-##  1. core or classic
-##  2. main storage
-if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
-	# Ubuntu Core
-	BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
-	if [ "$(df | grep -c " \/writable")" -eq 1 ]; then
-		# UC16
-		MOUNTPOINT="/writable"
+# create the disk.conf if it doesn't exist
+if [ ! -f "$DISKFILE" ]; then
+	## FIXME: what is the best way to determine
+	##  1. core or classic
+	##  2. main storage
+	if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
+		# Ubuntu Core
+		BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
+		if [ "$(df | grep -c " \/writable")" -eq 1 ]; then
+			# UC16
+			MOUNTPOINT="/writable"
+		else
+			# UC18
+			MOUNTPOINT="/var/lib/snapd/hostfs/writable"
+		fi
 	else
-		# UC18
-		MOUNTPOINT="/var/lib/snapd/hostfs/writable"
+		# Ubuntu Classic
+		BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
+		MOUNTPOINT="/"
 	fi
+	# shellcheck disable=SC2001
+	DISK=$(echo "$BOOTDEV" | \
+			sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
+	echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
+	echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > "$DISKFILE"
 else
-	# Ubuntu Classic
-	BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
-	MOUNTPOINT="/"
+	source "$DISKFILE"
 fi
-# shellcheck disable=SC2001
-DISK=$(echo "$BOOTDEV" | \
-		sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
-echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
-echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > "$DISKFILE"
 
 cat << EOF > "$CONF"
 # Config file for collectd(1).
@@ -208,8 +212,9 @@ LoadPlugin disk
 	ReportInodes true
 </Plugin>
 <Plugin "disk">
-	Disk "$DISK"
+	Disk "/^$DISK\$"
 	IgnoreSelected false
+	UdevNameAttr "DEVNAME"
 </Plugin>
 <Chain "PostCache">
 	<Rule>
@@ -227,6 +232,42 @@ LoadPlugin disk
 EOF
 
 chmod 0600 "$CONF"
+
+# migrate RRD DBs
+if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
+	if [ -d "$RRDDIR/localhost" ]; then
+		# based on graph1090/new-format.sh
+		cd "$RRDDIR"
+
+		TMPDIR=/tmp/rrd-migration
+
+		cp -T -r -n localhost "$RRDDIR_DISK/localhost-$(date -I)"
+		mv localhost/memory localhost/system_stats
+		cp -T -r localhost $TMPDIR
+		rm -r localhost
+
+		# collect data for 7 mins
+		export LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-x86_64-linux-gnu/libpython3.8.so
+		timeout 420 $BIN -f -C "$CONF" -P "$PIDFILE"
+
+		# migrate DB one by one
+		for file in $(cd localhost; find | grep '\.rrd'); do
+			rrdtool create -r $TMPDIR/$file -t localhost/$file localhost/$file
+		done
+
+		cp -T -r -n $TMPDIR localhost
+
+		# backup the runtime DBs
+		if [ "$PERIOD_BACKUP" -ne 0 ]; then
+			rrd-op backup
+		fi
+
+		# restart graphs-gend
+		snapctl restart adsb-box.graphs-gend
+	fi
+
+	touch "$BASEDIR/.db-v1-migrated"
+fi
 
 # rotate logs
 if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then

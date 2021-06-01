@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 
 # delay for dump1090 and collectd
 sleep 3

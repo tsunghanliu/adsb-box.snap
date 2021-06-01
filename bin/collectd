@@ -263,8 +263,10 @@ if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
 		rm -r localhost
 
 		# collect data for 7 mins
-		export LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so
-		timeout 420 $BIN -f -C "$CONF" -P "$PIDFILE"
+		LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
+			$BIN -f -C "$CONF" -P "$PIDFILE" &
+		sleep 420
+		kill $!
 
 		# migrate DB one by one
 		for file in $(cd localhost; find | grep '\.rrd'); do

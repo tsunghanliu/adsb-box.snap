@@ -75,7 +75,7 @@ index a29cdc9..ad36241 100644
      if ptime != 0 :
          V.dispatch(plugin_instance = instance_name,
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 356b4da..740dd5a 100755
+index 356b4da..a178797 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -91,36 +91,38 @@ index 356b4da..740dd5a 100755
  
  renice -n 19 -p $$
  
-@@ -32,15 +36,23 @@ RED=E30022
+@@ -32,15 +36,25 @@ RED=E30022
  DRED=990000
  LRED=FFCCCB
  
 -DB=/var/lib/collectd/rrd
-+PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
-+PERIOD_BACKUP=${PERIOD_BACKUP:-0}
-+if [ "$PERIOD_BACKUP" -ne 0 ]; then
-+	DB=/tmp/rrd
-+else
-+	DB=$SNAP_COMMON/collectd/rrd
-+fi
++DB=$SNAP_COMMON/var/lib/collectd/rrd
  # settings in /etc/default/graphs1090 will overwrite the DB directory
  
 -source /etc/default/graphs1090
 +source $SNAP/etc/default/graphs1090
-+source $SNAP_DATA/disk.conf
-+DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
++
++# use rrd db in tmp if exist
++PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
++PERIOD_BACKUP=${PERIOD_BACKUP:-0}
++if [ "$PERIOD_BACKUP" -ne 0 ]; then
++	DB=/tmp/rrd
++fi
  
 -ether="$(ls ${DB}/localhost | grep interface -m1)"
 -wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1)"
-+ether="$(ls ${DB}/localhost | grep interface -m1 || true)"
-+wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1 || true)"
++source $SNAP_DATA/disk.conf
++DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
  
 -disk="$(ls ${DB}/localhost | grep disk -m1)"
-+disk="$(ls ${DB}/localhost | grep disk -m1 || true)"
++ether="$(ls ${DB}/localhost | grep interface-e -m1 || true)"
++wifi="$(ls ${DB}/localhost | grep interface-w -m2 || true)"
++
++disk="$(ls ${DB}/localhost | grep ${DISK} -m1 || true)"
  
  
  if ! [ $position_scaling ]; then
-@@ -455,6 +467,10 @@ memory_graph() {
+@@ -455,6 +469,10 @@ memory_graph() {
  
  
  network_graph() {
@@ -131,7 +133,7 @@ index 356b4da..740dd5a 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1002,13 +1018,24 @@ dump1090_graphs() {
+@@ -1002,13 +1020,24 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -159,7 +161,7 @@ index 356b4da..740dd5a 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1017,19 +1044,19 @@ dump1090_graphs() {
+@@ -1017,19 +1046,19 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

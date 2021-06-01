@@ -47,7 +47,6 @@ if [ -f "$SNAP_COMMON/URL.conf" ]; then
 else
 	URL_1090="http://localhost:8080/dump1090"
 fi
-URL_978="http://localhost:8080/skyaware978"
 
 RRD_WRITES_PER_SECOND=$(snapctl get collectd.rrd-writes-per-seoncd)
 RRD_WRITES_PER_SECOND=${RRD_WRITES_PER_SECOND:-50}
@@ -101,6 +100,13 @@ case $SNAP_ARCH in
 		ARCH_TRIPLET="$SNAP_ARCH-linux-gnu"
 		;;
 esac
+
+if [ -n "$(snapctl get receiver.dump978.index)" ] || [ -n "$(snapctl get receiver.dump978.serial)" ]; then
+	URL_978="http://localhost:8080/skyaware978"
+else
+	mkdir -p /tmp/978-dummy
+	URL_978="file:///tmp/978-dummy"
+fi
 
 cat << EOF > "$CONF"
 # Config file for collectd(1).
@@ -227,9 +233,8 @@ LoadPlugin disk
 	ReportInodes true
 </Plugin>
 <Plugin "disk">
-	Disk "/^$DISK\$"
+	Disk "$DISK"
 	IgnoreSelected false
-	UdevNameAttr "DEVNAME"
 </Plugin>
 <Chain "PostCache">
 	<Rule>

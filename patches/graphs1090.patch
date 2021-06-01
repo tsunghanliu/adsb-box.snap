@@ -42,6 +42,38 @@ index 141c9d6..573a74f 100644
  
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
+diff --git a/dump1090.py b/dump1090.py
+index a29cdc9..ad36241 100644
+--- a/dump1090.py
++++ b/dump1090.py
+@@ -265,6 +265,7 @@ def read_1090(data):
+                    values = [stats['total']['cpu'][k]])
+ 
+     #airspy cpu usage
++    '''
+     cmdString = "PID=$(systemctl show -p MainPID airspy_adsb | cut -f 2 -d=); cat /proc/$PID/task/$(ls /proc/$PID/task | awk NR==3)/stat | cut -d ' ' -f 14,15 && getconf CLK_TCK"
+     if (sys.version_info > (3, 0)):
+         p = subprocess.Popen(cmdString, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
+@@ -272,9 +273,11 @@ def read_1090(data):
+         p = subprocess.Popen(cmdString, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+ 
+     out, err = p.communicate()
++    '''
+ 
+     ptime=0
+ 
++    '''
+     if p.returncode == 0 :
+         try:
+             out, clk_tck = out.split('\n', 1)
+@@ -285,6 +288,7 @@ def read_1090(data):
+ 
+         except:
+             ptime=0
++    '''
+ 
+     if ptime != 0 :
+         V.dispatch(plugin_instance = instance_name,
 diff --git a/graphs1090.sh b/graphs1090.sh
 index 356b4da..a86d48c 100755
 --- a/graphs1090.sh

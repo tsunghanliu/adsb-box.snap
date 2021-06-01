@@ -75,7 +75,7 @@ index a29cdc9..ad36241 100644
      if ptime != 0 :
          V.dispatch(plugin_instance = instance_name,
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 356b4da..60d31f4 100755
+index 356b4da..740dd5a 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -91,7 +91,7 @@ index 356b4da..60d31f4 100755
  
  renice -n 19 -p $$
  
-@@ -32,15 +36,21 @@ RED=E30022
+@@ -32,15 +36,23 @@ RED=E30022
  DRED=990000
  LRED=FFCCCB
  
@@ -107,6 +107,8 @@ index 356b4da..60d31f4 100755
  
 -source /etc/default/graphs1090
 +source $SNAP/etc/default/graphs1090
++source $SNAP_DATA/disk.conf
++DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
  
 -ether="$(ls ${DB}/localhost | grep interface -m1)"
 -wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1)"
@@ -118,7 +120,7 @@ index 356b4da..60d31f4 100755
  
  
  if ! [ $position_scaling ]; then
-@@ -455,6 +465,10 @@ memory_graph() {
+@@ -455,6 +467,10 @@ memory_graph() {
  
  
  network_graph() {
@@ -129,7 +131,7 @@ index 356b4da..60d31f4 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1002,13 +1016,24 @@ dump1090_graphs() {
+@@ -1002,13 +1018,24 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -157,12 +159,14 @@ index 356b4da..60d31f4 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1018,16 +1043,16 @@ dump1090_graphs() {
+@@ -1017,19 +1044,19 @@ dump1090_graphs() {
+ 
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"
- 	df_root_graph ${DOCUMENTROOT}/system-$2-df_root-$4.png ${DB}/$1/df-root "$3" "$4" "$5"
+-	df_root_graph ${DOCUMENTROOT}/system-$2-df_root-$4.png ${DB}/$1/df-root "$3" "$4" "$5"
 -	disk_io_iops_graph ${DOCUMENTROOT}/system-$2-disk_io_iops-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
 -	disk_io_octets_graph ${DOCUMENTROOT}/system-$2-disk_io_octets-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
++	df_root_graph ${DOCUMENTROOT}/system-$2-df_root-$4.png ${DB}/$1/df${DFDIR} "$3" "$4" "$5"
 +	if [ -n "$disk" ]; then
 +		disk_io_iops_graph ${DOCUMENTROOT}/system-$2-disk_io_iops-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
 +		disk_io_octets_graph ${DOCUMENTROOT}/system-$2-disk_io_octets-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
@@ -175,13 +179,17 @@ index 356b4da..60d31f4 100755
 -	else
 -		temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 -	fi
+-	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
+-	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
 +
 +	temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature_imperial-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 +	temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature_metric-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 +
- 	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
- 	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
++	[ -n "$ether" ] && eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
++	[ -n "$wifi" ] && wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
  }
+ 
+ dump1090_receiver_graphs() {
 diff --git a/scatter.sh b/scatter.sh
 index f231ae9..0264870 100755
 --- a/scatter.sh

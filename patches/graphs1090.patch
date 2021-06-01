@@ -75,7 +75,7 @@ index a29cdc9..ad36241 100644
      if ptime != 0 :
          V.dispatch(plugin_instance = instance_name,
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 356b4da..a86d48c 100755
+index 356b4da..60d31f4 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -91,12 +91,18 @@ index 356b4da..a86d48c 100755
  
  renice -n 19 -p $$
  
-@@ -32,15 +36,15 @@ RED=E30022
+@@ -32,15 +36,21 @@ RED=E30022
  DRED=990000
  LRED=FFCCCB
  
 -DB=/var/lib/collectd/rrd
-+DB=$SNAP_COMMON/collectd/rrd
++PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
++PERIOD_BACKUP=${PERIOD_BACKUP:-0}
++if [ "$PERIOD_BACKUP" -ne 0 ]; then
++	DB=/tmp/rrd
++else
++	DB=$SNAP_COMMON/collectd/rrd
++fi
  # settings in /etc/default/graphs1090 will overwrite the DB directory
  
 -source /etc/default/graphs1090
@@ -112,7 +118,7 @@ index 356b4da..a86d48c 100755
  
  
  if ! [ $position_scaling ]; then
-@@ -455,6 +459,10 @@ memory_graph() {
+@@ -455,6 +465,10 @@ memory_graph() {
  
  
  network_graph() {
@@ -123,7 +129,7 @@ index 356b4da..a86d48c 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1002,13 +1010,24 @@ dump1090_graphs() {
+@@ -1002,13 +1016,24 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -151,7 +157,7 @@ index 356b4da..a86d48c 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1018,16 +1037,16 @@ dump1090_graphs() {
+@@ -1018,16 +1043,16 @@ dump1090_graphs() {
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"
  	df_root_graph ${DOCUMENTROOT}/system-$2-df_root-$4.png ${DB}/$1/df-root "$3" "$4" "$5"

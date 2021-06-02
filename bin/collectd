@@ -22,6 +22,9 @@ trap 'rrd-op backup' EXIT
 [ ! -d "$BASEDIR" ] && mkdir -p "$BASEDIR"
 [ ! -d "$WORKDIR" ] && mkdir -p "$WORKDIR"
 
+# remove disk-loop* rrd
+[ -d "$RRDDIR_DISK/localhost" ] && rm -rf "$RRDDIR_DISK/localhost"/disk-loop*
+
 PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
 PERIOD_BACKUP=${PERIOD_BACKUP:-0}
 if [ "$PERIOD_BACKUP" -ne 0 ]; then

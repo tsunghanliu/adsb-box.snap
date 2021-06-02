@@ -161,7 +161,7 @@ LoadPlugin logfile
 LoadPlugin rrdtool
 LoadPlugin table
 LoadPlugin interface
-LoadPlugin memory
+#LoadPlugin memory
 LoadPlugin cpu
 LoadPlugin aggregation
 LoadPlugin match_regex

@@ -349,7 +349,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.21-20191004004313_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.4.2-20210525101900_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
@@ -368,8 +368,8 @@ parts:
           ;;
       esac
     stage-packages:
-      - to armhf: [libcurl3-gnutls, libglib2.0-0]
-      - to arm64: [libcurl3-gnutls, libglib2.0-0]
+      - to armhf: [libcurl4, libglib2.0-0, libjansson4]
+      - to arm64: [libcurl4, libglib2.0-0, libjansson4]
 
   enable-foreign-arch:
     plugin: nil

@@ -11,6 +11,21 @@ if [ -z "$dev_index" ] && [ -z "$dev_serial" ]; then
 	exit 0
 fi
 
+case $SNAP_ARCH in
+	amd64)
+		ARCH_TRIPLET="x86_64-linux-gnu"
+		;;
+	armhf)
+		ARCH_TRIPLET="arm-linux-gnueabihf"
+		;;
+	arm64)
+		ARCH_TRIPLET="aarch64-linux-gnu"
+		;;
+	*)
+		ARCH_TRIPLET="$SNAP_ARCH-linux-gnu"
+		;;
+esac
+
 BIN="$SNAP/usr/bin/dump978-fa"
 NICE_LEVEL=-5
 ARGS=()
@@ -30,7 +45,7 @@ ARGS+=("--format" "CS8")
 ARGS+=("--raw-port" "localhost:30978")
 ARGS+=("--json-port" "localhost:30979")
 
-export SOAPY_SDR_PLUGIN_PATH=$SNAP/usr/lib/x86_64-linux-gnu/SoapySDR/modules0.7
+export SOAPY_SDR_PLUGIN_PATH=$SNAP/usr/lib/$ARCH_TRIPLET/SoapySDR/modules0.7
 
 nice -n $NICE_LEVEL "$BIN" "${ARGS[@]}"
 

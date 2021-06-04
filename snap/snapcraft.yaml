@@ -369,7 +369,6 @@ parts:
       esac
     stage-packages:
       - to armhf: [libcurl4, libglib2.0-0, libjansson4]
-      - to arm64: [libcurl4, libglib2.0-0, libjansson4]
 
   enable-foreign-arch:
     plugin: nil
@@ -387,8 +386,9 @@ parts:
     after: [enable-foreign-arch]
     stage-packages:
       - to arm64:
-        - libcurl3-gnutls:armhf
+        - libcurl4:armhf
         - libglib2.0-0:armhf
+        - libjansson4:armhf
         - librtlsdr0:armhf
         - libusb-1.0-0:armhf
         - libstdc++6:armhf

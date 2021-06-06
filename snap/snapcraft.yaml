@@ -201,6 +201,7 @@ parts:
       - tcllib
       - tcl-tls
       - itcl3
+      - net-tools
     prime:
       - -usr/share/doc
       - -usr/share/man

@@ -1,8 +1,8 @@
 diff --git a/package/fa_piaware_config.tcl b/package/fa_piaware_config.tcl
-index 4f06160..f82d3f1 100644
+index 0399471..f8f19fd 100644
 --- a/package/fa_piaware_config.tcl
 +++ b/package/fa_piaware_config.tcl
-@@ -518,7 +518,7 @@ namespace eval ::fa_piaware_config {
+@@ -542,7 +542,7 @@ namespace eval ::fa_piaware_config {
  				set f [open $temppath "w" [expr {$fpstat(mode) & 0777}]]
  
  				# fix the ownership to match the old file
@@ -11,7 +11,7 @@ index 4f06160..f82d3f1 100644
  			}
  
  			# write the new data
-@@ -1048,26 +1048,24 @@ namespace eval ::fa_piaware_config {
+@@ -1072,26 +1072,24 @@ namespace eval ::fa_piaware_config {
  	# (starting from the highest priority):
  	#
  	#  priority 100+:     any extra config file given as an argument (readonly)
@@ -62,6 +62,19 @@ index 60f748e..086f9e1 100644
  		# try a few different things to drop root
  		set path [auto_execok $::fa_sudo::dropRootHelper]
  		if {$path ne ""} {
+diff --git a/package/fa_sysinfo.tcl b/package/fa_sysinfo.tcl
+index 8cb06bf..174de58 100644
+--- a/package/fa_sysinfo.tcl
++++ b/package/fa_sysinfo.tcl
+@@ -6,7 +6,7 @@ namespace eval ::fa_sysinfo {
+ 	# filesystem_usage - return a list of mountpoint / percentage-used pairs
+ 	proc filesystem_usage {} {
+ 		set result [list]
+-		set fp [::fa_sudo::open_as "|/bin/df --output=target,pcent"]
++		set fp [::fa_sudo::open_as "|$::env(SNAP)/bin/df-snappy --output=target,pcent"]
+ 		try {
+ 			gets $fp ;# skip header line
+ 			while {[gets $fp line] >= 0} {
 diff --git a/package/piaware.tcl b/package/piaware.tcl
 index 1e1f340..0f9acd5 100644
 --- a/package/piaware.tcl
@@ -80,7 +93,7 @@ index 1e1f340..0f9acd5 100644
  
  #
 diff --git a/programs/piaware-config/main.tcl b/programs/piaware-config/main.tcl
-index e2c9c35..a39fd97 100644
+index 3d302a3..3743597 100644
 --- a/programs/piaware-config/main.tcl
 +++ b/programs/piaware-config/main.tcl
 @@ -19,7 +19,11 @@ source $::launchdir/helpers.tcl
@@ -97,7 +110,7 @@ index e2c9c35..a39fd97 100644
  #
  # main - the main program
 diff --git a/programs/piaware/faup1090.tcl b/programs/piaware/faup1090.tcl
-index 803404d..7382169 100644
+index 9c80bb9..8c9275d 100644
 --- a/programs/piaware/faup1090.tcl
 +++ b/programs/piaware/faup1090.tcl
 @@ -63,7 +63,11 @@ proc connect_adsb_via_faup1090 {} {
@@ -114,7 +127,7 @@ index 803404d..7382169 100644
  		logger "No faup1090 found at $path, 1090ES support disabled"
  		return
 diff --git a/programs/piaware/faup978.tcl b/programs/piaware/faup978.tcl
-index 2ada473..163f7d0 100644
+index fa2f933..d7e6799 100644
 --- a/programs/piaware/faup978.tcl
 +++ b/programs/piaware/faup978.tcl
 @@ -34,7 +34,11 @@ proc connect_uat_via_faup978 {} {

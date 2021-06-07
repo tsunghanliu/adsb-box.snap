@@ -1,51 +1,49 @@
 diff --git a/package/fa_piaware_config.tcl b/package/fa_piaware_config.tcl
-index 0399471..f8f19fd 100644
+index 0399471..bed9b13 100644
 --- a/package/fa_piaware_config.tcl
 +++ b/package/fa_piaware_config.tcl
-@@ -542,7 +542,7 @@ namespace eval ::fa_piaware_config {
+@@ -542,7 +542,9 @@ namespace eval ::fa_piaware_config {
  				set f [open $temppath "w" [expr {$fpstat(mode) & 0777}]]
  
  				# fix the ownership to match the old file
 -				chown -fileid [list $fpstat(uid) $fpstat(gid)] $f
-+				#chown -fileid [list $fpstat(uid) $fpstat(gid)] $f
++				if {![info exists ::env(SNAP_DATA)]} {
++					chown -fileid [list $fpstat(uid) $fpstat(gid)] $f
++				}
  			}
  
  			# write the new data
-@@ -1072,26 +1072,24 @@ namespace eval ::fa_piaware_config {
+@@ -1071,20 +1073,30 @@ namespace eval ::fa_piaware_config {
+ 	# Return a new ConfigGroup that handles the standard piaware config location, which are
  	# (starting from the highest priority):
  	#
++	#  priority 100+:     $::env(SNAP_DATA)/piaware/piaware.conf (readwrite)
  	#  priority 100+:     any extra config file given as an argument (readonly)
--	#  priority 100+:     any config files found in /media/usb/*/piaware-config.txt, ordered arbitrarily (readonly)
--	#  priority 50:       /boot/piaware-config.txt (readwrite)
--	#  priority 40:       /etc/piaware.conf (readwrite)
--	#  priority 30:       /usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
-+	#  priority 50:       $SNAP_DATA/piaware/piaware.conf (readwrite)
-+	#  priority 40:       $SNAP/etc/piaware.conf (readonly)
-+	#  priority 30:       $SNAP/usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
+ 	#  priority 100+:     any config files found in /media/usb/*/piaware-config.txt, ordered arbitrarily (readonly)
+ 	#  priority 50:       /boot/piaware-config.txt (readwrite)
+ 	#  priority 40:       /etc/piaware.conf (readwrite)
++	#  priority 40:       $::env(SNAP)/etc/piaware.conf (readonly)
+ 	#  priority 30:       /usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
  	#
--	# which means that in general changes will be written to /etc/piaware.conf where possible, or
--	# /boot/piaware-config.txt if the setting was set there.
-+	# which means that in general changes will be written to $SNAP_DATA/piaware/piaware.conf where possible.
+ 	# which means that in general changes will be written to /etc/piaware.conf where possible, or
+ 	# /boot/piaware-config.txt if the setting was set there.
  	#
++	# for snappied version, $::env(SNAP)/etc/piaware.conf is for default values and
++	# $::env(SNAP_DATA)/piaware/piaware.conf is the major one for customizations.
++	#
  	# Provide a itcl name pattern (e.g. #auto) as "name"
  	proc piaware_combined_config {name {extraConfigFile ""}} {
  		set metadata [piaware_standard_settings #auto]
  		set combined [uplevel 1 ::fa_piaware_config::new ::fa_piaware_config::ConfigGroup $name -metadata $metadata]
  
--		$combined add [new ConfigFile #auto -filename "/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
-+		$combined add [new ConfigFile #auto -filename "$::env(SNAP)/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
++		if {[info exists ::env(SNAP)]} {
++			$combined add [new ConfigFile #auto -filename "$::env(SNAP)/etc/piaware.conf" -metadata $metadata -priority 40 -readonly 1]
++			$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware/piaware.conf" -metadata $metadata -priority 100 -writeHelper $::fa_piaware_config::helperPath]
++		}
++
+ 		$combined add [new ConfigFile #auto -filename "/usr/share/piaware-support/piaware-image-config.txt" -metadata $metadata -priority 30 -readonly 1]
  
  		if {$extraConfigFile ne ""} {
--			$combined add [new ConfigFile #auto -filename $extraConfigFile -metadata $metadata -priority 100]
-+			$combined add [new ConfigFile #auto -filename $extraConfigFile -metadata $metadata -priority 100 -readonly 1]
- 		} else {
--			$combined add [new ConfigFile #auto -filename "/etc/piaware.conf" -metadata $metadata -priority 40 -writeHelper $::fa_piaware_config::helperPath]
--			$combined add [new ConfigFile #auto -filename "/boot/piaware-config.txt" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath -eol crlf]
-+			$combined add [new ConfigFile #auto -filename "$::env(SNAP)/etc/piaware.conf" -metadata $metadata -priority 40 -readonly 1]
-+			$combined add [new ConfigFile #auto -filename "$::env(SNAP_DATA)/piaware/piaware.conf" -metadata $metadata -priority 50 -writeHelper $::fa_piaware_config::helperPath]
- 		}
- 
- 		return $combined
 diff --git a/package/fa_sudo.tcl b/package/fa_sudo.tcl
 index 60f748e..086f9e1 100644
 --- a/package/fa_sudo.tcl
@@ -63,15 +61,21 @@ index 60f748e..086f9e1 100644
  		set path [auto_execok $::fa_sudo::dropRootHelper]
  		if {$path ne ""} {
 diff --git a/package/fa_sysinfo.tcl b/package/fa_sysinfo.tcl
-index 8cb06bf..174de58 100644
+index 8cb06bf..cd4f60b 100644
 --- a/package/fa_sysinfo.tcl
 +++ b/package/fa_sysinfo.tcl
-@@ -6,7 +6,7 @@ namespace eval ::fa_sysinfo {
+@@ -6,7 +6,13 @@ namespace eval ::fa_sysinfo {
  	# filesystem_usage - return a list of mountpoint / percentage-used pairs
  	proc filesystem_usage {} {
  		set result [list]
 -		set fp [::fa_sudo::open_as "|/bin/df --output=target,pcent"]
-+		set fp [::fa_sudo::open_as "|$::env(SNAP)/bin/df-snappy --output=target,pcent"]
++
++		if {[info exists ::env(SNAP_DATA)]} {
++			set fp [::fa_sudo::open_as "|$::env(SNAP)/bin/df-snappy --output=target,pcent"]
++		} else {
++			set fp [::fa_sudo::open_as "|/bin/df --output=target,pcent"]
++		}
++
  		try {
  			gets $fp ;# skip header line
  			while {[gets $fp line] >= 0} {
@@ -109,6 +113,23 @@ index 3d302a3..3743597 100644
  
  #
  # main - the main program
+diff --git a/programs/piaware-status/helpers.tcl b/programs/piaware-status/helpers.tcl
+index a945b54..cec17b8 100644
+--- a/programs/piaware-status/helpers.tcl
++++ b/programs/piaware-status/helpers.tcl
+@@ -189,7 +189,11 @@ proc report_feeder_id {} {
+ 		return
+ 	}
+ 
+-	set path "/var/cache/piaware/feeder_id"
++	if {[info exists ::env(SNAP_DATA)]} {
++		set path "$::env(SNAP_DATA)/piaware/feeder_id"
++	} else {
++		set path "/var/cache/piaware/feeder_id"
++	}
+ 	set id ""
+ 	catch {
+ 		set f [open $path "r"]
 diff --git a/programs/piaware/faup1090.tcl b/programs/piaware/faup1090.tcl
 index 9c80bb9..8c9275d 100644
 --- a/programs/piaware/faup1090.tcl

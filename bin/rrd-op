@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 BASEDIR="$SNAP_COMMON/collectd/rrd"
 RRDDIR="/tmp/rrd"

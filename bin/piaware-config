@@ -24,10 +24,10 @@ DIR_TCLLIB=$(find $SNAP/usr/share/tcltk/ -maxdepth 1 -type d -name "tcllib*")
 DIR_ITCL=$(find $SNAP/usr/share/tcltk/ -maxdepth 1 -type d -name "itcl*")
 TCL_LIBRARY="$DIR_TCL8:$TCL_LIBRARY"
 TCLLIBPATH="$TCLLIBPATH $DIR_TCL8"
-for d in $(find $SNAP/usr/share/tcltk -type d -maxdepth 1 -mindepth 1); do
+for d in $(find $SNAP/usr/share/tcltk -maxdepth 1 -mindepth 1 -type d); do
 	TCLLIBPATH="$TCLLIBPATH $d"
 done
-for d in $(find $SNAP/usr/lib/tcltk/$ARCH_TRIPLET -type d -maxdepth 1 -mindepth 1); do
+for d in $(find $SNAP/usr/lib/tcltk/$ARCH_TRIPLET -maxdepth 1 -mindepth 1 -type d); do
 	TCLLIBPATH="$TCLLIBPATH $d"
 done
 ITCL_LIBRARY="$DIR_ITCL"

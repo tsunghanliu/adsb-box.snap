@@ -11,6 +11,26 @@ if [ -z "$dev_index" ] && [ -z "$dev_serial" ]; then
 	exit 0
 fi
 
+# get bias-tee config (gpio number for bias-tee)
+dev_enable_biast=$(snapctl get receiver.dump978.enable-biast)
+if [ -n "$dev_enable_biast" ] && [ "$dev_enable_biast" = "1" ]; then
+	biast_args=("-b" "1")
+
+	dev_biast_gpio=$(snapctl get receiver.dump978.biast-gpio)
+	if [ -n "$dev_biast_gpio" ]; then
+		biast_args+=("-g" "$dev_biast_gpio")
+	fi
+
+	if [ -n "$dev_index" ]; then
+		biast_args+=("-d" "$dev_index")
+	elif [ -n "$dev_serial" ]; then
+		biast_args+=("-d" "$dev_serial")
+	fi
+
+	# allow errors?!
+	"$RTL_BIAST" "${biast_args[@]}" || true
+fi
+
 case $SNAP_ARCH in
 	amd64)
 		ARCH_TRIPLET="x86_64-linux-gnu"

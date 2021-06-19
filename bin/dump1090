@@ -6,6 +6,7 @@ BIN="$SNAP/usr/bin/dump1090-fa"
 ARGS=()
 CONF="$SNAP_DATA/dump1090-fa.conf"
 WISDOM="$SNAP_COMMON/wisdom.local"
+RTL_BIAST="$SNAP/usr/bin/rtl_biast"
 
 # migration for config file
 if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
@@ -19,6 +20,26 @@ fi
 # get index/serial of receiver
 dev_index=$(snapctl get receiver.dump1090.index)
 dev_serial=$(snapctl get receiver.dump1090.serial)
+
+# get bias-tee config (gpio number for bias-tee)
+dev_enable_biast=$(snapctl get receiver.dump1090.enable-biast)
+if [ -n "$dev_enable_biast" ] && [ "$dev_enable_biast" = "1" ]; then
+	biast_args=("-b" "1")
+
+	dev_biast_gpio=$(snapctl get receiver.dump1090.biast-gpio)
+	if [ -n "$dev_biast_gpio" ]; then
+		biast_args+=("-g" "$dev_biast_gpio")
+	fi
+
+	if [ -n "$dev_index" ]; then
+		biast_args+=("-d" "$dev_index")
+	elif [ -n "$dev_serial" ]; then
+		biast_args+=("-d" "$dev_serial")
+	fi
+
+	# allow errors?!
+	"$RTL_BIAST" "${biast_args[@]}" || true
+fi
 
 if [ ! -f "$CONF" ]; then
 	cp "$SNAP/etc/dump1090-fa/config-template" "$CONF"

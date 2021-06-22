@@ -6,6 +6,7 @@
 	<title>graphs</title>
 	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
 	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
+	<style>.modal-content { width: fit-content; }</style>
 </head>
 <body class="has-navbar-fixed-bottom">
 
@@ -143,7 +144,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id="dump1090-local_trailing_rate-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-local_trailing_rate-image" src="#" alt="Message Rate (Trailing)">
@@ -154,7 +155,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-aircraft-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-aircraft-image" src="#" alt="Aircraft Seen">
@@ -163,7 +164,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-tracks-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-tracks-image" src="#" alt="Tracks Seen">
@@ -174,7 +175,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification" id="range-graph">
+				<article class="tile is-child notification p-4" id="range-graph">
 					<!--
 					<a id ="dump1090-range_imperial_nautical-link" class="graph-link">
 						<figure class="image">
@@ -195,7 +196,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-signal-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-signal-image" src="#" alt="Signal Level">
@@ -206,7 +207,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-local_rate-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-local_rate-image" src="#" alt="Message Rate">
@@ -215,7 +216,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-aircraft_message_rate-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-aircraft_message_rate-image" src="#" alt="Aircraft Message Rate">
@@ -226,7 +227,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-cpu-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-cpu-image" src="#" alt="CPU Utilization">
@@ -253,7 +254,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-messages_978-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-messages_978-image" src="#" alt="UAT Message Rate">
@@ -262,7 +263,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-aircraft_978-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-aircraft_978-image" src="#" alt="UAT Aircraft">
@@ -273,7 +274,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification" id="range-graph_978">
+				<article class="tile is-child notification p-4" id="range-graph_978">
 					<!--
 					<a id ="dump1090-range_978_imperial_nautical-link" class="graph-link">
 						<figure class="image">
@@ -294,7 +295,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="dump1090-signal_978-link" class="graph-link">
 						<figure class="image">
 							<img id="dump1090-signal_978-image" src="#" alt="UAT Signal Level">
@@ -317,7 +318,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="system-cpu-link" class="graph-link">
 						<figure class="image">
 							<img id="system-cpu-image" class="img-responsive" src="#" alt="Overall CPU Utilization">
@@ -328,7 +329,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification" id="core-temp-graph">
+				<article class="tile is-child notification p-4" id="core-temp-graph">
 					<!--
 					<a id ="system-temperature_metric-link" class="graph-link">
 						<figure class="image">
@@ -344,7 +345,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="system-memory-link" class="graph-link">
 						<figure class="image">
 							<img id="system-memory-image" class="img-responsive" src="#" alt="Memory Utilization">
@@ -355,7 +356,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification" id="nic-bandwidth-graph">
+				<article class="tile is-child notification p-4" id="nic-bandwidth-graph">
 					<!--
 					<a id ="system-eth0_bandwidth-link" class="graph-link">
 						<figure class="image">
@@ -371,7 +372,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="system-df_root-link" class="graph-link">
 						<figure class="image">
 							<img id="system-df_root-image" class="img-responsive" src="#" alt="Disk Space Usage (/)">
@@ -382,7 +383,7 @@
 		</div>
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="system-disk_io_iops-link" class="graph-link">
 						<figure class="image">
 							<img id="system-disk_io_iops-image" class="img-responsive" src="#" alt="Disk I/O - IOPS">
@@ -391,7 +392,7 @@
 				</article>
 			</div>
 			<div class="tile is-parent">
-				<article class="tile is-child notification">
+				<article class="tile is-child notification p-4">
 					<a id ="system-disk_io_octets-link" class="graph-link">
 						<figure class="image">
 							<img id="system-disk_io_octets-image" class="img-responsive" src="#" alt="Disk I/O - Bandwidth">

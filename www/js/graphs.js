@@ -1,7 +1,7 @@
 //*** BEGIN USER DEFINED VARIABLES ***//
 
 // Set the default time frame to use when loading images when the page is first accessed.
-// Can be set to 1h, 6h, 24h, 7d, 30d, or 365d.
+// Can be set to 1h, 6h, 12h, 24h, 7d, 30d, 90d, 180d or 365d.
 $timeFrame = '24h';
 
 // Set this to the hostname of the system which is running dump1090.
@@ -103,6 +103,9 @@ $(document).ready(function () {
 		case '6h':
 			$('#report-period-6h').addClass('is-active');
 			break;
+		case '12h':
+			$('#report-period-12h').addClass('is-active');
+			break;
 		case '24h':
 		default:
 			$timeFrame = '24h';
@@ -113,6 +116,12 @@ $(document).ready(function () {
 			break;
 		case '30d':
 			$('#report-period-30d').addClass('is-active');
+			break;
+		case '90d':
+			$('#report-period-90d').addClass('is-active');
+			break;
+		case '180d':
+			$('#report-period-180d').addClass('is-active');
 			break;
 		case '365d':
 			$('#report-period-365d').addClass('is-active');

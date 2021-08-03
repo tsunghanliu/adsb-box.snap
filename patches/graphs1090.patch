@@ -1,5 +1,5 @@
 diff --git a/boot.sh b/boot.sh
-index 1a0f197..b31103f 100755
+index 13e608e..cf896d7 100755
 --- a/boot.sh
 +++ b/boot.sh
 @@ -1,7 +1,12 @@
@@ -14,10 +14,10 @@ index 1a0f197..b31103f 100755
 +fi
 +
 +disable() {
- if [ -f /var/lib/collectd/rrd/localhost/dump1090-localhost/dump1090_messages-messages_978.rrd ] \
-     || [ -f /var/lib/collectd/rrd/localhost/dump1090-localhost/dump1090_messages-messages_978.rrd.gz ] \
-     || [ -f /run/collectd/localhost/dump1090-localhost/dump1090_messages-messages_978.rrd ]
-@@ -19,6 +24,7 @@ else
+ # fontconfig writes stuff to that directory for no good reason
+ # graphs1090 is mostly used on RPis, avoiding frequent disk writes is preferred
+ # if this fails, no big deal either.
+@@ -26,6 +31,7 @@ else
  	sed -i -e 's?flex: 100%; // all_large?flex: 50%; // all_large?' /usr/share/graphs1090/html/portal.css
  	sed -i -e 's?display: inline; // all_large2?display: flex; // all_large2?' /usr/share/graphs1090/html/portal.css
  fi
@@ -25,7 +25,7 @@ index 1a0f197..b31103f 100755
  
  if [[ $1 == "nographs" ]]; then
  	exit 0
-@@ -37,5 +43,5 @@ done
+@@ -44,5 +50,5 @@ done
  
  for i in 24h 8h 2h 48h 7d 14d 30d 90d 180d 365d 730d 1095d
  do
@@ -75,7 +75,7 @@ index a29cdc9..ad36241 100644
      if ptime != 0 :
          V.dispatch(plugin_instance = instance_name,
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 356b4da..a178797 100755
+index 356b4da..df24053 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -116,7 +116,7 @@ index 356b4da..a178797 100755
  
 -disk="$(ls ${DB}/localhost | grep disk -m1)"
 +ether="$(ls ${DB}/localhost | grep interface-e -m1 || true)"
-+wifi="$(ls ${DB}/localhost | grep interface-w -m2 || true)"
++wifi="$(ls ${DB}/localhost | grep interface-w -m1 || true)"
 +
 +disk="$(ls ${DB}/localhost | grep ${DISK} -m1 || true)"
  

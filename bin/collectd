@@ -263,17 +263,23 @@ chmod 0600 "$CONF"
 
 # migrate RRD DBs
 if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
+	TMPDIR=/tmp/rrd-migration
+	BACKUPDIR="$RRDDIR_DISK/localhost-v1"
+
 	if [ -d "$RRDDIR/localhost" ]; then
 		# based on graph1090/new-format.sh
 		cd "$RRDDIR"
 
-		TMPDIR=/tmp/rrd-migration
-		BACKUPDIR="$RRDDIR_DISK/localhost-$(date -I)"
-
-		[ ! -d "$BACKUPDIR" ] && cp -T -r -n localhost "$BACKUPDIR"
-		mv localhost/memory localhost/system_stats
-		cp -T -r localhost $TMPDIR
-		rm -r localhost
+		if [ ! -d "$BACKUPDIR" ]; then
+			cp -T -r -n localhost "$BACKUPDIR"
+		else
+			# mirgration interrupted
+			rm -rf localhost "$TMPDIR"
+			cp -T -r -n "$BACKUPDIR" localhost
+		fi
+		[ -d localhost/memory ] && mv localhost/memory localhost/system_stats
+		cp -T -r localhost "$TMPDIR"
+		rm -r localhost # the following command will create a new version of DB.
 
 		# collect data for 7 mins
 		LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
@@ -282,8 +288,8 @@ if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
 		kill $!
 
 		# migrate DB one by one
-		for file in $(cd localhost; find | grep '\.rrd'); do
-			rrdtool create -r $TMPDIR/$file -t localhost/$file localhost/$file
+		for file in $(cd localhost; find . | grep '\.rrd'); do
+			rrdtool create -r "$TMPDIR/$file" -t localhost/"$file" localhost/"$file"
 		done
 
 		cp -T -r -n $TMPDIR localhost

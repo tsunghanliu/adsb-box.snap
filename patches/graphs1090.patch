@@ -1,37 +1,3 @@
-diff --git a/boot.sh b/boot.sh
-index 13e608e..cf896d7 100755
---- a/boot.sh
-+++ b/boot.sh
-@@ -1,7 +1,12 @@
--#!/bin/bash
-+#!/bin/bash -e
- 
--source /etc/default/graphs1090
-+source $SNAP/etc/default/graphs1090
- 
-+if [ -f "$SNAP_DATA/graphs1090.conf" ]; then
-+	source $SNAP_DATA/graphs1090.conf
-+fi
-+
-+disable() {
- # fontconfig writes stuff to that directory for no good reason
- # graphs1090 is mostly used on RPis, avoiding frequent disk writes is preferred
- # if this fails, no big deal either.
-@@ -26,6 +31,7 @@ else
- 	sed -i -e 's?flex: 100%; // all_large?flex: 50%; // all_large?' /usr/share/graphs1090/html/portal.css
- 	sed -i -e 's?display: inline; // all_large2?display: flex; // all_large2?' /usr/share/graphs1090/html/portal.css
- fi
-+}
- 
- if [[ $1 == "nographs" ]]; then
- 	exit 0
-@@ -44,5 +50,5 @@ done
- 
- for i in 24h 8h 2h 48h 7d 14d 30d 90d 180d 365d 730d 1095d
- do
--	/usr/share/graphs1090/graphs1090.sh $i $1 &>/dev/null
-+	$SNAP/usr/share/graphs1090/graphs1090.sh $i $1 &>/dev/null
- done
 diff --git a/default b/default
 index 141c9d6..573a74f 100644
 --- a/default
@@ -75,7 +41,7 @@ index a29cdc9..ad36241 100644
      if ptime != 0 :
          V.dispatch(plugin_instance = instance_name,
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 356b4da..df24053 100755
+index 1d703a2..aa161db 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -133,7 +99,7 @@ index 356b4da..df24053 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1002,13 +1020,24 @@ dump1090_graphs() {
+@@ -1002,15 +1020,26 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -149,9 +115,13 @@ index 356b4da..df24053 100755
  	signal_graph ${DOCUMENTROOT}/dump1090-$2-signal-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	if [ -f ${DB}/$1/dump1090-$2/dump1090_messages-messages_978.rrd ]
  	then
--		sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
+-        if grep -qs -e 'style="display:none"> <!-- dump978 -->' /usr/share/graphs1090/html/index.html; then
+-            sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
+-        fi
 -		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-+		#sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
++        #if grep -qs -e 'style="display:none"> <!-- dump978 -->' /usr/share/graphs1090/html/index.html; then
++        #    sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
++        #fi
 +		range=nautical
 +		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978_imperial_nautical-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
 +		range=statute
@@ -161,7 +131,7 @@ index 356b4da..df24053 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1017,19 +1046,19 @@ dump1090_graphs() {
+@@ -1019,19 +1048,19 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

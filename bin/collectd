@@ -63,26 +63,33 @@ RRD_RANDOM_TIMEOUT=${RRD_RANDOM_TIMEOUT:-0}
 # create the disk.conf if it doesn't exist
 if [ ! -f "$DISKFILE" ]; then
 	## FIXME: what is the best way to determine
+
+	# always use "/var/snap" for disk space
+	MOUNTPOINT="/var/snap"
+
 	##  1. core or classic
 	##  2. main storage
 	if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
 		# Ubuntu Core
 		BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
-		if [ "$(df | grep -c " \/writable")" -eq 1 ]; then
-			# UC16
-			MOUNTPOINT="/writable"
-		else
-			# UC18
-			MOUNTPOINT="/var/lib/snapd/hostfs/writable"
-		fi
 	else
 		# Ubuntu Classic
 		BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
-		MOUNTPOINT="/"
 	fi
 	# shellcheck disable=SC2001
 	DISK=$(echo "$BOOTDEV" | \
 			sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
+	if [ ! -b "/dev/$DISK" ]; then
+		# failsafe to mmcblk0, nvme0n1 or sda
+		if [ -b "/dev/mmcblk0" ]; then
+			DISK="mmcblk0"
+		elif [ -b "/dev/nvme0n1" ]; then
+			DISK="nvme0n1"
+		else
+			DISK="sda"
+		fi
+	fi
+
 	echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
 	echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > "$DISKFILE"
 else

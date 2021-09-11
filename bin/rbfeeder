@@ -9,6 +9,22 @@ if [ ! -f "$BIN" ]; then
 	exit 0
 fi
 
+# wait until all required interfaces are connected
+PLUGS="network-observe hardware-observe"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
+
 # delay for dump1090
 sleep 3
 

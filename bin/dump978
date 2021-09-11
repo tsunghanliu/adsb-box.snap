@@ -11,6 +11,22 @@ if [ -z "$dev_index" ] && [ -z "$dev_serial" ]; then
 	exit 0
 fi
 
+# wait until all required interfaces are connected
+PLUGS="network-observe raw-usb"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
+
 # get bias-tee config (gpio number for bias-tee)
 dev_enable_biast=$(snapctl get receiver.dump978.enable-biast)
 if [ -n "$dev_enable_biast" ] && [ "$dev_enable_biast" = "1" ]; then

@@ -4,6 +4,22 @@ set -e
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
 
+# wait until all required interfaces are connected
+PLUGS="raw-usb process-control hardware-observe"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			echo "plug: $plug is not connected, run 'sudo snap connect adsb-box:$plug' first"
+			exit 1
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
+
 case $SNAP_ARCH in
 	amd64)
 		ARCH_TRIPLET="x86_64-linux-gnu"

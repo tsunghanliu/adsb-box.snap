@@ -8,6 +8,22 @@ CONF="$SNAP_DATA/dump1090-fa.conf"
 WISDOM="$SNAP_COMMON/wisdom.local"
 RTL_BIAST="$SNAP/usr/bin/rtl_biast"
 
+# wait until all required interfaces are connected
+PLUGS="raw-usb process-control hardware-observe"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
+
 # migration for config file
 if [ -f "$SNAP_DATA/dump1090-mutability.conf" ]; then
 	if [ -f "$CONF" ]; then

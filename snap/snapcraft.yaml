@@ -400,6 +400,7 @@ parts:
         - libusb-1.0-0:armhf
         - libstdc++6:armhf
         - netbase
+        - libcurl3-gnutls:armhf
 
   snapcraft-preload:
     source: https://github.com/tsunghanliu/snapcraft-preload.git

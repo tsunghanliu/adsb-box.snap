@@ -115,7 +115,8 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v5.0
+    source-branch: v6.1
+    source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
@@ -157,6 +158,7 @@ parts:
     plugin: autotools
     source: https://github.com/flightaware/tcllauncher.git
     source-type: git
+    source-depth: 1
     override-build: |
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
         PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
@@ -178,7 +180,8 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v5.0
+    source-branch: v6.1
+    source-depth: 1
     override-build: |
       echo 'patching piaware ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
@@ -211,6 +214,7 @@ parts:
     python-packages: [python-prctl]
     source: https://github.com/mutability/mlat-client.git
     source-type: git
+    source-depth: 1
     build-packages:
       - libcap-dev # for python-prctl
     override-build: |
@@ -236,9 +240,9 @@ parts:
       - else:
         - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.25-3_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.27-2_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.28-1_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.27-2_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.28-1_armhf.tgz
       - else fail
     build-packages:
       - wget
@@ -312,6 +316,8 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
+    source-commit: 53a7b45c7c9d887ae420fc4d1c4859c613a65d9a
+    source-depth: 1
     stage-packages:
       - rrdtool
     override-build: |
@@ -350,7 +356,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.4.2-20210525101900_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.4.3-20210909231001_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
@@ -394,6 +400,7 @@ parts:
         - libusb-1.0-0:armhf
         - libstdc++6:armhf
         - netbase
+        - libcurl3-gnutls:armhf
 
   snapcraft-preload:
     source: https://github.com/tsunghanliu/snapcraft-preload.git
@@ -422,7 +429,8 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v5.0
+    source-branch: v6.1
+    source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then

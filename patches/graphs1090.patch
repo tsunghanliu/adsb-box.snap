@@ -1,18 +1,18 @@
 diff --git a/default b/default
-index b669964..1b7f529 100644
+index 774c0fe..e4bc501 100644
 --- a/default
 +++ b/default
-@@ -63,4 +63,4 @@ lr_rate_per_aircraft=
+@@ -67,4 +67,4 @@ lr_rate_per_aircraft=
  # leave blank for a default of 0.1
  position_scaling=
  
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
 diff --git a/dump1090.py b/dump1090.py
-index b5d6deb..7d0b53d 100644
+index ad468d7..d148800 100644
 --- a/dump1090.py
 +++ b/dump1090.py
-@@ -153,10 +153,12 @@ def read_1090(data):
+@@ -182,10 +182,12 @@ def read_1090(data):
                 time=time.time(),
                 values = [1])
  
@@ -26,7 +26,7 @@ index b5d6deb..7d0b53d 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 09bc3b1..25e7fc6 100755
+index 609b95b..88d7e4e 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -42,7 +42,7 @@ index 09bc3b1..25e7fc6 100755
  
  renice -n 19 -p $$
  
-@@ -32,15 +36,25 @@ RED=E30022
+@@ -35,15 +39,25 @@ RED=E30022
  DRED=990000
  LRED=FFCCCB
  
@@ -73,10 +73,10 @@ index 09bc3b1..25e7fc6 100755
  
  
  if ! [ $position_scaling ]; then
-@@ -455,6 +469,10 @@ memory_graph() {
- 
+@@ -463,6 +477,10 @@ memory_graph() {
  
  network_graph() {
+ 	$pre
 +	if [ -z $ether ] && [ -z $wifi ]
 +	then
 +		return
@@ -84,7 +84,7 @@ index 09bc3b1..25e7fc6 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1083,15 +1101,26 @@ dump1090_graphs() {
+@@ -1172,15 +1190,26 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -116,7 +116,7 @@ index 09bc3b1..25e7fc6 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1109,19 +1138,19 @@ dump1090_graphs() {
+@@ -1204,19 +1233,19 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"
@@ -148,7 +148,7 @@ index 09bc3b1..25e7fc6 100755
  
  dump1090_receiver_graphs() {
 diff --git a/scatter.sh b/scatter.sh
-index f231ae9..0264870 100755
+index 853770f..62ecd04 100755
 --- a/scatter.sh
 +++ b/scatter.sh
 @@ -1,14 +1,14 @@

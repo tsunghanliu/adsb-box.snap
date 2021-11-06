@@ -312,6 +312,8 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
+    source-commit: 53a7b45c7c9d887ae420fc4d1c4859c613a65d9a
+    source-depth: 1
     stage-packages:
       - rrdtool
     override-build: |

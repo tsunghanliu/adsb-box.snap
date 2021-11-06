@@ -4,33 +4,33 @@ set -e
 
 # flightware dump1090
 R_VERSION=$(git ls-remote https://github.com/flightaware/dump1090.git | grep tags | tail -1 | sed 's/.*\///')
-L_VERSION=$(python -c 'import sys, yaml, json; data = yaml.load(sys.stdin); print(data["parts"]["dump1090"]["source-branch"]);' < snap/snapcraft.yaml)
+L_VERSION=$(python3 -c 'import sys, yaml, json; data = yaml.full_load(sys.stdin); print(data["parts"]["dump1090"]["source-branch"]);' < snap/snapcraft.yaml)
 if [ "$L_VERSION" != "$R_VERSION" ]; then
-	echo "Upgrade dump1090 and piaware to $R_VERSION"
+	echo "Upgrade dump1090, dump978 and piaware to $R_VERSION"
 fi
-R_VERSION=$(python -c 'import sys, yaml, json; data = yaml.load(sys.stdin); print(data["parts"]["dump1090"]["source-branch"]);' < snap/snapcraft.yaml)
-L_VERSION=$(python -c 'import sys, yaml, json; data = yaml.load(sys.stdin); print(data["parts"]["piaware"]["source-branch"]);' < snap/snapcraft.yaml)
+R_VERSION=$(python3 -c 'import sys, yaml, json; data = yaml.full_load(sys.stdin); print(data["parts"]["dump1090"]["source-branch"]);' < snap/snapcraft.yaml)
+L_VERSION=$(python3 -c 'import sys, yaml, json; data = yaml.full_load(sys.stdin); print(data["parts"]["piaware"]["source-branch"]);' < snap/snapcraft.yaml)
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "dump1090($R_VERSION) and piaware($L_VERSION) have different versions"
 fi
 
 # fr24feed (amd64)
 wget -q -O fr24feed_versions.json https://repo-feed.flightradar24.com/fr24feed_versions.json
-R_VERSION=$(python -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_x86_64_tgz"]["url"]["software"]);' < fr24feed_versions.json)
+R_VERSION=$(python3 -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_x86_64_tgz"]["url"]["software"]);' < fr24feed_versions.json)
 L_VERSION=$(grep "fr24feed_.*_amd64.tgz" snap/snapcraft.yaml | sed 's/.*on amd64: //')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade fr24feed(amd64) to $R_VERSION"
 fi
 
 # fr24feed (i386)
-R_VERSION=$(python -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_x86_tgz"]["url"]["software"]);' < fr24feed_versions.json)
+R_VERSION=$(python3 -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_x86_tgz"]["url"]["software"]);' < fr24feed_versions.json)
 L_VERSION=$(grep "fr24feed_.*_i386.tgz" snap/snapcraft.yaml | sed 's/.*on i386: //')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade fr24feed(i386) to $R_VERSION"
 fi
 
 # fr24feed (armhf)
-R_VERSION=$(python -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_arm_tgz"]["url"]["software"]);' < fr24feed_versions.json)
+R_VERSION=$(python3 -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_arm_tgz"]["url"]["software"]);' < fr24feed_versions.json)
 L_VERSION=$(grep "fr24feed_.*_armhf.tgz" snap/snapcraft.yaml | grep "on armhf" | sed 's/.*on armhf: //')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade fr24feed(armhf) to $R_VERSION"
@@ -50,3 +50,10 @@ if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade rbfeeder to $R_VERSION"
 fi
 
+# graphs1090
+curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/wiedehopf/graphs1090/commits/master > graphs1090_master.json
+R_VERSION=$(python3 -c 'import sys, json; data = json.load(sys.stdin); print(data["sha"]);' < graphs1090_master.json)
+L_VERSION=$(python3 -c 'import sys, yaml, json; data = yaml.full_load(sys.stdin); print(data["parts"]["graphs1090"]["source-commit"]);' < snap/snapcraft.yaml)
+if [ "$L_VERSION" != "$R_VERSION" ]; then
+	echo "Upgrade graphs1090 to $R_VERSION"
+fi

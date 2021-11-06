@@ -1,6 +1,22 @@
 #!/bin/bash
 
-set -x
+#set -x
+
+# wait until all required interfaces are connected
+PLUGS="process-control"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
 
 # delay for dump1090 and collectd
 sleep 3
@@ -19,22 +35,31 @@ export FONTCONFIG_FILE=$SNAP/etc/fonts/fonts.conf
 
 TIMEOUT_1h=0
 TIMEOUT_6h=0
+TIMEOUT_12h=0
 TIMEOUT_24h=0
 TIMEOUT_7d=0
 TIMEOUT_30d=0
+TIMEOUT_90d=0
+TIMEOUT_180d=0
 TIMEOUT_365d=0
 TIMEOUT_BACKUP=0
 
 PERIOD_1h=300
 PERIOD_6h=600
-PERIOD_24h=600
-PERIOD_7d=1200
+PERIOD_12h=600
+PERIOD_24h=900
+PERIOD_7d=1800
 PERIOD_30d=3600
+PERIOD_90d=7200
+PERIOD_180d=14400
 PERIOD_365d=43200
 
+OFFSET_12h=120
 OFFSET_24h=120
 OFFSET_7d=240
 OFFSET_30d=360
+OFFSET_90d=360
+OFFSET_180d=480
 OFFSET_365d=480
 
 PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
@@ -46,7 +71,7 @@ mkdir -p /tmp/graphs
 gen_graphs()
 {
 	echo "[$(date +"%F %T")] run cmd, arg=$*"
-	nice -n 5 "$SNAP/usr/share/adsb-receiver/graphs/make-collectd-graphs.sh" "$@" >/dev/null 2>&1
+	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" 0.7 >/dev/null 2>&1
 }
 
 init_timeouts()
@@ -57,12 +82,18 @@ init_timeouts()
 	TIMEOUT_1h=$((now-mod))
 	mod=$((now%PERIOD_6h))
 	TIMEOUT_6h=$((now-mod))
+	mod=$((now%PERIOD_12h))
+	TIMEOUT_12h=$((now-mod+OFFSET_12h))
 	mod=$((now%PERIOD_24h))
 	TIMEOUT_24h=$((now-mod+OFFSET_24h))
 	mod=$((now%PERIOD_7d))
 	TIMEOUT_7d=$((now-mod+OFFSET_7d))
 	mod=$((now%PERIOD_30d))
 	TIMEOUT_30d=$((now-mod+OFFSET_30d))
+	mod=$((now%PERIOD_90d))
+	TIMEOUT_90d=$((now-mod+OFFSET_90d))
+	mod=$((now%PERIOD_180d))
+	TIMEOUT_180d=$((now-mod+OFFSET_180d))
 	mod=$((now%PERIOD_365d))
 	TIMEOUT_365d=$((now-mod+OFFSET_365d))
 	if [ "$PERIOD_BACKUP" -ne 0 ]; then
@@ -88,6 +119,12 @@ while true; do
 		TIMEOUT_6h=$((TIMEOUT_6h+PERIOD_6h))
 	fi
 
+	## 12hr work
+	if [ "$now" -ge "$TIMEOUT_12h" ]; then
+		gen_graphs 12h &
+		TIMEOUT_24h=$((TIMEOUT_12h+PERIOD_12h))
+	fi
+
 	## 24hr work
 	if [ "$now" -ge "$TIMEOUT_24h" ]; then
 		gen_graphs 24h &
@@ -106,6 +143,18 @@ while true; do
 		TIMEOUT_30d=$((TIMEOUT_30d+PERIOD_30d))
 	fi
 
+	## 90d work
+	if [ "$now" -ge "$TIMEOUT_90d" ]; then
+		gen_graphs 90d &
+		TIMEOUT_90d=$((TIMEOUT_90d+PERIOD_90d))
+	fi
+
+	## 180d work
+	if [ "$now" -ge "$TIMEOUT_180d" ]; then
+		gen_graphs 180d &
+		TIMEOUT_180d=$((TIMEOUT_180d+PERIOD_180d))
+	fi
+
 	## 365d work
 	if [ "$now" -ge "$TIMEOUT_365d" ]; then
 		gen_graphs 365d &
@@ -118,6 +167,6 @@ while true; do
 		TIMEOUT_BACKUP=$((TIMEOUT_BACKUP+PERIOD_BACKUP))
 	fi
 
-	sleep 30
+	sleep 60
 done
 

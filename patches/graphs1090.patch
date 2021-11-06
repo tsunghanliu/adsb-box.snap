@@ -1,0 +1,172 @@
+diff --git a/default b/default
+index b669964..1b7f529 100644
+--- a/default
++++ b/default
+@@ -63,4 +63,4 @@ lr_rate_per_aircraft=
+ # leave blank for a default of 0.1
+ position_scaling=
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/collectd/rrd
+diff --git a/dump1090.py b/dump1090.py
+index b5d6deb..7d0b53d 100644
+--- a/dump1090.py
++++ b/dump1090.py
+@@ -153,10 +153,12 @@ def read_1090(data):
+                time=time.time(),
+                values = [1])
+ 
++    '''
+     try:
+         read_airspy(data)
+     except:
+         pass
++    '''
+ 
+     try:
+         with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
+diff --git a/graphs1090.sh b/graphs1090.sh
+index 09bc3b1..25e7fc6 100755
+--- a/graphs1090.sh
++++ b/graphs1090.sh
+@@ -1,6 +1,10 @@
+-#!/bin/bash
++#!/bin/bash -e
+ 
+-DOCUMENTROOT=/run/graphs1090
++DOCUMENTROOT=/tmp/graphs1090
++
++if [ ! -d ${DOCUMENTROOT} ]; then
++	mkdir -p ${DOCUMENTROOT}
++fi
+ 
+ renice -n 19 -p $$
+ 
+@@ -32,15 +36,25 @@ RED=E30022
+ DRED=990000
+ LRED=FFCCCB
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/var/lib/collectd/rrd
+ # settings in /etc/default/graphs1090 will overwrite the DB directory
+ 
+-source /etc/default/graphs1090
++source $SNAP/etc/default/graphs1090
++
++# use rrd db in tmp if exist
++PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
++PERIOD_BACKUP=${PERIOD_BACKUP:-0}
++if [ "$PERIOD_BACKUP" -ne 0 ]; then
++	DB=/tmp/rrd
++fi
+ 
+-ether="$(ls ${DB}/localhost | grep interface -m1)"
+-wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1)"
++source $SNAP_DATA/disk.conf
++DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
+ 
+-disk="$(ls ${DB}/localhost | grep disk -m1)"
++ether="$(ls ${DB}/localhost | grep interface-e -m1 || true)"
++wifi="$(ls ${DB}/localhost | grep interface-w -m1 || true)"
++
++disk="$(ls ${DB}/localhost | grep ${DISK} -m1 || true)"
+ 
+ 
+ if ! [ $position_scaling ]; then
+@@ -455,6 +469,10 @@ memory_graph() {
+ 
+ 
+ network_graph() {
++	if [ -z $ether ] && [ -z $wifi ]
++	then
++		return
++	fi
+ 	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
+ 	then
+ 		interfaces=(\
+@@ -1083,15 +1101,26 @@ dump1090_graphs() {
+ 	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 
+-	range_graph ${DOCUMENTROOT}/dump1090-$2-range-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
++	range2=leftaxis
++	range=nautical
++	range_graph ${DOCUMENTROOT}/dump1090-$2-range_imperial_nautical-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
++	range=statute
++	range_graph ${DOCUMENTROOT}/dump1090-$2-range_imperial_statute-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
++	range=metric
++	range_graph ${DOCUMENTROOT}/dump1090-$2-range_metric-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 
+ 	signal_graph ${DOCUMENTROOT}/dump1090-$2-signal-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
+ 	if [ -f ${DB}/$1/dump1090-$2/dump1090_messages-messages_978.rrd ]
+ 	then
+-        if grep -qs -e 'style="display:none"> <!-- dump978 -->' /usr/share/graphs1090/html/index.html; then
+-            sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
+-        fi
+-		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
++        #if grep -qs -e 'style="display:none"> <!-- dump978 -->' /usr/share/graphs1090/html/index.html; then
++        #    sed -i -e 's/ style="display:none"> <!-- dump978 -->/> <!-- dump978 -->/' /usr/share/graphs1090/html/index.html
++        #fi
++		range=nautical
++		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978_imperial_nautical-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
++		range=statute
++		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978_imperial_statute-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
++		range=metric
++		range_graph ${DOCUMENTROOT}/dump1090-$2-range_978_metric-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+ 		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+ 		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+ 		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
+@@ -1109,19 +1138,19 @@ dump1090_graphs() {
+ 
+ system_graphs() {
+ 	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"
+-	df_root_graph ${DOCUMENTROOT}/system-$2-df_root-$4.png ${DB}/$1/df-root "$3" "$4" "$5"
+-	disk_io_iops_graph ${DOCUMENTROOT}/system-$2-disk_io_iops-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
+-	disk_io_octets_graph ${DOCUMENTROOT}/system-$2-disk_io_octets-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
++	df_root_graph ${DOCUMENTROOT}/system-$2-df_root-$4.png ${DB}/$1/df${DFDIR} "$3" "$4" "$5"
++	if [ -n "$disk" ]; then
++		disk_io_iops_graph ${DOCUMENTROOT}/system-$2-disk_io_iops-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
++		disk_io_octets_graph ${DOCUMENTROOT}/system-$2-disk_io_octets-$4.png ${DB}/$1/$disk "$3" "$4" "$5"
++	fi
+ 	memory_graph ${DOCUMENTROOT}/system-$2-memory-$4.png ${DB}/$1/system_stats "$3" "$4" "$5"
+ 	network_graph ${DOCUMENTROOT}/system-$2-network_bandwidth-$4.png ${DB}/$1 "$3" "$4" "$5"
+-	if [[ $farenheit == 1 ]]
+-	then
+-		temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
+-	else
+-		temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
+-	fi
+-	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
+-	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
++
++	temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature_imperial-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
++	temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature_metric-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
++
++	[ -n "$ether" ] && eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
++	[ -n "$wifi" ] && wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
+ }
+ 
+ dump1090_receiver_graphs() {
+diff --git a/scatter.sh b/scatter.sh
+index f231ae9..0264870 100755
+--- a/scatter.sh
++++ b/scatter.sh
+@@ -1,14 +1,14 @@
+ #!/bin/bash
+ 
+ # Fetch a day worth of data from the rrds
+-data_dir=/var/lib/graphs1090/scatter
+-tmp=/run/graphs1090/scatter
++data_dir=$SNAP_COMMON/graphs1090/scatter
++tmp=/tmp/graphs1090/scatter
+ mkdir -p ${tmp}
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/collectd/rrd
+ # settings in /etc/default/graphs1090 will overwrite the DB directory
+ 
+-source /etc/default/graphs1090
++source $SNAP/etc/default/graphs1090
+ 
+ if [[ -z "$enable_scatter" ]] || [[ "enable_scatter" == "no" ]]; then
+     exit 0

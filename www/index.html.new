@@ -4,8 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>ADS-B Box Snap</title>
-	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
-	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
+	<link rel="stylesheet" href="/css/bulma-0.7.1.min.css">
 	<style type="text/css">
 		html, body {
 			height: 100%;
@@ -58,7 +57,8 @@
 		<div class="content" id="content" style="overflow-y: auto;"><iframe id="map" src="/dump1090/"></iframe></div>
 	</div>
 
-	<script src="/js/jquery-3.6.0.min.js"></script>
+	<script defer src="/fontawesome/js/all-v5.10.1.min.js" data-auto-replace-svg="nest"></script>
+	<script src="/js/jquery-3.4.1.min.js"></script>
 	<script type="text/javascript">
 		$(document).ready(function(){
 			// set up the click event
@@ -80,7 +80,6 @@
 					$('.content').html("<iframe id=\"map\" src=\"/dump1090/\"></iframe>");
 				}
 				else {
-					$.ajaxPrefilter(function( options, originalOptions, jqXHR ) {    options.async = true; });
 					$('.content').slideDown('fast');
 					$('.content').html("<div class=\"modal is-active\"><div class=modal-background\"></div><div class=\"modal-content\"><span class=\"icon is-large\" style=\"width: 100%; scroll: no\"><i class=\"fas fa-spinner fa-3x is-centered\"></i></span></div></div>").delay(1000);
 					$('.content').load(target, '', function(response, status, xhr) {

@@ -14,16 +14,32 @@ DISKFILE=$SNAP_DATA/disk.conf
 DISK=
 MOUNTPOINT=
 
-export PYTHONHOME=$SNAP/usr
-export PYTHONPATH=$SNAP/usr/lib/python2.7
-
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
+
+# wait until all required interfaces are connected
+PLUGS="system-observe network-observe mount-observe hardware-observe"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
 
 trap 'rrd-op backup' EXIT
 
 [ ! -d "$BASEDIR" ] && mkdir -p "$BASEDIR"
 [ ! -d "$WORKDIR" ] && mkdir -p "$WORKDIR"
+
+# remove disk-loop* rrd
+[ -d "$RRDDIR_DISK/localhost" ] && rm -rf "$RRDDIR_DISK/localhost"/disk-loop*
 
 PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
 PERIOD_BACKUP=${PERIOD_BACKUP:-0}
@@ -46,9 +62,9 @@ fi
 [ -f "$SNAP_DATA/collectd.pid" ] && rm "$SNAP_DATA/collectd.pid"
 
 if [ -f "$SNAP_COMMON/URL.conf" ]; then
-	URL="$(head -n 1 "$SNAP_COMMON/URL.conf" | tr -d '\n')"
+	URL_1090="$(head -n 1 "$SNAP_COMMON/URL.conf" | tr -d '\n')"
 else
-	URL="http://localhost:8080/dump1090"
+	URL_1090="http://localhost:8080/dump1090"
 fi
 
 RRD_WRITES_PER_SECOND=$(snapctl get collectd.rrd-writes-per-seoncd)
@@ -60,30 +76,68 @@ RRD_CACHE_FLUSH=${RRD_CACHE_FLUSH:-$((RRD_CACHE_TIMEOUT*10))}
 RRD_RANDOM_TIMEOUT=$(snapctl get collectd.rrd-random-timeout)
 RRD_RANDOM_TIMEOUT=${RRD_RANDOM_TIMEOUT:-0}
 
-# always update the disk.conf
-## FIXME: what is the best way to determine
-##  1. core or classic
-##  2. main storage
-if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
-	# Ubuntu Core
-	BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
-	if [ "$(df | grep -c " \/writable")" -eq 1 ]; then
-		# UC16
-		MOUNTPOINT="/writable"
+# create the disk.conf if it doesn't exist
+if [ ! -f "$DISKFILE" ]; then
+	## FIXME: what is the best way to determine
+
+	# always use "/var/snap" for disk space
+	MOUNTPOINT="/var/snap"
+
+	##  1. core or classic
+	##  2. main storage
+	if [ "$(grep -cE "\/dev\/loop[0-9]+ \/ squashfs" /etc/mtab)" -eq 1 ]; then
+		# Ubuntu Core
+		BOOTDEV="$(sed -n 's/\ \/home .*//p' < /etc/mtab | cut -c 6-)"
 	else
-		# UC18
-		MOUNTPOINT="/var/lib/snapd/hostfs/writable"
+		# Ubuntu Classic
+		BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
 	fi
+	# shellcheck disable=SC2001
+	DISK=$(echo "$BOOTDEV" | \
+			sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
+	if [ ! -b "/dev/$DISK" ]; then
+		# failsafe to mmcblk0, nvme0n1 or sda
+		if [ -b "/dev/mmcblk0" ]; then
+			DISK="mmcblk0"
+		elif [ -b "/dev/nvme0n1" ]; then
+			DISK="nvme0n1"
+		else
+			DISK="sda"
+		fi
+	fi
+
+	echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
+	echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > "$DISKFILE"
 else
-	# Ubuntu Classic
-	BOOTDEV="$(sed -n 's/\ \/ .*//p' < /etc/mtab | cut -c 6-)"
-	MOUNTPOINT="/"
+	source "$DISKFILE"
 fi
-# shellcheck disable=SC2001
-DISK=$(echo "$BOOTDEV" | \
-		sed 's:\(\(cciss\|ida\|rs\)/c[0-9]d[0-9][0-9]*\|mmcblk[0-9]\|nvme[0-9][0-9]*n[0-9][0-9]*\|\(ad\|ada\|da\|vtbd\|xbd\)[0-9]\+\|[hms]d[0-9]\+\|[a-z]\+\).*:\1:')
-echo "Set '$DISK' as the boot device and '$MOUNTPOINT' as the main partition"
-echo -e "DISK=\"$DISK\"\nMOUNTPOINT=\"$MOUNTPOINT\"" > "$DISKFILE"
+
+case $SNAP_ARCH in
+	amd64)
+		ARCH_TRIPLET="x86_64-linux-gnu"
+		;;
+	armhf)
+		ARCH_TRIPLET="arm-linux-gnueabihf"
+		;;
+	arm64)
+		ARCH_TRIPLET="aarch64-linux-gnu"
+		;;
+	*)
+		ARCH_TRIPLET="$SNAP_ARCH-linux-gnu"
+		;;
+esac
+
+if [ -n "$(snapctl get receiver.dump978.index)" ] || [ -n "$(snapctl get receiver.dump978.serial)" ]; then
+	URL_978="http://localhost:8080/skyaware978"
+else
+	mkdir -p /tmp/978-dummy
+	URL_978="file:///tmp/978-dummy"
+fi
+
+eth0=$(ls /sys/class/net/ | grep -m1 '^e')
+eth0=${eth0:-eth0}
+wlan0=$(ls /sys/class/net/ | grep -m1 '^w')
+wlan0=${wlan0:-wlan0}
 
 cat << EOF > "$CONF"
 # Config file for collectd(1).
@@ -98,7 +152,7 @@ PluginDir "$SNAP/usr/lib/collectd"
 # Added types for dump1090.                                                  #
 # Make sure the path to dump1090.db is correct.                              #
 #----------------------------------------------------------------------------#
-TypesDB "$SNAP/usr/share/adsb-receiver/graphs/dump1090.db" "$SNAP/usr/share/collectd/types.db"
+TypesDB "$SNAP/usr/share/graphs1090/dump1090.db" "$SNAP/usr/share/collectd/types.db"
 #----------------------------------------------------------------------------#
 # Interval at which to query values. This may be overwritten on a per-plugin #
 # base by using the 'Interval' option of the LoadPlugin block:               #
@@ -130,7 +184,7 @@ LoadPlugin logfile
 LoadPlugin rrdtool
 LoadPlugin table
 LoadPlugin interface
-LoadPlugin memory
+#LoadPlugin memory
 LoadPlugin cpu
 LoadPlugin aggregation
 LoadPlugin match_regex
@@ -148,6 +202,13 @@ LoadPlugin disk
 	CacheTimeout $RRD_CACHE_TIMEOUT
 	WritesPerSecond $RRD_WRITES_PER_SECOND
 	RandomTimeout $RRD_RANDOM_TIMEOUT
+	RRARows 3000
+	RRATimespan 174000
+	RRATimespan 696000
+	RRATimespan 2784000
+	RRATimespan 16008000
+	RRATimespan 96048000
+	XFF 0.8
 </Plugin>
 #----------------------------------------------------------------------------#
 # Configure the dump1090 python module.                                      #
@@ -157,14 +218,19 @@ LoadPlugin disk
 # statistics will be loaded from http://localhost/dump1090/data/stats.json   #
 #----------------------------------------------------------------------------#
 <Plugin python>
-	ModulePath "$SNAP/usr/share/adsb-receiver/graphs"
+	ModulePath "$SNAP/usr/share/graphs1090"
 	LogTraces true
 	Interactive false
 	Import "dump1090"
 	<Module dump1090>
 		<Instance localhost>
-			URL "$URL"
+			URL "$URL_1090"
+			URL_978 "$URL_978"
 		</Instance>
+	</Module>
+	Import "system_stats"
+	<Module system_stats>
+		placeholder "true"
 	</Module>
 </Plugin>
 <Plugin table>
@@ -179,8 +245,8 @@ LoadPlugin disk
 	</Table>
 </Plugin>
 <Plugin "interface">
-	Interface "eth0"
-	Interface "wlan0"
+	Interface "$eth0"
+	Interface "$wlan0"
 </Plugin>
 <Plugin "aggregation">
 	<Aggregation>
@@ -218,6 +284,51 @@ EOF
 
 chmod 0600 "$CONF"
 
+# migrate RRD DBs
+if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
+	TMPDIR=/tmp/rrd-migration
+	BACKUPDIR="$RRDDIR_DISK/localhost-v1"
+
+	if [ -d "$RRDDIR/localhost" ]; then
+		# based on graph1090/new-format.sh
+		cd "$RRDDIR"
+
+		if [ ! -d "$BACKUPDIR" ]; then
+			cp -T -r -n localhost "$BACKUPDIR"
+		else
+			# mirgration interrupted
+			rm -rf localhost "$TMPDIR"
+			cp -T -r -n "$BACKUPDIR" localhost
+		fi
+		[ -d localhost/memory ] && mv localhost/memory localhost/system_stats
+		cp -T -r localhost "$TMPDIR"
+		rm -r localhost # the following command will create a new version of DB.
+
+		# collect data for 7 mins
+		LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
+			$BIN -f -C "$CONF" -P "$PIDFILE" &
+		sleep 420
+		kill $!
+
+		# migrate DB one by one
+		for file in $(cd localhost; find . | grep '\.rrd'); do
+			rrdtool create -r "$TMPDIR/$file" -t localhost/"$file" localhost/"$file"
+		done
+
+		cp -T -r -n $TMPDIR localhost
+
+		# backup the runtime DBs
+		if [ "$PERIOD_BACKUP" -ne 0 ]; then
+			rrd-op backup
+		fi
+
+		# restart graphs-gend
+		snapctl restart adsb-box.graphs-gend
+	fi
+
+	touch "$BASEDIR/.db-v1-migrated"
+fi
+
 # rotate logs
 if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 	gzip -c "$LOGFILE" > "$LOGFILE.1.gz.tmp"
@@ -225,4 +336,6 @@ if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 	cat /dev/null > "$LOGFILE"
 fi
 
-$BIN -f -C "$CONF" -P "$PIDFILE"
+# workaround for collectd bug (LP: #1872281)
+LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
+	$BIN -f -C "$CONF" -P "$PIDFILE"

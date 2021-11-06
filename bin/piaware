@@ -13,6 +13,22 @@ CONFFILE=$CACHEDIR/piaware.conf
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SNAP/usr/lib
 
+# wait until all required interfaces are connected
+PLUGS="system-observe network-observe mount-observe hardware-observe"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
+
 case $SNAP_ARCH in
 	amd64)
 		ARCH_TRIPLET="x86_64-linux-gnu"
@@ -28,15 +44,20 @@ case $SNAP_ARCH in
 		;;
 esac
 
-TCL_LIBRARY="$SNAP/usr/share/tcltk/tcl8.6:$TCL_LIBRARY"
-TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tcl8.6"
-TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tcllib1.17"
-TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/itcl3.4"
-TCLLIBPATH="$TCLLIBPATH $SNAP/usr/share/tcltk/tls1.6.7"
-TCLLIBPATH="$TCLLIBPATH $SNAP/usr/lib/tcltk/$ARCH_TRIPLET/itcl3.4"
-ITCL_LIBRARY="$SNAP/usr/share/tcltk/itcl3.4"
+DIR_TCL8=$(find $SNAP/usr/share/tcltk/ -maxdepth 1 -type d -name "tcl8*")
+DIR_TCLLIB=$(find $SNAP/usr/share/tcltk/ -maxdepth 1 -type d -name "tcllib*")
+DIR_ITCL=$(find $SNAP/usr/share/tcltk/ -maxdepth 1 -type d -name "itcl*")
+TCL_LIBRARY="$DIR_TCL8:$TCL_LIBRARY"
+TCLLIBPATH="$TCLLIBPATH $DIR_TCL8"
+for d in $(find $SNAP/usr/share/tcltk -maxdepth 1 -mindepth 1 -type d); do
+	TCLLIBPATH="$TCLLIBPATH $d"
+done
+for d in $(find $SNAP/usr/lib/tcltk/$ARCH_TRIPLET -maxdepth 1 -mindepth 1 -type d); do
+	TCLLIBPATH="$TCLLIBPATH $d"
+done
+ITCL_LIBRARY="$DIR_ITCL"
 
-export TCL8_6_TM_PATH="$SNAP/usr/share/tcltk/tcl8.6/tcl8"
+export TCL8_6_TM_PATH="$DIR_TCL8/tcl8"
 export TCL_LIBRARY="$TCL_LIBRARY"
 export TCLLIBPATH="$TCLLIBPATH"
 export ITCL_LIBRARY=$ITCL_LIBRARY

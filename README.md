@@ -14,7 +14,9 @@ This is a snap to establish a ADS-B receiver box.
 * [plane finder](https://planefinder.net/sharing/)
 * [RadarBox](https://www.radarbox24.com/)
 * [collectd](https://collectd.org)
+* [dump978](https://github.com/flightaware/dump978/)
 * graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
+  * performance graphs of [graph1090](https://github.com/wiedehopf/graphs1090)
 * other base tools and libraries, e.g python and tcl
 
 # Build
@@ -325,6 +327,57 @@ Copy your `sharing key` to the field and claim it.
 To enable MLAT client, you need to set the location (see the **snap settings** section). The program will get the feeder name from the configuration file of rbfeeder.
 
 Read the [document](https://www.radarbox24.com/sharing-data) for more information.
+
+## UAT978 Settings
+### Provision dongle
+This step is used to program the serial numbers in the EEPROM of dongles. The serial numbers will be provided to `dump1090` and `dump978` later.
+It would be easier to provision dongles one by one. If you find that the serial (SN) is not `00000001`, you can skip this step.
+
+```bash
+# run rtl-sdr tools within the snap
+$ sudo snap run --shell adsb-box.dump1090
+(in-snap)$ cd $SNAP
+# list dongles
+(in-snap)$ rtl_test -t
+Found 1 device(s):
+  0:  Realtek, RTL2838UHIDIR, SN: 00000001
+  ...
+# set serial number to a 8 digit number, eg 10900001 or 09780001
+# -d for index, -s for serial
+(in-snap)$ rtl_eeprom -d 0 -s 10900001
+
+# unplug the dongle and plug another one
+# re-do rtl_test and rtl_eeprom commands
+# remember to use a different serial for the second dongle
+
+(in-snap)$ exit
+```
+
+### Enable dump978
+Replace serials with yours set in the previous step.
+In this example, dongle 10900001 is for dump1090 and dongle 09780001 is for dump978.
+
+```bash
+$ sudo snap set adsb-box receiver.dump1090.serial=10900001
+$ sudo snap set adsb-box receiver.dump978.serial=09780001
+$ sudo adsb-box.piaware-config uat-receiver-type sdr
+```
+
+## Restart adsb-box
+Connect both dongles and their cables and antennas.
+
+```bash
+$ sudo snap restart adsb-box
+```
+
+## Verification
+- [ ] Check dump978 status is active in `$ snap services adsb-box`
+- [ ] On the skyview page, you would see `UAT` in the legend list.
+- [ ] On the skyview page, you would see aircraft using UAT.
+- [ ] On the performance view, you would see a new group of dump978 charts.
+- [ ] Check your feeder page on Flightaware if it recevies your UAT data.
+- [ ] Check your feeder page on Radarbox24 if it receives you UAT data.
+
 
 ## Running Status
 

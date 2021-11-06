@@ -9,6 +9,22 @@ if [ ! -f "$BIN" ]; then
 	exit 0
 fi
 
+# wait until all required interfaces are connected
+PLUGS="network-observe hardware-observe"
+while true; do
+	WAIT=0
+	for plug in $PLUGS; do
+		snapctl is-connected "$plug" || WAIT=1
+		if [ "$WAIT" -eq 1 ]; then
+			sleep 10
+			break
+		fi
+	done
+	if [ "$WAIT" -eq 0 ]; then
+		break
+	fi
+done
+
 # delay for dump1090
 sleep 3
 
@@ -21,6 +37,16 @@ RBFEEDER_INI="$WORKDIR/rbfeeder.ini"
 if [ ! -f "$RBFEEDER_INI" ]; then
 	cp "$SNAP/etc/rbfeeder.ini" "$RBFEEDER_INI"
 	sed -i 's/\/var\/log\/rbfeeder.log/\/dev\/null/' "$RBFEEDER_INI"
+fi
+
+if [ -n "$(snapctl get receiver.dump978.index)" ] || [ -n "$(snapctl get receiver.dump978.serial)" ]; then
+	# add dump978 settings
+	if [ "$(grep -c dump978_ $RBFEEDER_INI)" -eq 0 ]; then
+		sed -i '/\[dump978\]/a dump978_enabled=true\ndump978_port=30979' "$RBFEEDER_INI"
+	fi
+else
+	# remove dump978 settings
+	sed -i '/^dump978_.*/d ' "$RBFEEDER_INI"
 fi
 
 if [ "$SNAP_ARCH" = "arm64" ]; then

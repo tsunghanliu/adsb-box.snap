@@ -1,6 +1,5 @@
 name: adsb-box
-version: set-by-version-script
-version-script: git describe --tags --always --dirty
+#version: set-by-adopt-info
 summary: ADS-B tools
 description: |
   This snap includes several ADS-B related tools to let users builds their
@@ -8,7 +7,8 @@ description: |
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
-base: core
+base: core20
+adopt-info: common
 
 apps:
   dump1090:
@@ -83,11 +83,24 @@ apps:
     command: bin/rbfeedercli
   generate-wisdom:
     command: bin/generate-wisdom
+  dump978:
+    command: bin/dump978
+    daemon: simple
+    plugs: [network, network-bind, network-observe, raw-usb]
+    after: [dump1090]
+  skyaware978:
+    command: bin/skyaware978
+    daemon: simple
+    plugs: [network, network-bind, network-observe]
+    after: [dump978]
 
 parts:
   common:
     plugin: dump
     source: .
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version "$(git describe --tags --always --dirty)"
     organize:
       www: var/www
     prime:
@@ -95,16 +108,6 @@ parts:
       - etc
       - var
       - README.md
-
-  customized-ppa:
-    plugin: nil
-    build-packages:
-      - software-properties-common
-    override-pull: |
-      sudo add-apt-repository \
-        --yes \
-        ppa:robertliu/packages-for-ubuntu-core
-      sudo apt update
 
   dump1090:
     plugin: make
@@ -121,23 +124,18 @@ parts:
         PATCHES_DIR="../../../patches"
       fi
       patch -p1 < "$PATCHES_DIR/dump1090.patch"
-      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html/flags-tiny/
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html_merged/flags-tiny/
       DUMP1090_VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
       sed -i "1i DUMP1090_VERSION ?= $DUMP1090_VERSION" Makefile
       echo 'building dump1090 ...'
-      snapcraftctl build
-    artifacts:
-      - dump1090
-      - faup1090
-      - starch-benchmark
-      - debian/generate-wisdom
-      - public_html_merged
-      - COPYING
+      make -j$(nproc) BLADERF=no dump1090 faup1090 starch-benchmark
+      echo 'installing dump1090 ...'
+      cp -a dump1090 faup1090 starch-benchmark debian/generate-wisdom public_html_merged COPYING $SNAPCRAFT_PART_INSTALL
     organize:
       dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
       starch-benchmark: usr/bin/starch-benchmark
-      debian/generate-wisdom: bin/generate-wisdom
+      generate-wisdom: bin/generate-wisdom
       public_html_merged: usr/share/dump1090-fa/html
       COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
@@ -145,16 +143,15 @@ parts:
       - libusb-1.0-0-dev
       - librtlsdr-dev
       - libncurses5-dev
+    stage-packages:
+      - librtlsdr0
+      - libusb-1.0-0
 
   lighttpd:
     plugin: nil
     stage-packages:
       - lighttpd
-    prime:
-      - usr/sbin/lighttpd
-      - usr/lib/libfam*
-      - usr/lib/lighttpd
-      - usr/share/doc/lighttpd/copyright
+      - libgamin0
 
   tcllauncher:
     plugin: autotools
@@ -169,9 +166,11 @@ parts:
       echo 'patching tcllauncher ...'
       patch -p1 < "$PATCHES_DIR/tcllauncher.patch"
       snapcraftctl build
-    configflags: ['--with-tcl=/usr/lib/tcl8.6']
+    autotools-configure-parameters: ['--with-tcl=/usr/lib/tcl8.6']
     build-packages:
       - tcl8.6-dev
+    stage-packages:
+      - libtcl8.6
 
   piaware:
     after: [tcllauncher]
@@ -193,7 +192,7 @@ parts:
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/itcl3.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl \
-        $SNAPCRAFT_PART_INSTALL/usr/share/tcltk/tls1.6.7/pkgIndex.tcl \
+        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/tcltls1.7.20/pkgIndex.tcl \
         || \
         exit 1
     stage-packages:
@@ -202,6 +201,7 @@ parts:
       - tcllib
       - tcl-tls
       - itcl3
+      - net-tools
     prime:
       - -usr/share/doc
       - -usr/share/man
@@ -282,34 +282,56 @@ parts:
 
   collectd:
     plugin: nil
-    after: [customized-ppa]
     stage-packages:
       - collectd
-      - python2.7
-      - libpython2.7
+      - python3.8
+      - libpython3.8
+      - python3-urllib3
+      - libasn1-8-heimdal
+      - libbrotli1
+      - libcurl3-gnutls
+      - libgssapi3-heimdal
+      - libhcrypto4-heimdal
+      - libheimbase1-heimdal
+      - libheimntlm0-heimdal
+      - libhx509-5-heimdal
+      - libkrb5-26-heimdal
+      - libldap-2.4-2
+      - libnghttp2-14
+      - libperl5.30
+      - libpsl5
+      - libroken18-heimdal
+      - librtmp1
+      - libsasl2-2
+      - libssh-4
+      - libwind0-heimdal
     stage:
       - -etc/fonts/fonts.conf
 
-  graphs-gend:
+  graphs1090:
     plugin: nil
-    source: https://github.com/jprochazka/adsb-receiver.git
+    source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
     stage-packages:
       - rrdtool
     override-build: |
+      set -x
       # patch
-      echo 'patching adsb-receiver scripts ...'
+      echo 'patching graphs1090 ...'
       if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
         PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
       else
         PATCHES_DIR="../../../patches"
       fi
-      patch -p1 < "$PATCHES_DIR/graphs-gend.patch"
+      patch -p1 < "$PATCHES_DIR/graphs1090.patch"
       # no build process is required
       # install
       pwd
-      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
-      cp -a build/portal/graphs $SNAPCRAFT_PART_INSTALL/usr/share/adsb-receiver
+      mkdir -p $SNAPCRAFT_PART_INSTALL/usr/share/graphs1090
+      cp -a * $SNAPCRAFT_PART_INSTALL/usr/share/graphs1090
+      mkdir -p $SNAPCRAFT_PART_INSTALL/etc/default
+      cp default $SNAPCRAFT_PART_INSTALL/etc/default/graphs1090
+
     stage:
       - -etc/fonts/fonts.conf
 
@@ -328,7 +350,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.2.21-20191004004313_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.4.2-20210525101900_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
@@ -347,8 +369,7 @@ parts:
           ;;
       esac
     stage-packages:
-      - to armhf: [libcurl3-gnutls, libglib2.0-0]
-      - to arm64: [libcurl3-gnutls, libglib2.0-0]
+      - to armhf: [libcurl4, libglib2.0-0, libjansson4]
 
   enable-foreign-arch:
     plugin: nil
@@ -366,8 +387,9 @@ parts:
     after: [enable-foreign-arch]
     stage-packages:
       - to arm64:
-        - libcurl3-gnutls:armhf
+        - libcurl4:armhf
         - libglib2.0-0:armhf
+        - libjansson4:armhf
         - librtlsdr0:armhf
         - libusb-1.0-0:armhf
         - libstdc++6:armhf
@@ -394,6 +416,46 @@ parts:
       cmake ${SNAPCRAFT_PART_SRC} -DCMAKE_INSTALL_PREFIX=
       cmake --build . -- -j$(nproc)
       cmake --build . --target install
+
+  dump978:
+    plugin: make
+    source: https://github.com/flightaware/dump978.git
+    source-type: git
+    # the branch should be the same with piaware
+    source-branch: v5.0
+    override-build: |
+      echo 'patching dump1090 ...'
+      if [ -n "$SNAPCRAFT_PROJECT_DIR" ]; then
+        PATCHES_DIR="$SNAPCRAFT_PROJECT_DIR/patches"
+      else
+        PATCHES_DIR="../../../patches"
+      fi
+      patch -p1 < "$PATCHES_DIR/dump978-fa.patch"
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" skyaware/flags-tiny/
+      VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
+      sed -i "1i VERSION ?= $VERSION" Makefile
+      echo 'building dump978 ...'
+      #snapcraftctl build
+      make -j$(nproc) dump978-fa faup978 skyaware978
+      echo 'installing dump978 ...'
+      cp -a dump978-fa faup978 skyaware978 skyaware debian/copyright $SNAPCRAFT_PART_INSTALL
+    organize:
+      dump978-fa: usr/bin/dump978-fa
+      faup978: usr/lib/piaware/helpers/faup978
+      skyaware978: usr/bin/skyaware978-fa
+      skyaware: usr/share/dump978-fa/html
+      copyright: usr/share/dump978-fa/copyright
+    build-packages:
+      - libboost-system-dev
+      - libboost-program-options-dev
+      - libboost-regex-dev
+      - libboost-filesystem-dev
+      - libsoapysdr-dev
+    stage-packages:
+      - libboost-filesystem1.71.0
+      - libboost-program-options1.71.0
+      - libboost-regex1.71.0
+      - soapysdr-module-rtlsdr
 
 
 layout:

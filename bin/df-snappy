@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+/bin/df --output=target,pcent /var/snap | sed 's/\/var\/snap/\/        /g'

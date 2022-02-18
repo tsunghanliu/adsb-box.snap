@@ -22,8 +22,7 @@ done
 sleep 3
 
 export XDG_DATA_HOME=$SNAP/usr/share
-export FONTCONFIG_PATH=$SNAP/etc/fonts/config.d
-export FONTCONFIG_FILE=$SNAP/etc/fonts/fonts.conf
+export FONTCONFIG_PATH=$SNAP/etc/fonts
 
 ## crontab commands
 #*/5 * * * * root bash $PORTALBUILDDIRECTORY/graphs/make-collectd-graphs.sh 1h >/dev/null 2>&1

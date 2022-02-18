@@ -471,3 +471,5 @@ layout:
     bind-file: $SNAP_DATA/fr24feed/fr24feed.ini
   /var/lib/openskyd:
     bind: $SNAP_DATA/openskyd
+  /etc/fonts:
+    bind: $SNAP/etc/fonts

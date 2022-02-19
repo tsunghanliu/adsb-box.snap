@@ -115,7 +115,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v6.1
+    source-branch: v7.1
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -180,7 +180,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v6.1
+    source-branch: v7.1
     source-depth: 1
     override-build: |
       echo 'patching piaware ...'
@@ -240,9 +240,9 @@ parts:
       - else:
         - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.25-3_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.28-1_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.29-8_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.28-1_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.29-8_armhf.tgz
       - else fail
     build-packages:
       - wget
@@ -316,7 +316,7 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
-    source-commit: 53a7b45c7c9d887ae420fc4d1c4859c613a65d9a
+    source-commit: 754db5bcf2b87c6801226929ddec7faaa2a7441d
     source-depth: 1
     stage-packages:
       - rrdtool
@@ -429,7 +429,7 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v6.1
+    source-branch: v7.1
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -471,3 +471,5 @@ layout:
     bind-file: $SNAP_DATA/fr24feed/fr24feed.ini
   /var/lib/openskyd:
     bind: $SNAP_DATA/openskyd
+  /etc/fonts:
+    bind: $SNAP/etc/fonts

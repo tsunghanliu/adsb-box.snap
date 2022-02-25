@@ -41,7 +41,10 @@ fi
 
 if [ -n "$(snapctl get receiver.dump978.index)" ] || [ -n "$(snapctl get receiver.dump978.serial)" ]; then
 	# add dump978 settings
-	if [ "$(grep -c dump978_ $RBFEEDER_INI)" -eq 0 ]; then
+	if [ "$(grep -c "\[dump978\]" "$RBFEEDER_INI")" -eq 0 ]; then
+		echo -e "\n[dump978]" >> "$RBFEEDER_INI"
+	fi
+	if [ "$(grep -c dump978_ "$RBFEEDER_INI")" -eq 0 ]; then
 		sed -i '/\[dump978\]/a dump978_enabled=true\ndump978_port=30979' "$RBFEEDER_INI"
 	fi
 else

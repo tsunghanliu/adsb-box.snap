@@ -26,7 +26,7 @@ index 6cddc94..32401ef 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 5b0dbcc..29ae3b2 100755
+index 5b0dbcc..0d121a5 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -74,7 +74,7 @@ index 5b0dbcc..29ae3b2 100755
      wifi="interface-${wifi}"
  else
 -    wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1)"
-+    wifi="$(ls ${DB}/localhost | grep interface-w -m1 | true)"
++    wifi="$(ls ${DB}/localhost | grep interface-w -m1 || true)"
  fi
  
  if [[ -n $disk ]]; then

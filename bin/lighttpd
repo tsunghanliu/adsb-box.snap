@@ -52,6 +52,9 @@ server.errorlog             = "$ERROR_LOG"
 server.pid-file             = "$WORKDIR/lighttpd.pid"
 server.port                 = $PORT
 
+# listen to IPv6
+\$SERVER["socket"] == "[::]:$PORT" {  }
+
 index-file.names            = ( "index.html", "gmap.html" )
 url.access-deny             = ( "~", ".inc" )
 

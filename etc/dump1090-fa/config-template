@@ -8,13 +8,16 @@
 
 # Set to "yes" to start dump1090 on boot.
 START_DUMP1090=
+## no
 
 # User to run dump1090 as.
 DUMP1090_USER=
+## no
 
 # Logfile to log to
 LOGFILE=
-
+## no
+#
 #
 # Receiver options
 #
@@ -22,14 +25,17 @@ LOGFILE=
 # RTLSDR device index or serial number to use
 # If set to "none", dump1090 will be started in --net-only mode
 DEVICE=
+## no
 
 # RTLSDR gain in dB.
 # If set to "max" (the default) the maximum supported gain is used.
 # If set to "agc", the tuner AGC is used to set the gain.
 GAIN=
+## RECEIVER_GAIN
 
 # RTLSDR frequency correction in PPM
 PPM=
+## EXTRA_PPM
 
 #
 # Decoding options
@@ -37,10 +43,12 @@ PPM=
 
 # If yes, fixes messages with correctable CRC errors.
 FIX_CRC=
+## ERROR_CORRECTION
 
 # If set, supplies a reference location for local position decoding.
 LAT=
 LON=
+## RECEIVER_LAT, RECEIVER_LON
 
 # If set, provides the absolute maximum receiver range used to
 # filter bad position reports, and to determine when local position
@@ -53,35 +61,45 @@ MAX_RANGE=
 
 # Port to listen on for raw (AVR-format) input connections. 0 disables.
 RAW_INPUT_PORT=
+## NET_RAW_INPUT_PORTS
 
 # Port to listen on for raw (AVR-format) output connections. 0 disables.
 RAW_OUTPUT_PORT=
+## NET_RAW_OUTPUT_PORTS
 
 # Port to listen on for SBS-format output connections. 0 disables.
 SBS_OUTPUT_PORT=
+## NET_SBS_OUTPUT_PORTS
 
 # Port to listen on for Beast-format input connections. 0 disables.
 BEAST_INPUT_PORT=30104
+## NET_BEAST_INPUT_PORTS
 
 # Port to listen on for Beast-format output connections. 0 disables.
 BEAST_OUTPUT_PORT=30005
+## NET_BEAST_OUTPUT_PORTS
 
 # TCP heartbeat interval in seconds. 0 disables.
 NET_HEARTBEAT=
+## EXTRAS_NET_HEARTBEAT
 
 # Minimum output buffer size per write, in bytes.
 NET_OUTPUT_SIZE=
+## EXTRAS_NET_RO_SIZE
 
 # Maximum buffering time before writing, in seconds.
 NET_OUTPUT_INTERVAL=
+## EXTRAS_NET_RO_INTERVAL
 
 # TCP buffer size, in bytes
 NET_BUFFER=
+## no
 
 # Bind ports on a particular address. If unset, binds to all interfaces.
 # This defaults to binding to localhost. If you need to allow remote
 # connections, change this.
 NET_BIND_ADDRESS=
+## no
 
 #
 # Misc options
@@ -89,19 +107,26 @@ NET_BIND_ADDRESS=
 
 # Interval (in seconds) between logging stats to the logfile. 0 disables.
 STATS_INTERVAL=
+## no
 
 # Path to write json state to (for use with an external webserver). Blank disables.
 JSON_DIR=
+## no
 
 # Interval between writing json state (in seconds). 0 disables.
 JSON_INTERVAL=
+## no
 
 # Accuracy of receiver location to write to json state, one of "exact" / "approximate" / "none"
 JSON_LOCATION_ACCURACY=
+## JSON_LOCATION_ACCURACY
 
 # Set to yes to log all decoded messages
 # This can get large fast!
 LOG_DECODED_MESSAGES=
+## no
 
 # Additional options that are passed to the Daemon.
 EXTRA_ARGS=
+## EXTRA_OPTIONS
+

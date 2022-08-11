@@ -1,8 +1,8 @@
 diff --git a/default b/default
-index 6b93166..372da85 100644
+index 11170ef..da813b7 100644
 --- a/default
 +++ b/default
-@@ -74,4 +74,4 @@ disk=
+@@ -77,4 +77,4 @@ disk=
  ether=
  wifi=
  
@@ -26,7 +26,7 @@ index 6cddc94..32401ef 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 5b0dbcc..0d121a5 100755
+index e5f2eb2..e40d140 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,10 @@
@@ -42,9 +42,9 @@ index 5b0dbcc..0d121a5 100755
  
  renice -n 19 -p $$
  
-@@ -35,27 +39,37 @@ RED=E30022
- DRED=990000
- LRED=FFCCCB
+@@ -49,27 +53,37 @@ AYELLOW=ffcc00
+ 
+ AGRAY=dddddd
  
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/var/lib/collectd/rrd
@@ -66,26 +66,26 @@ index 5b0dbcc..0d121a5 100755
  if [[ -n $ether ]]; then
      ether="interface-${ether}"
  else
--    ether="$(ls ${DB}/localhost | grep interface -m1)"
-+    ether="$(ls ${DB}/localhost | grep interface-e -m1 || true)"
+-    ether="$(ls ${DB}/localhost | grep -v 'interface-lo' | grep interface -m1)"
++    ether="$(ls ${DB}/localhost | grep 'interface-e' -m1 || true)"
  fi
  
  if [[ -n $wifi ]]; then
      wifi="interface-${wifi}"
  else
--    wifi="$(ls ${DB}/localhost | grep interface -m2 | tail -n1)"
-+    wifi="$(ls ${DB}/localhost | grep interface-w -m1 || true)"
+-    wifi="$(ls ${DB}/localhost | grep -v 'interface-lo' | grep interface -m2 | tail -n1)"
++    wifi="$(ls ${DB}/localhost | grep 'interface-w' -m1 || true)"
  fi
  
  if [[ -n $disk ]]; then
      disk="disk-${disk}"
  else
 -    disk="$(ls ${DB}/localhost | grep disk -m1)"
-+    disk="$(ls ${DB}/localhost | grep ${DISK} -m1 || true)"
++    disk="$(ls ${DB}/localhost | grep disk -m1 || true)"
  fi
  
  
-@@ -476,6 +490,10 @@ memory_graph() {
+@@ -534,6 +548,10 @@ memory_graph() {
  
  network_graph() {
  	$pre
@@ -96,7 +96,7 @@ index 5b0dbcc..0d121a5 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1185,15 +1203,26 @@ dump1090_graphs() {
+@@ -1252,15 +1270,26 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -128,7 +128,7 @@ index 5b0dbcc..0d121a5 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1217,19 +1246,19 @@ dump1090_graphs() {
+@@ -1284,19 +1313,23 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"
@@ -147,24 +147,31 @@ index 5b0dbcc..0d121a5 100755
 -		temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 -	else
 -		temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
--	fi
--	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
--	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
 +
 +	temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature_imperial-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 +	temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature_metric-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 +
-+	[ -n "$ether" ] && eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
-+	[ -n "$wifi" ] && wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
++	if [ -n "$ether" ]; then
++		eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
++	fi
++	if [ -n "$wifi" ]; then
++		wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
+ 	fi
+-	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
+-	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
  }
  
  dump1090_receiver_graphs() {
 diff --git a/scatter.sh b/scatter.sh
-index dde2834..7484031 100755
+index caf9656..3dc6ed5 100755
 --- a/scatter.sh
 +++ b/scatter.sh
 @@ -1,17 +1,17 @@
  #!/bin/bash
+ 
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/collectd/rrd
+ # settings in /etc/default/graphs1090 will overwrite the DB directory
  
 -source /etc/default/graphs1090
 +source $SNAP/etc/default/graphs1090
@@ -179,9 +186,5 @@ index dde2834..7484031 100755
 +data_dir=$SNAP_COMMON/graphs1090/scatter
 +tmp=/tmp/graphs1090/scatter
  mkdir -p ${tmp}
- 
--DB=/var/lib/collectd/rrd
-+DB=$SNAP_COMMON/collectd/rrd
- # settings in /etc/default/graphs1090 will overwrite the DB directory
  
  date=$(date -I --date=yesterday)

@@ -1,6 +1,10 @@
 #! /bin/bash
 
-set -x
+ENABLE_LOG=$(snapctl get collectd.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 WORKDIR=$SNAP_DATA/collectd
 CONF=$WORKDIR/collectd.conf

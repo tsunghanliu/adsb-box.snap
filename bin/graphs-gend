@@ -1,6 +1,11 @@
 #!/bin/bash
 
-#set -x
+ENABLE_LOG=$(snapctl get graphs-gend.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 # wait until all required interfaces are connected
 PLUGS="process-control"
@@ -69,7 +74,9 @@ mkdir -p /tmp/graphs
 
 gen_graphs()
 {
-	echo "[$(date +"%F %T")] run cmd, arg=$*"
+	if [ "$ENABLE_LOG" != "0" ]; then
+		echo "[$(date +"%F %T")] run cmd, arg=$*"
+	fi
 	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" 0.7 >/dev/null 2>&1
 }
 

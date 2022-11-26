@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
-set -x
+
+ENABLE_LOG=$(snapctl get fr24feed.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 # delay for dump1090
 sleep 3
@@ -70,7 +75,6 @@ fi
 
 ARGS=("--monitor-file=$MONITORFILE" "--write-pid=$PIDFILE")
 
-ENABLE_LOG=$(snapctl get fr24feed.enable-log)
 case "$ENABLE_LOG" in
 	1|[Oo][Nn]|[Tt][Rr][Uu][Ee])
 		;;

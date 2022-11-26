@@ -473,3 +473,5 @@ layout:
     bind: $SNAP_DATA/openskyd
   /etc/fonts:
     bind: $SNAP/etc/fonts
+  /var/log/rbfeeder.log:
+    bind-file: $SNAP_DATA/rbfeeder.log

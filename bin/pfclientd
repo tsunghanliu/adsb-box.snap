@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
-set -x
+
+ENABLE_LOG=$(snapctl get plane-finder.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 # delay for dump1090
 sleep 3
@@ -21,7 +26,6 @@ fi
 
 ARGS=("-i" "$PIDFILE" "-z" "$CONFIGFILE")
 
-ENABLE_LOG=$(snapctl get plane-finder.enable-log)
 case "$ENABLE_LOG" in
 	1|on|ON|true|TRUE)
 		ARGS+=("-y" "$LOGDIR")

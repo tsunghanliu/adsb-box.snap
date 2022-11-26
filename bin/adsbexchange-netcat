@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
-set -x
+
+ENABLE_LOG=$(snapctl get adsbexchange.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 # wait until all required interfaces are connected
 PLUGS="network-observe"

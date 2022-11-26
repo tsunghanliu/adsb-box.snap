@@ -3,7 +3,12 @@
 # ported from /etc/init.d/fr24feed carried in fr24feed.deb
 
 set -e
-#set -x
+
+ENABLE_LOG=$(snapctl get fr24feed.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 # From bin/fr24feed
 WORKDIR="$SNAP_DATA/fr24feed"

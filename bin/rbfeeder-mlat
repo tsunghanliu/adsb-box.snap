@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
-set -x
+
+ENABLE_LOG=$(snapctl get rbfeeder.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 if [ ! -f "$SNAP/usr/bin/rbfeeder" ]; then
 	echo "The rbfeeder does not exist. Maybe the architecture($SNAP_ARCH) is not supported."

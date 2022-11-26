@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
-set -x
+
+ENABLE_LOG=$(snapctl get rbfeeder.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 BIN="$SNAP/usr/bin/rbfeeder"
 
@@ -36,8 +41,8 @@ RBFEEDER_INI="$WORKDIR/rbfeeder.ini"
 
 if [ ! -f "$RBFEEDER_INI" ]; then
 	cp "$SNAP/etc/rbfeeder.ini" "$RBFEEDER_INI"
-	sed -i 's/\/var\/log\/rbfeeder.log/\/dev\/null/' "$RBFEEDER_INI"
 fi
+sed -i 's/\/var\/log\/rbfeeder.log/\/dev\/null/' "$RBFEEDER_INI"
 
 if [ -n "$(snapctl get receiver.dump978.index)" ] || [ -n "$(snapctl get receiver.dump978.serial)" ]; then
 	# add dump978 settings

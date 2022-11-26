@@ -115,7 +115,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v7.1
+    source-branch: v7.2
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -125,19 +125,19 @@ parts:
         PATCHES_DIR="../../../patches"
       fi
       patch -p1 < "$PATCHES_DIR/dump1090.patch"
-      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html_merged/flags-tiny/
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html/flags-tiny/
       DUMP1090_VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
       sed -i "1i DUMP1090_VERSION ?= $DUMP1090_VERSION" Makefile
       echo 'building dump1090 ...'
       make -j$(nproc) BLADERF=no dump1090 faup1090 starch-benchmark
       echo 'installing dump1090 ...'
-      cp -a dump1090 faup1090 starch-benchmark debian/generate-wisdom public_html_merged COPYING $SNAPCRAFT_PART_INSTALL
+      cp -a dump1090 faup1090 starch-benchmark debian/generate-wisdom public_html COPYING $SNAPCRAFT_PART_INSTALL
     organize:
       dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
       starch-benchmark: usr/bin/starch-benchmark
       generate-wisdom: bin/generate-wisdom
-      public_html_merged: usr/share/dump1090-fa/html
+      public_html: usr/share/dump1090-fa/html
       COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
       - pkg-config
@@ -180,7 +180,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v7.1
+    source-branch: v7.2
     source-depth: 1
     override-build: |
       echo 'patching piaware ...'
@@ -429,7 +429,7 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v7.1
+    source-branch: v7.2
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'

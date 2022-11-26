@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
-#set -x
+
+ENABLE_LOG=$(snapctl get skyaware978.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
 
 # get index/serial of receiver
 dev_index=$(snapctl get receiver.dump978.index)

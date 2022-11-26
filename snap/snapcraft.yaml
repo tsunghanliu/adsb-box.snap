@@ -356,7 +356,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.4.3-20210909231001_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_1.0.8+deb10_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
@@ -375,7 +375,7 @@ parts:
           ;;
       esac
     stage-packages:
-      - to armhf: [libcurl4, libglib2.0-0, libjansson4]
+      - to armhf: [libcurl4, libglib2.0-0, libjansson4, libprotobuf-c1]
 
   enable-foreign-arch:
     plugin: nil
@@ -401,6 +401,8 @@ parts:
         - libstdc++6:armhf
         - netbase
         - libcurl3-gnutls:armhf
+        - libprotobuf-c1:armhf
+        - libtinfo6:armhf
 
   snapcraft-preload:
     source: https://github.com/tsunghanliu/snapcraft-preload.git

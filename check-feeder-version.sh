@@ -70,7 +70,7 @@ echo "Check https://planefinder.net/sharing/client, current version is $(grep "p
 
 # radarbox feeder
 #R_VERSION=$(wget -qO - http://apt.rb24.com/dists/rpi-stable/main/binary-armhf/Packages | grep -A 10 "Package: rbfeeder" | grep "Filename: " | cut -c 11-)
-R_VERSION=$(wget -qO - http://apt.rb24.com/dists/buster/main/binary-armhf/Packages | grep -A 10 "Package: rbfeeder" | grep "Filename: " | cut -c 11-)
+R_VERSION=$(curl -s http://apt.rb24.com/dists/buster/main/binary-armhf/Packages | grep-dctrl --show-field Filename -Pw rbfeeder | cut -c 11-)
 L_VERSION=$(grep "rbfeeder_.*_armhf.deb" snap/snapcraft.yaml | sed 's/.*\.com\///')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade rbfeeder to $R_VERSION"

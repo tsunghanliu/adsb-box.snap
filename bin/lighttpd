@@ -1,5 +1,11 @@
 #! /bin/sh
 
+ENABLE_LOG=$(snapctl get collectd.enable-log)
+ENABLE_LOG=${ENABLE_LOG:-0}
+if [ "$ENABLE_LOG" != "0" ]; then
+	set -x
+fi
+
 WORKDIR=$SNAP_DATA/lighttpd
 CONF=$WORKDIR/lighttpd.conf
 BIN=$SNAP/usr/sbin/lighttpd
@@ -122,7 +128,6 @@ accesslog.filename          = "$ACCESS_LOG"
 
 EOF
 
-ENABLE_LOG=$(snapctl get lighttpd.enable-localhost-log)
 case "$ENABLE_LOG" in
 	1|on|ON|true|TRUE)
 		# no restrictions of access logs

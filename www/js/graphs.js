@@ -346,6 +346,8 @@ function switchView(newTimeFrame) {
 
 	$("#dump1090-cpu-image").attr("src", "graphs/dump1090-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 
+	$("#dump1090-misc-image").attr("src", "graphs/dump1090-" + $hostName + "-misc-" + $timeFrame + ".png?time=" + $timestamp);
+
 	if (has_uat == true) {
 		$("#dump1090-messages_978-image").attr("src", "graphs/dump1090-" + $hostName + "-messages_978-" + $timeFrame + ".png?time=" + $timestamp);
 

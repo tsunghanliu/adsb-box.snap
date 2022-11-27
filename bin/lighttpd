@@ -1,6 +1,6 @@
 #! /bin/sh
 
-ENABLE_LOG=$(snapctl get collectd.enable-log)
+ENABLE_LOG=$(snapctl get lighttpd.enable-log)
 ENABLE_LOG=${ENABLE_LOG:-0}
 if [ "$ENABLE_LOG" != "0" ]; then
 	set -x
@@ -9,7 +9,9 @@ fi
 WORKDIR=$SNAP_DATA/lighttpd
 CONF=$WORKDIR/lighttpd.conf
 BIN=$SNAP/usr/sbin/lighttpd
-PORT=8080
+
+PORT=$(snapctl get lighttpd.port)
+PORT=${PORT:-8080}
 
 ## defined in bin/dump1090
 JSON_1090_DIR=/tmp/dump1090-fa

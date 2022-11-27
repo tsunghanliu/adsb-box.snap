@@ -115,7 +115,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v7.1
+    source-branch: v7.2
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -125,19 +125,19 @@ parts:
         PATCHES_DIR="../../../patches"
       fi
       patch -p1 < "$PATCHES_DIR/dump1090.patch"
-      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html_merged/flags-tiny/
+      cp "$PATCHES_DIR/dump1090/Taiwan.png" public_html/flags-tiny/
       DUMP1090_VERSION=$(head -n 1 debian/changelog | sed 's/.*(\(.*\)).*/\1/')
       sed -i "1i DUMP1090_VERSION ?= $DUMP1090_VERSION" Makefile
       echo 'building dump1090 ...'
       make -j$(nproc) BLADERF=no dump1090 faup1090 starch-benchmark
       echo 'installing dump1090 ...'
-      cp -a dump1090 faup1090 starch-benchmark debian/generate-wisdom public_html_merged COPYING $SNAPCRAFT_PART_INSTALL
+      cp -a dump1090 faup1090 starch-benchmark debian/generate-wisdom public_html COPYING $SNAPCRAFT_PART_INSTALL
     organize:
       dump1090: usr/bin/dump1090-fa
       faup1090: usr/lib/piaware/helpers/faup1090
       starch-benchmark: usr/bin/starch-benchmark
       generate-wisdom: bin/generate-wisdom
-      public_html_merged: usr/share/dump1090-fa/html
+      public_html: usr/share/dump1090-fa/html
       COPYING: usr/share/dump1090-fa/COPYING
     build-packages:
       - pkg-config
@@ -180,7 +180,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v7.1
+    source-branch: v7.2
     source-depth: 1
     override-build: |
       echo 'patching piaware ...'
@@ -240,9 +240,9 @@ parts:
       - else:
         - on i386: http://repo.feed.flightradar24.com/linux_x86_binaries/fr24feed_1.0.25-3_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.29-8_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.30-3_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.29-8_armhf.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.30-3_armhf.tgz
       - else fail
     build-packages:
       - wget
@@ -256,13 +256,13 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: https://opensky-network.org/files/firmware/opensky-feeder_latest_amd64.deb
+      - on amd64: https://opensky-network.org/repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_amd64.deb
       - else:
-        - on i386: https://opensky-network.org/files/firmware/opensky-feeder_latest_i386.deb
+        - on i386: https://opensky-network.org/repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_i386.deb
       - else:
-        - on armhf: https://opensky-network.org/files/firmware/opensky-feeder_latest_armhf.deb
+        - on armhf: https://opensky-network.org/repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_armhf.deb
       - else:
-        - on arm64: https://opensky-network.org/files/firmware/opensky-feeder_latest_arm64.deb
+        - on arm64: https://opensky-network.org/repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_arm64.deb
       - else fail
 
   pfclient:
@@ -316,7 +316,7 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
-    source-commit: daa88d188ce279688aa976796a057ede7bc0a317
+    source-commit: 151e63a810d6b087518992d4f366d9776c5c826b
     source-depth: 1
     stage-packages:
       - rrdtool
@@ -356,7 +356,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_0.4.3-20210909231001_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_1.0.8+deb10_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
@@ -375,7 +375,7 @@ parts:
           ;;
       esac
     stage-packages:
-      - to armhf: [libcurl4, libglib2.0-0, libjansson4]
+      - to armhf: [libcurl4, libglib2.0-0, libjansson4, libprotobuf-c1]
 
   enable-foreign-arch:
     plugin: nil
@@ -401,6 +401,8 @@ parts:
         - libstdc++6:armhf
         - netbase
         - libcurl3-gnutls:armhf
+        - libprotobuf-c1:armhf
+        - libtinfo6:armhf
 
   snapcraft-preload:
     source: https://github.com/tsunghanliu/snapcraft-preload.git
@@ -429,7 +431,7 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v7.1
+    source-branch: v7.2
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'

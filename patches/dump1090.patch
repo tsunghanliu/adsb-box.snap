@@ -20,10 +20,10 @@ index dc98d72..ef3dffa 100755
 -echo "(and restart dump1090-fa) to start using it." >&2
 +echo "Wisdom written to $SNAP_COMMON/wisdom.local" >&2
 +echo "run 'snap restart adsb-box.dump1090' to start using it." >&2
-diff --git a/public_html_merged/flags.js b/public_html_merged/flags.js
+diff --git a/public_html/flags.js b/public_html/flags.js
 index fb40163..442ac1c 100644
---- a/public_html_merged/flags.js
-+++ b/public_html_merged/flags.js
+--- a/public_html/flags.js
++++ b/public_html/flags.js
 @@ -195,7 +195,7 @@ var ICAO_Ranges = [
          { start: 0x004000, end: 0x0043FF, country: "Zimbabwe", flag_image: "Zimbabwe.png" },
  
@@ -33,16 +33,16 @@ index fb40163..442ac1c 100644
          { start: 0xF09000, end: 0xF093FF, country: "ICAO (special use)", flag_image: "blank.png" },
  
          // Block assignments mentioned in Chapter 9 section 4, at the end so they are only used if
-diff --git a/public_html_merged/index.html b/public_html_merged/index.html
-index 96c5fdc..9869701 100644
---- a/public_html_merged/index.html
-+++ b/public_html_merged/index.html
+diff --git a/public_html/index.html b/public_html/index.html
+index 422f001..5d3beac 100644
+--- a/public_html/index.html
++++ b/public_html/index.html
 @@ -393,7 +393,7 @@
  											<tbody>
  												<tr id="plane_row_template" class="plane_table_row hidden">
  													<td class="icaoCodeColumn">ICAO</td>
 -													<td><img style="width: 20px; height: 12px" src="about:blank" alt="Flag"></td>
-+													<td><img style="width: 20px; height: 12px" src="data:," alt="Flag"></td>
++													<td><img style="width: 20px; height: 12px" src="data:" alt="Flag"></td>
  													<td>FLIGHT</td>
  													<td>REGISTRATION</td>
  													<td>AIRCRAFT_TYPE</td>

@@ -1,15 +1,15 @@
 diff --git a/default b/default
-index 11170ef..da813b7 100644
+index 4cf0894..010a06d 100644
 --- a/default
 +++ b/default
-@@ -77,4 +77,4 @@ disk=
- ether=
- wifi=
+@@ -84,4 +84,4 @@ wifi=
+ # set temperature multiplier, on the pi this is 1000, on some platforms you might need to set it to 1
+ TEMP_MULTIPLIER=1000
  
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
 diff --git a/dump1090.py b/dump1090.py
-index 6cddc94..32401ef 100644
+index f06d7aa..3857a62 100644
 --- a/dump1090.py
 +++ b/dump1090.py
 @@ -182,10 +182,12 @@ def read_1090(data):
@@ -26,29 +26,28 @@ index 6cddc94..32401ef 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index e5f2eb2..e40d140 100755
+index 693eb42..9b6fb8c 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
-@@ -1,6 +1,10 @@
+@@ -1,8 +1,12 @@
 -#!/bin/bash
 +#!/bin/bash -e
  
 -DOCUMENTROOT=/run/graphs1090
 +DOCUMENTROOT=/tmp/graphs1090
-+
+ 
+-DB=/var/lib/collectd/rrd
 +if [ ! -d ${DOCUMENTROOT} ]; then
 +	mkdir -p ${DOCUMENTROOT}
 +fi
- 
- renice -n 19 -p $$
- 
-@@ -49,27 +53,37 @@ AYELLOW=ffcc00
- 
- AGRAY=dddddd
- 
--DB=/var/lib/collectd/rrd
++
 +DB=$SNAP_COMMON/var/lib/collectd/rrd
  # settings in /etc/default/graphs1090 will overwrite the DB directory
+ 
+ renice -n 19 -p $$
+@@ -55,7 +59,17 @@ AYELLOW=ffcc00
+ AGRAY=dddddd
+ 
  
 -source /etc/default/graphs1090
 +source $SNAP/etc/default/graphs1090
@@ -57,11 +56,19 @@ index e5f2eb2..e40d140 100755
 +PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
 +PERIOD_BACKUP=${PERIOD_BACKUP:-0}
 +if [ "$PERIOD_BACKUP" -ne 0 ]; then
-+	DB=/tmp/rrd
++    DB=/tmp/rrd
 +fi
 +
 +source $SNAP_DATA/disk.conf
 +DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
+ 
+ if [[ "$colorscheme" == "dark" ]]; then
+     CANVAS=161618
+@@ -98,24 +112,23 @@ if [[ "$colorscheme" == "dark" ]]; then
+     AGRAY=2a2e31
+ fi
+ 
+-source /etc/default/graphs1090
  
  if [[ -n $ether ]]; then
      ether="interface-${ether}"
@@ -85,7 +92,7 @@ index e5f2eb2..e40d140 100755
  fi
  
  
-@@ -534,6 +548,10 @@ memory_graph() {
+@@ -539,6 +552,10 @@ memory_graph() {
  
  network_graph() {
  	$pre
@@ -96,7 +103,7 @@ index e5f2eb2..e40d140 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1252,15 +1270,26 @@ dump1090_graphs() {
+@@ -1257,15 +1274,26 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -128,7 +135,7 @@ index e5f2eb2..e40d140 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1284,19 +1313,23 @@ dump1090_graphs() {
+@@ -1289,19 +1317,23 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

@@ -66,7 +66,24 @@ if [ "$L_VERSION" != "$R_VERSION" ]; then
 fi
 
 # planefinder
-echo "Check https://planefinder.net/sharing/client, current version is $(grep "pfclient_.*_armhf.deb" snap/snapcraft.yaml | grep "on armhf:" | sed 's/.*\.net\///')"
+CURL_CHROME=$(which curl_chrome104 || true)
+if [ -n "${CURL_CHROME:-}" ]; then
+	# use curl-impersonate-chrome
+	OUT_HTML=$(pwd)/pfclient.html
+	curl_chrome104 -sS -o "$OUT_HTML" https://planefinder.net/coverage/client
+	for arch in i386 amd64 armhf; do
+		R_VERSION=$(grep "pfclient_.*_${arch}.deb" "$OUT_HTML" | sed -n 's/.*href="\([^"]*\).*/\1/p')
+		L_VERSION=$(grep "pfclient_.*_${arch}.deb" snap/snapcraft.yaml | grep "on ${arch}" | sed "s/.*on ${arch}: //")
+		if [ "$L_VERSION" != "$R_VERSION" ]; then
+			echo "Upgrade pfclient(${arch}) to $R_VERSION"
+		fi
+	done
+	# check if arm64 version is available
+	grep "pfclient_.*_arm64.deb" "$OUT_HTML" | sed -n 's/.*href="\([^"]*\).*/\1/p' || true
+	rm -f "$OUT_HTML"
+else
+	echo "Check https://planefinder.net/sharing/client, current version is $(grep "pfclient_.*_armhf.deb" snap/snapcraft.yaml | grep "on armhf:" | sed 's/.*\.net\///')"
+fi
 
 # radarbox feeder
 #R_VERSION=$(wget -qO - http://apt.rb24.com/dists/rpi-stable/main/binary-armhf/Packages | grep -A 10 "Package: rbfeeder" | grep "Filename: " | cut -c 11-)

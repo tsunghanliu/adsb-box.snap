@@ -9,10 +9,10 @@ index 4cf0894..010a06d 100644
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
 diff --git a/dump1090.py b/dump1090.py
-index f06d7aa..3857a62 100644
+index c0185ff..e87dfd9 100644
 --- a/dump1090.py
 +++ b/dump1090.py
-@@ -182,10 +182,12 @@ def read_1090(data):
+@@ -184,10 +184,12 @@ def read_1090(data):
                 time=time.time(),
                 values = [1])
  
@@ -26,7 +26,7 @@ index f06d7aa..3857a62 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index 693eb42..9b6fb8c 100755
+index 77ba459..9c0eae8 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,8 +1,12 @@
@@ -45,7 +45,7 @@ index 693eb42..9b6fb8c 100755
  # settings in /etc/default/graphs1090 will overwrite the DB directory
  
  renice -n 19 -p $$
-@@ -55,7 +59,17 @@ AYELLOW=ffcc00
+@@ -56,7 +60,17 @@ AYELLOW=ffcc00
  AGRAY=dddddd
  
  
@@ -64,7 +64,7 @@ index 693eb42..9b6fb8c 100755
  
  if [[ "$colorscheme" == "dark" ]]; then
      CANVAS=161618
-@@ -98,24 +112,23 @@ if [[ "$colorscheme" == "dark" ]]; then
+@@ -99,24 +113,23 @@ if [[ "$colorscheme" == "dark" ]]; then
      AGRAY=2a2e31
  fi
  
@@ -92,7 +92,7 @@ index 693eb42..9b6fb8c 100755
  fi
  
  
-@@ -539,6 +552,10 @@ memory_graph() {
+@@ -540,6 +553,10 @@ memory_graph() {
  
  network_graph() {
  	$pre
@@ -103,7 +103,7 @@ index 693eb42..9b6fb8c 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1257,15 +1274,26 @@ dump1090_graphs() {
+@@ -1259,15 +1276,26 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -135,7 +135,7 @@ index 693eb42..9b6fb8c 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1289,19 +1317,23 @@ dump1090_graphs() {
+@@ -1291,19 +1319,23 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

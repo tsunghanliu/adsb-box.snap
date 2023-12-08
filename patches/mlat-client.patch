@@ -1,8 +1,8 @@
-diff --git a/fa-mlat-client b/fa-mlat-client
-index 47e1da1..87273aa 100755
---- a/fa-mlat-client
-+++ b/fa-mlat-client
-@@ -11,8 +11,13 @@ from mlat.client.coordinator import Coordinator
+diff --git a/flightaware/client/cli.py b/flightaware/client/cli.py
+index b9c52a4..9b3aee1 100644
+--- a/flightaware/client/cli.py
++++ b/flightaware/client/cli.py
+@@ -10,8 +10,13 @@ from mlat.client.coordinator import Coordinator
  from mlat.client.util import log, log_exc
  from mlat.client import options
  
@@ -10,17 +10,17 @@ index 47e1da1..87273aa 100755
 +from os.path import basename
 +from prctl import set_name
  
- def main():
+ def _main():
 +    set_name(basename(sys.argv[0]))
 +
      # piaware will timestamp our log messages itself, suppress the normal logging timestamps
      mlat.client.util.suppress_log_timestamps = True
  
-diff --git a/mlat-client b/mlat-client
-index 859529e..2dd6cac 100755
---- a/mlat-client
-+++ b/mlat-client
-@@ -27,8 +27,13 @@ from mlat.client.jsonclient import JsonServerConnection
+diff --git a/mlat/client/cli.py b/mlat/client/cli.py
+index f6a79f2..d8535ff 100644
+--- a/mlat/client/cli.py
++++ b/mlat/client/cli.py
+@@ -26,8 +26,13 @@ from mlat.client.jsonclient import JsonServerConnection
  from mlat.client.coordinator import Coordinator
  from mlat.client import options
  
@@ -35,21 +35,14 @@ index 859529e..2dd6cac 100755
  
      options.make_inputs_group(parser)
 diff --git a/setup.py b/setup.py
-index 92de640..207bf35 100755
+index 06d16f0..6849f38 100755
 --- a/setup.py
 +++ b/setup.py
-@@ -16,7 +16,7 @@
- # You should have received a copy of the GNU General Public License
- # along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
--from distutils.core import setup, Extension
-+from setuptools import setup, Extension
- from distutils.ccompiler import get_default_compiler
- 
- # get the version from the source
-@@ -40,4 +40,5 @@ setup(name='MlatClient',
-       author_email='oliver@mutability.co.uk',
-       packages=['mlat', 'mlat.client', 'flightaware', 'flightaware.client'],
-       ext_modules=[modes_ext],
+@@ -31,6 +31,7 @@ setup(name='MlatClient',
+           Extension('_modes',
+                     include_dirs=["."],
+                     sources=['_modes.c', 'modes_reader.c', 'modes_message.c', 'modes_crc.c'])],
 +      install_requires=['python-prctl'],
-       scripts=['mlat-client', 'fa-mlat-client'])
+       entry_points={
+           'console_scripts': [
+               'mlat-client = mlat.client.cli:main',

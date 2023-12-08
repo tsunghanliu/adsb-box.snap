@@ -211,6 +211,7 @@ parts:
     python-packages: [python-prctl]
     source: https://github.com/mutability/mlat-client.git
     source-type: git
+    source-tag: v0.2.12
     build-packages:
       - libcap-dev # for python-prctl
     override-build: |

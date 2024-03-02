@@ -43,6 +43,13 @@ if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade fr24feed(armhf)($L_VERSION) to $R_VERSION"
 fi
 
+# fr24feed (arm64)
+R_VERSION=$(python3 -c 'import sys, json; data = json.load(sys.stdin); print(data["platform"]["linux_arm64_tgz"]["url"]["software"]);' < fr24feed_versions.json)
+L_VERSION=$(grep "fr24feed_.*_arm64.tgz" snap/snapcraft.yaml | grep "on arm64" | sed 's/.*on arm64: //')
+if [ "$L_VERSION" != "$R_VERSION" ]; then
+	echo "Upgrade fr24feed(arm64)($L_VERSION) to $R_VERSION"
+fi
+
 # opensky network (amd64)
 #echo "Check https://opensky-network.org/community/projects/30-dump1090-feeder"
 R_VERSION=$(curl -s https://opensky-network.org/repos/debian/dists/opensky/custom/binary-amd64/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)

@@ -237,13 +237,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.44-0_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.46-2_amd64.tgz
       - else:
-        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.44-0_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.46-2_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.44-0_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.46-1_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.44-0_arm64.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.46-1_arm64.tgz
       - else fail
     build-packages:
       - wget
@@ -357,7 +357,7 @@ parts:
       env | sort
       case $SNAPCRAFT_ARCH_TRIPLET in
         arm-*|aarch64-*)
-          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_1.0.8+deb10_armhf.deb
+          wget -O rbfeeder.deb https://apt.rb24.com/pool/main/r/rbfeeder/rbfeeder_1.0.10+buster_armhf.deb
           ;;
         *)
           echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"

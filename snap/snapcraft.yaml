@@ -237,13 +237,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.46-2_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.48-0_amd64.tgz
       - else:
-        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.46-2_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.48-0_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.46-1_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.48-0_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.46-1_arm64.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.48-0_arm64.tgz
       - else fail
     build-packages:
       - wget
@@ -317,7 +317,7 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
-    source-commit: 0f3660ba73bd28666d2cb46afa9000a03938907e
+    source-commit: 679071705bef0335c8488246f82c5b6b5c098c68
     source-depth: 1
     stage-packages:
       - rrdtool

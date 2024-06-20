@@ -1,0 +1,50 @@
+#!/bin/bash -e
+
+# ported from usr/bin/fr24feed-status carried in fr24feed.deb
+
+. /lib/lsb/init-functions
+
+# From bin/fr24feed
+WORKDIR="$SNAP_DATA/fr24feed"
+PIDFILE="$WORKDIR/fr24uat-feed.pid"
+MONITOR_FILE="/tmp/uat-decoder.txt"
+
+FR24PID=$(cat "$PIDFILE" 2>/dev/null)
+
+if [ "$(snapctl services adsb-box.fr24feed | grep -c active)" -eq 1 ] && [ "$FR24PID" = "" ] || [ ! -d "/proc/${FR24PID}" ]; then
+	log_failure_msg "FR24 UAT Feeder/Decoder Process"
+	exit 1
+else
+	log_success_msg "FR24 UAT Feeder/Decoder Process: running"
+fi
+
+log_success_msg "FR24 UAT Feeder/Decoder Process: running"
+
+DATE=$(grep time_update_utc_s= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+log_success_msg "FR24 Stats Timestamp: $DATE"
+
+
+FEED=$(grep 'feed_status=' ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+if [ "$FEED" == "" ]; then
+    FEED="unknown"
+fi
+
+if [ "$FEED" == "connected" ]; then
+    MODE=$(grep feed_current_mode= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+    log_success_msg "FR24 Link: $FEED [$MODE]"
+    FEED=$(grep feed_alias= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+    log_success_msg "FR24 Radar: $FEED"
+    FEED=$(grep feed_num_ac_tracked= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+    log_success_msg "FR24 Tracked AC: ${FEED}"
+else
+    log_failure_msg "FR24 Link: $FEED"
+fi
+
+RX=$(grep rx_connected= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+RX1=$(grep num_messages= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+RX2=$(grep num_resyncs= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
+
+if [ "$RX" == "1" ]; then
+    log_success_msg "Receiver: connected ($RX1 MSGS/$RX2 SYNC)"
+else
+    log_failure_msg "Receiver: down"

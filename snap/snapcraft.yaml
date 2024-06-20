@@ -34,11 +34,18 @@ apps:
     daemon: simple
     plugs: [network, network-bind, network-observe]
     after: [dump1090]
+  fr24uat-feed:
+    command: bin/fr24uat-feed
+    daemon: simple
+    plugs: [network, network-bind, network-observe]
+    after: [dump1090]
   fr24feedcli:
     command: bin/fr24feedcli
     plugs: [network, network-bind, network-observe]
   fr24feed-status:
     command: bin/fr24feed-status
+  fr24uat-feed-status:
+    command: bin/fr24uat-feed-status
   openskyd:
     command: bin/openskyd
     daemon: simple

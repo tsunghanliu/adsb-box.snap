@@ -6,17 +6,19 @@
 
 # From bin/fr24feed
 WORKDIR="$SNAP_DATA/fr24feed"
-PIDFILE="$WORKDIR/fr24feed.pid"
-MONITOR_FILE="/tmp/fr24feed.txt"
+PIDFILE="$WORKDIR/fr24uat-feed.pid"
+MONITOR_FILE="/tmp/uat-decoder.txt"
 
 FR24PID=$(cat "$PIDFILE" 2>/dev/null)
 
 if [ "$(snapctl services adsb-box.fr24feed | grep -c active)" -eq 1 ] && [ "$FR24PID" = "" ] || [ ! -d "/proc/${FR24PID}" ]; then
-	log_failure_msg "FR24 Feeder/Decoder Process"
+	log_failure_msg "FR24 UAT Feeder/Decoder Process"
 	exit 1
 else
-	log_success_msg "FR24 Feeder/Decoder Process: running"
+	log_success_msg "FR24 UAT Feeder/Decoder Process: running"
 fi
+
+log_success_msg "FR24 UAT Feeder/Decoder Process: running"
 
 DATE=$(grep time_update_utc_s= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
 log_success_msg "FR24 Stats Timestamp: $DATE"
@@ -46,18 +48,3 @@ if [ "$RX" == "1" ]; then
     log_success_msg "Receiver: connected ($RX1 MSGS/$RX2 SYNC)"
 else
     log_failure_msg "Receiver: down"
-fi
-
-MLAT=$(grep 'mlat-ok=' ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
-if [ "$MLAT" == "" ]; then
-    MLAT="unknown"
-fi
-
-if [ "$MLAT" == "YES" ]; then
-    MLAT_MODE=$(grep mlat-mode= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
-    log_success_msg "FR24 MLAT: ok [$MLAT_MODE]"
-    MLAT_SEEN=$(grep mlat-number-seen= ${MONITOR_FILE} 2>/dev/null | cut -d'=' -f2)
-    log_success_msg "FR24 MLAT AC seen: $MLAT_SEEN"
-else
-    log_failure_msg "FR24 MLAT: not running"
-fi

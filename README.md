@@ -377,6 +377,9 @@ $ sudo snap restart adsb-box
 - [ ] On the performance view, you would see a new group of dump978 charts.
 - [ ] Check your feeder page on Flightaware if it recevies your UAT data.
 - [ ] Check your feeder page on Radarbox24 if it receives you UAT data.
+- [ ] Run `adsb-box.fr24uat-feed-status` to check fr24uat-feed status.
+- [ ] Open http://your-feeder-ip:8755/ to check fr24uat-feed status.
+- [ ] Check your feeder page on Flighradar24 if it receives your UAT data.
 
 
 ## Running Status

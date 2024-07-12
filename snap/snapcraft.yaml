@@ -295,6 +295,7 @@ parts:
     plugin: nil
     source: https://github.com/jprochazka/adsb-receiver.git
     source-type: git
+    source-commit: 505bbad7d1d5074d2cb45f80b1b0258a9ccdb693
     stage-packages:
       - rrdtool
     override-build: |

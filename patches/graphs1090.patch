@@ -1,10 +1,10 @@
 diff --git a/default b/default
-index a5e6b41..38ade2e 100644
+index a55c804..09f0d9e 100644
 --- a/default
 +++ b/default
-@@ -93,4 +93,4 @@ WWW_HEADER="Performance Graphs"
- HIDE_SYSTEM=no
- # this does not turn off the data collection for the system stats as automatic changes to collectd.conf are somewhat complicated
+@@ -95,4 +95,4 @@ HIDE_SYSTEM=no
+ # you can use /usr/share/graphs1090/git/hide_system-collectd.conf though, that's up to you to copy to /etc/collectd/collectd.conf
+ # that collectd.conf by default has 978 data collection disabled, if you want to enable it, uncomment the URL_978 line
  
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
@@ -27,7 +27,7 @@ index 3bcd537..930b796 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index e79c5cf..d3f70b8 100755
+index ab1574a..91704cd 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,8 +1,12 @@
@@ -93,7 +93,7 @@ index e79c5cf..d3f70b8 100755
  fi
  
  
-@@ -548,6 +560,10 @@ memory_graph() {
+@@ -547,6 +559,10 @@ memory_graph() {
  
  network_graph() {
  	$pre
@@ -104,7 +104,7 @@ index e79c5cf..d3f70b8 100755
  	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1273,13 +1289,24 @@ dump1090_graphs() {
+@@ -1272,13 +1288,24 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -132,7 +132,7 @@ index e79c5cf..d3f70b8 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1302,19 +1329,23 @@ dump1090_graphs() {
+@@ -1301,19 +1328,23 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

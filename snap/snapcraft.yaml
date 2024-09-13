@@ -282,7 +282,7 @@ parts:
       - else:
         - on i386: http://client.planefinder.net/pfclient_5.0.161_i386.deb
       - else:
-        - on armhf: http://client.planefinder.net/pfclient_5.1.440_arm64.deb
+        - on armhf: http://client.planefinder.net/pfclient_5.0.161_armhf.deb
       - else:
         - on arm64: http://client.planefinder.net/pfclient_5.1.440_arm64.deb
       - else fail

@@ -1,8 +1,8 @@
 diff --git a/package/fa_piaware_config.tcl b/package/fa_piaware_config.tcl
-index 0399471..bed9b13 100644
+index a0580b6..68b278b 100644
 --- a/package/fa_piaware_config.tcl
 +++ b/package/fa_piaware_config.tcl
-@@ -542,7 +542,9 @@ namespace eval ::fa_piaware_config {
+@@ -543,7 +543,9 @@ namespace eval ::fa_piaware_config {
  				set f [open $temppath "w" [expr {$fpstat(mode) & 0777}]]
  
  				# fix the ownership to match the old file
@@ -13,7 +13,7 @@ index 0399471..bed9b13 100644
  			}
  
  			# write the new data
-@@ -1071,20 +1073,30 @@ namespace eval ::fa_piaware_config {
+@@ -1080,21 +1082,31 @@ namespace eval ::fa_piaware_config {
  	# Return a new ConfigGroup that handles the standard piaware config location, which are
  	# (starting from the highest priority):
  	#
@@ -21,12 +21,13 @@ index 0399471..bed9b13 100644
  	#  priority 100+:     any extra config file given as an argument (readonly)
  	#  priority 100+:     any config files found in /media/usb/*/piaware-config.txt, ordered arbitrarily (readonly)
  	#  priority 50:       /boot/piaware-config.txt (readwrite)
+ 	#  priority 50:       /boot/firmware/piaware-config.txt (readwrite)
  	#  priority 40:       /etc/piaware.conf (readwrite)
 +	#  priority 40:       $::env(SNAP)/etc/piaware.conf (readonly)
  	#  priority 30:       /usr/share/piaware-support/piaware-image-config.txt (readonly) (provides additional defaults on PiAware sdcard images)
  	#
  	# which means that in general changes will be written to /etc/piaware.conf where possible, or
- 	# /boot/piaware-config.txt if the setting was set there.
+ 	# in piaware-config.txt if the setting was set there.
  	#
 +	# for snappied version, $::env(SNAP)/etc/piaware.conf is for default values and
 +	# $::env(SNAP_DATA)/piaware/piaware.conf is the major one for customizations.

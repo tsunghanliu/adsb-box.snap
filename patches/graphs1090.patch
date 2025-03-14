@@ -1,15 +1,15 @@
 diff --git a/default b/default
-index a55c804..09f0d9e 100644
+index a7c0f13..68e6a85 100644
 --- a/default
 +++ b/default
-@@ -95,4 +95,4 @@ HIDE_SYSTEM=no
- # you can use /usr/share/graphs1090/git/hide_system-collectd.conf though, that's up to you to copy to /etc/collectd/collectd.conf
- # that collectd.conf by default has 978 data collection disabled, if you want to enable it, uncomment the URL_978 line
+@@ -97,4 +97,4 @@ HIDE_SYSTEM=no
  
+ # this variable is ignored if /run/collectd/localhost exists, in that case /run/collectd is used
+ # still leaving the variable here in case this change causes issues
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
 diff --git a/dump1090.py b/dump1090.py
-index 3bcd537..930b796 100644
+index 5625e3a..4d5c41e 100644
 --- a/dump1090.py
 +++ b/dump1090.py
 @@ -329,11 +329,13 @@ def read_1090(data):
@@ -27,30 +27,27 @@ index 3bcd537..930b796 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index ab1574a..91704cd 100755
+index b9f19ac..475ff2d 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
-@@ -1,8 +1,12 @@
--#!/bin/bash
-+#!/bin/bash -e
+@@ -1,6 +1,9 @@
+ #!/bin/bash
  
 -DOCUMENTROOT=/run/graphs1090
 +DOCUMENTROOT=/tmp/graphs1090
- 
--DB=/var/lib/collectd/rrd
 +if [ ! -d ${DOCUMENTROOT} ]; then
 +	mkdir -p ${DOCUMENTROOT}
 +fi
-+
-+DB=$SNAP_COMMON/var/lib/collectd/rrd
- # settings in /etc/default/graphs1090 will overwrite the DB directory
  
- renice -n 19 -p $$
-@@ -64,7 +68,17 @@ AYELLOW=ffcc00
+ renice -n 20 -p $$
+ 
+@@ -61,17 +64,27 @@ AYELLOW=ffcc00
  AGRAY=dddddd
  
  
--source /etc/default/graphs1090
+-DB=/var/lib/collectd/rrd
++DB=$SNAP_COMMON/var/lib/collectd/rrd
++
 +source $SNAP/etc/default/graphs1090
 +
 +# use rrd db in tmp if exist
@@ -59,13 +56,25 @@ index ab1574a..91704cd 100755
 +if [ "$PERIOD_BACKUP" -ne 0 ]; then
 +    DB=/tmp/rrd
 +fi
-+
+ 
+-source /etc/default/graphs1090
 +source $SNAP_DATA/disk.conf
 +DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
  
+ # autodetect and use /run/collectd as DB folder if it exists and has localhost
+ # folder having it automatically changed in /etc/default/graphs1090 causes
+ # issues for example when the user replaces his configuration with the default
+ # which is a valid approach
+-if [[ -d /run/collectd/localhost ]]; then
+-    DB=/run/collectd
+-fi
++#if [[ -d /run/collectd/localhost ]]; then
++#    DB=/run/collectd
++#fi
+ 
  if [[ "$colorscheme" == "dark" ]]; then
      CANVAS=161618
-@@ -107,24 +121,22 @@ if [[ "$colorscheme" == "dark" ]]; then
+@@ -114,24 +127,22 @@ if [[ "$colorscheme" == "dark" ]]; then
      AGRAY=2a2e31
  fi
  
@@ -93,7 +102,7 @@ index ab1574a..91704cd 100755
  fi
  
  
-@@ -547,6 +559,10 @@ memory_graph() {
+@@ -556,6 +567,10 @@ memory_graph() {
  
  network_graph() {
  	$pre
@@ -101,10 +110,10 @@ index ab1574a..91704cd 100755
 +	then
 +		return
 +	fi
- 	if [[ $(ls ${DB}/localhost | grep interface -c) < 2 ]]
+ 	if [[ $(ls ${DB}/localhost | grep -v 'interface-lo' | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1272,13 +1288,24 @@ dump1090_graphs() {
+@@ -1293,13 +1308,24 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -132,7 +141,7 @@ index ab1574a..91704cd 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1301,19 +1328,23 @@ dump1090_graphs() {
+@@ -1322,19 +1348,23 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

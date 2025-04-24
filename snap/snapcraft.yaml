@@ -264,13 +264,13 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: https://opensky-network.org/files/firmware//opensky-feeder_2.1.7-1_amd64.deb
+      - on amd64: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_amd64.deb
       - else:
-        - on i386: https://opensky-network.org/files/firmware/opensky-feeder_2.1.7-1_i386.deb
+        - on i386: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_i386.deb
       - else:
-        - on armhf: https://opensky-network.org/files/firmware/opensky-feeder_2.1.7-1_armhf.deb
+        - on armhf: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_armhf.deb
       - else:
-        - on arm64: https://opensky-network.org/files/firmware/opensky-feeder_2.1.7-1_arm64.deb
+        - on arm64: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_arm64.deb
       - else fail
 
   pfclient:

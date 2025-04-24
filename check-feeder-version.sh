@@ -52,29 +52,29 @@ fi
 
 # opensky network (amd64)
 #echo "Check https://opensky-network.org/community/projects/30-dump1090-feeder"
-R_VERSION=$(curl -s https://opensky-network.org/repos/debian/dists/opensky/custom/binary-amd64/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
-L_VERSION=$(grep "opensky-feeder_.*_amd64.deb" snap/snapcraft.yaml | grep "on amd64" | sed 's/.*on amd64: https:\/\/opensky-network.org\/repos\/debian\///')
+R_VERSION=$(curl -s https://s3.opensky-network.org/website-public-repos/debian/dists/opensky/custom/binary-amd64/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
+L_VERSION=$(grep "opensky-feeder_.*_amd64.deb" snap/snapcraft.yaml | grep "on amd64" | sed 's/.*on amd64: https:\/\/s3.opensky-network.org\/website-public-repos\/debian\///')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade opensky-feeder(amd64)($L_VERSION) to $R_VERSION"
 fi
 
 # opensky network (i386)
-R_VERSION=$(curl -s https://opensky-network.org/repos/debian/dists/opensky/custom/binary-i386/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
-L_VERSION=$(grep "opensky-feeder_.*_i386.deb" snap/snapcraft.yaml | grep "on i386" | sed 's/.*on i386: https:\/\/opensky-network.org\/repos\/debian\///')
+R_VERSION=$(curl -s https://s3.opensky-network.org/website-public-repos/debian/dists/opensky/custom/binary-i386/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
+L_VERSION=$(grep "opensky-feeder_.*_i386.deb" snap/snapcraft.yaml | grep "on i386" | sed 's/.*on i386: https:\/\/s3.opensky-network.org\/website-public-repos\/debian\///')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade opensky-feeder(i386)($L_VERSION) to $R_VERSION"
 fi
 
 # opensky network (armhf)
-R_VERSION=$(curl -s https://opensky-network.org/repos/debian/dists/opensky/custom/binary-armhf/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
-L_VERSION=$(grep "opensky-feeder_.*_armhf.deb" snap/snapcraft.yaml | grep "on armhf" | sed 's/.*on armhf: https:\/\/opensky-network.org\/repos\/debian\///')
+R_VERSION=$(curl -s https://s3.opensky-network.org/website-public-repos/debian/dists/opensky/custom/binary-armhf/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
+L_VERSION=$(grep "opensky-feeder_.*_armhf.deb" snap/snapcraft.yaml | grep "on armhf" | sed 's/.*on armhf: https:\/\/s3.opensky-network.org\/website-public-repos\/debian\///')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade opensky-feeder(armhf)($L_VERSION) to $R_VERSION"
 fi
 
 # opensky network (arm64)
-R_VERSION=$(curl -s https://opensky-network.org/repos/debian/dists/opensky/custom/binary-arm64/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
-L_VERSION=$(grep "opensky-feeder_.*_arm64.deb" snap/snapcraft.yaml | grep "on arm64" | sed 's/.*on arm64: https:\/\/opensky-network.org\/repos\/debian\///')
+R_VERSION=$(curl -s https://s3.opensky-network.org/website-public-repos/debian/dists/opensky/custom/binary-arm64/Packages | grep-dctrl --show-field Filename -Pw opensky-feeder | cut -c 11-)
+L_VERSION=$(grep "opensky-feeder_.*_arm64.deb" snap/snapcraft.yaml | grep "on arm64" | sed 's/.*on arm64: https:\/\/s3.opensky-network.org\/website-public-repos\/debian\///')
 if [ "$L_VERSION" != "$R_VERSION" ]; then
 	echo "Upgrade opensky-feeder(arm64)($L_VERSION) to $R_VERSION"
 fi

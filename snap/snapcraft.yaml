@@ -202,7 +202,7 @@ parts:
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/itcl3.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl \
-        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/tcltls1.7.20/pkgIndex.tcl \
+        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/tcltls1.7.22/pkgIndex.tcl \
         || \
         exit 1
     stage-packages:
@@ -296,8 +296,7 @@ parts:
     plugin: nil
     stage-packages:
       - collectd
-      - python3.8
-      - libpython3.8
+      - python3
       - python3-urllib3
       - libasn1-8-heimdal
       - libbrotli1
@@ -308,9 +307,9 @@ parts:
       - libheimntlm0-heimdal
       - libhx509-5-heimdal
       - libkrb5-26-heimdal
-      - libldap-2.4-2
+      - libldap-2.5-0
       - libnghttp2-14
-      - libperl5.30
+      - libperl5.34
       - libpsl5
       - libroken18-heimdal
       - librtmp1
@@ -470,9 +469,9 @@ parts:
       - libboost-filesystem-dev
       - libsoapysdr-dev
     stage-packages:
-      - libboost-filesystem1.71.0
-      - libboost-program-options1.71.0
-      - libboost-regex1.71.0
+      - libboost-filesystem1.74.0
+      - libboost-program-options1.74.0
+      - libboost-regex1.74.0
       - soapysdr-module-rtlsdr
 
 

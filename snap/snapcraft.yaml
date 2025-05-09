@@ -386,7 +386,7 @@ parts:
 
   enable-foreign-arch:
     plugin: nil
-    override-build: |
+    override-pull: |
       set -x
       case $SNAPCRAFT_ARCH_TRIPLET in
         aarch64-*)
@@ -394,6 +394,7 @@ parts:
           sudo apt update
           ;;
       esac
+      snapcraftctl pull
 
   non-native-debs:
     plugin: nil

@@ -316,6 +316,7 @@ parts:
       - libsasl2-2
       - libssh-4
       - libwind0-heimdal
+      - libpython3.10
     stage:
       - -etc/fonts/fonts.conf
 

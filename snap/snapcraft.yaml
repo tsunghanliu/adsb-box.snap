@@ -243,6 +243,25 @@ parts:
       - else fail
     build-packages:
       - wget
+    override-pull: |
+      env | sort
+      case $SNAPCRAFT_TARGET_ARCH in
+        armhf)
+          wget https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.44-0_armhf.tgz
+          ;;
+        arm64)
+          wget https://repo-feed.flightradar24.com/rpi_binaries/fr24feed_1.0.44-0_arm64.tgz
+          ;;
+        amd64)
+          wget https://repo-feed.flightradar24.com/linux_binaries/fr24feed_1.0.44-0_amd64.tgz
+          ;;
+        i386)
+          wget https://repo-feed.flightradar24.com/linux_binaries/fr24feed_1.0.44-0_i386.tgz
+          ;;
+        *)
+          echo "Unsupported architecture: $SNAPCRAFT_ARCH_TRIPLET"
+          ;;
+      esac
     organize:
       fr24feed: usr/bin/
       LICENSE.fr24feed: usr/share/fr24feed/

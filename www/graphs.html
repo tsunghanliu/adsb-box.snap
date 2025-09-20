@@ -68,6 +68,7 @@
 						Network Interface
 					</a>
 					<div class="navbar-dropdown is-boxed is-hidden-mobile">
+						  <a class="navbar-item nic-name" id="nic-name-all">all interfaces</a>
 						  <a class="navbar-item nic-name" id="nic-name-eth0">eth0</a>
 						  <a class="navbar-item nic-name" id="nic-name-wlan0">wlan0</a>
 					</div>
@@ -118,6 +119,7 @@
 			<div class="control">
 				<div class="select">
 					<select id="nic-name">
+						<option>all interfaces</option>
 						<option>eth0</option>
 						<option>wlan0</option>
 					</select>
@@ -364,6 +366,11 @@
 			<div class="tile is-parent">
 				<article class="tile is-child notification p-4" id="nic-bandwidth-graph">
 					<!--
+					<a id ="system-network_bandwidth-link" class="graph-link">
+						<figure class="image">
+							<img id="system-network_bandwidth-image" class="img-responsive" src="#" alt="Bandwidth Usage (eth0+wlan0)">
+						</figure>
+					</a>
 					<a id ="system-eth0_bandwidth-link" class="graph-link">
 						<figure class="image">
 							<img id="system-eth0_bandwidth-image" class="img-responsive" src="#" alt="Bandwidth Usage (eth0)">

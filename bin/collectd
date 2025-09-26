@@ -21,6 +21,8 @@ MOUNTPOINT=
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
+PYTHON_LD_PRELOAD="$SNAP/usr/lib/python3.10/config-3.10-${ARCH_TRIPLET}/libpython3.10.so"
+
 # wait until all required interfaces are connected
 PLUGS="system-observe network-observe mount-observe hardware-observe"
 while true; do
@@ -309,7 +311,7 @@ if [ ! -f "$BASEDIR/.db-v1-migrated" ]; then
 		rm -r localhost # the following command will create a new version of DB.
 
 		# collect data for 7 mins
-		LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
+		LD_PRELOAD=$PYTHON_LD_PRELOAD \
 			$BIN -f -C "$CONF" -P "$PIDFILE" &
 		sleep 420
 		kill $!
@@ -341,5 +343,5 @@ if [ -f "$LOGFILE" ] && [ "$(stat -c "%s" "$LOGFILE")" -gt 67108864 ]; then
 fi
 
 # workaround for collectd bug (LP: #1872281)
-LD_PRELOAD=$SNAP/usr/lib/python3.8/config-3.8-${ARCH_TRIPLET}/libpython3.8.so \
+LD_PRELOAD=$PYTHON_LD_PRELOAD \
 	$BIN -f -C "$CONF" -P "$PIDFILE"

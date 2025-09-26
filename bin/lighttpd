@@ -74,6 +74,7 @@ mimetype.assign = (
     ".json" => "application/json",
     ".gif" => "image/gif",
     ".png" => "image/png",
+    ".svg" => "image/svg+xml",
     ".css" => "text/css",
     ".html" => "text/html",
     ".txt" => "text/plain",

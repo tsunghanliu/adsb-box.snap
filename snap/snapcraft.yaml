@@ -7,7 +7,7 @@ description: |
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict
-base: core20
+base: core22
 adopt-info: common
 
 apps:
@@ -122,7 +122,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v10.0
+    source-branch: v10.2
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -187,7 +187,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v10.0
+    source-branch: v10.2
     source-depth: 1
     override-build: |
       echo 'patching piaware ...'
@@ -202,7 +202,7 @@ parts:
       sed -i 's/\/usr/\$\:\:env\(SNAP\)\/usr/g' \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/itcl3.4/pkgIndex.tcl \
         $SNAPCRAFT_PART_INSTALL/usr/lib/tclx8.4/pkgIndex.tcl \
-        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/tcltls1.7.20/pkgIndex.tcl \
+        $SNAPCRAFT_PART_INSTALL/usr/lib/tcltk/$SNAPCRAFT_ARCH_TRIPLET/tcltls1.7.22/pkgIndex.tcl \
         || \
         exit 1
     stage-packages:
@@ -244,13 +244,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.48-0_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.51-0_amd64.tgz
       - else:
-        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.48-0_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.51-0_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.48-0_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.51-0_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.48-0_arm64.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.51-0_arm64.tgz
       - else fail
     build-packages:
       - wget
@@ -264,13 +264,13 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: https://opensky-network.org/files/firmware//opensky-feeder_2.1.7-1_amd64.deb
+      - on amd64: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_amd64.deb
       - else:
-        - on i386: https://opensky-network.org/files/firmware/opensky-feeder_2.1.7-1_i386.deb
+        - on i386: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_i386.deb
       - else:
-        - on armhf: https://opensky-network.org/files/firmware/opensky-feeder_2.1.7-1_armhf.deb
+        - on armhf: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_armhf.deb
       - else:
-        - on arm64: https://opensky-network.org/files/firmware/opensky-feeder_2.1.7-1_arm64.deb
+        - on arm64: https://s3.opensky-network.org/website-public-repos/debian/pool/custom/o/openskyd/opensky-feeder_2.1.7-1_arm64.deb
       - else fail
 
   pfclient:
@@ -282,9 +282,9 @@ parts:
       - else:
         - on i386: http://client.planefinder.net/pfclient_5.0.161_i386.deb
       - else:
-        - on armhf: http://client.planefinder.net/pfclient_5.0.161_armhf.deb
+        - on armhf: http://client.planefinder.net/pfclient_5.3.2_armhf.deb
       - else:
-        - on arm64: http://client.planefinder.net/pfclient_5.1.440_arm64.deb
+        - on arm64: http://client.planefinder.net/pfclient_5.3.2_arm64.deb
       - else fail
 
   rtlsdr:
@@ -296,8 +296,7 @@ parts:
     plugin: nil
     stage-packages:
       - collectd
-      - python3.8
-      - libpython3.8
+      - python3
       - python3-urllib3
       - libasn1-8-heimdal
       - libbrotli1
@@ -308,15 +307,16 @@ parts:
       - libheimntlm0-heimdal
       - libhx509-5-heimdal
       - libkrb5-26-heimdal
-      - libldap-2.4-2
+      - libldap-2.5-0
       - libnghttp2-14
-      - libperl5.30
+      - libperl5.34
       - libpsl5
       - libroken18-heimdal
       - librtmp1
       - libsasl2-2
       - libssh-4
       - libwind0-heimdal
+      - libpython3.10
     stage:
       - -etc/fonts/fonts.conf
 
@@ -324,7 +324,7 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
-    source-commit: 129ebde476170c33df0528667c48ef92ed23c26a
+    source-commit: 378fc7a72a1c665959c4901fd795d84dce6bc881
     source-depth: 1
     stage-packages:
       - rrdtool
@@ -387,7 +387,7 @@ parts:
 
   enable-foreign-arch:
     plugin: nil
-    override-build: |
+    override-pull: |
       set -x
       case $SNAPCRAFT_ARCH_TRIPLET in
         aarch64-*)
@@ -395,6 +395,7 @@ parts:
           sudo apt update
           ;;
       esac
+      snapcraftctl pull
 
   non-native-debs:
     plugin: nil
@@ -439,7 +440,7 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v10.0
+    source-branch: v10.2
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -470,9 +471,9 @@ parts:
       - libboost-filesystem-dev
       - libsoapysdr-dev
     stage-packages:
-      - libboost-filesystem1.71.0
-      - libboost-program-options1.71.0
-      - libboost-regex1.71.0
+      - libboost-filesystem1.74.0
+      - libboost-program-options1.74.0
+      - libboost-regex1.74.0
       - soapysdr-module-rtlsdr
 
 

@@ -84,9 +84,12 @@ $(document).ready(function () {
 
 	cval = getCookie('nic_name');
 	switch(cval) {
-		case 'eth0':
+		case 'all interfaces':
 		default:
-			cval = 'eth0';	// update for default
+			cval = 'all interfaces';	// update for default
+			$('#nic-name-all').addClass('is-active');
+			break;
+		case 'eth0':
 			$('#nic-name-eth0').addClass('is-active');
 			break;
 		case 'wlan0':
@@ -281,7 +284,16 @@ function switchCoreTempGraph(unit) {
 }
 
 function switchNetBandwidthGraph(nic) {
-	if (nic == "eth0") {
+	if (nic == "all interfaces") {
+		$("#nic-bandwidth-graph").html(
+				"<a id =\"system-network_bandwidth-link\" class=\"graph-link\">" +
+				"	<figure class=\"image\">" +
+				"		<img id=\"system-network_bandwidth-image\" class=\"img-responsive\" src=\"#\" alt=\"Bandwidth Usage (eth0+wlan0)\">" +
+				"	</figure>" +
+				"</a>"
+				);
+	}
+	else if (nic == "eth0") {
 		$("#nic-bandwidth-graph").html(
 				"<a id =\"system-eth0_bandwidth-link\" class=\"graph-link\">" +
 				"	<figure class=\"image\">" +
@@ -373,6 +385,10 @@ function switchView(newTimeFrame) {
 
 	$("#system-cpu-image").attr("src", "graphs/system-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 
+	element =  document.getElementById('system-network_bandwidth-image');
+	if (typeof(element) != 'undefined' && element != null) {
+		$("#system-network_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-network_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+	}
 	element =  document.getElementById('system-eth0_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
 		$("#system-eth0_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-eth0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);

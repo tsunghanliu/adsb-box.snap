@@ -1,5 +1,5 @@
 diff --git a/default b/default
-index a7c0f13..68e6a85 100644
+index 19af4da..010917c 100644
 --- a/default
 +++ b/default
 @@ -97,4 +97,4 @@ HIDE_SYSTEM=no
@@ -9,7 +9,7 @@ index a7c0f13..68e6a85 100644
 -DB=/var/lib/collectd/rrd
 +DB=$SNAP_COMMON/collectd/rrd
 diff --git a/dump1090.py b/dump1090.py
-index 5625e3a..4d5c41e 100644
+index 65e1ea1..ef20a19 100644
 --- a/dump1090.py
 +++ b/dump1090.py
 @@ -329,11 +329,13 @@ def read_1090(data):
@@ -27,7 +27,7 @@ index 5625e3a..4d5c41e 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index b9f19ac..475ff2d 100755
+index 90397b9..ad810b3 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
 @@ -1,6 +1,9 @@
@@ -113,7 +113,7 @@ index b9f19ac..475ff2d 100755
  	if [[ $(ls ${DB}/localhost | grep -v 'interface-lo' | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1293,13 +1308,24 @@ dump1090_graphs() {
+@@ -1294,13 +1309,24 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -141,7 +141,7 @@ index b9f19ac..475ff2d 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1322,19 +1348,23 @@ dump1090_graphs() {
+@@ -1323,14 +1349,25 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"
@@ -155,23 +155,21 @@ index b9f19ac..475ff2d 100755
 +	fi
  	memory_graph ${DOCUMENTROOT}/system-$2-memory-$4.png ${DB}/$1/system_stats "$3" "$4" "$5"
  	network_graph ${DOCUMENTROOT}/system-$2-network_bandwidth-$4.png ${DB}/$1 "$3" "$4" "$5"
--	if [[ $farenheit == 1 ]]
--	then
--		temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
--	else
--		temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
-+
-+	temp_graph_imperial ${DOCUMENTROOT}/system-$2-temperature_imperial-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
-+	temp_graph_metric ${DOCUMENTROOT}/system-$2-temperature_metric-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
-+
+-    temp_graph ${DOCUMENTROOT}/system-$2-temperature-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
+-	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
+-	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
++	# imperial
++	fahrenheit=1
++	temp_graph ${DOCUMENTROOT}/system-$2-temperature_imperial-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
++	# metric
++	fahrenheit=0
++	temp_graph ${DOCUMENTROOT}/system-$2-temperature_metric-$4.png ${DB}/$1/table-$2 "$3" "$4" "$5"
 +	if [ -n "$ether" ]; then
 +		eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
 +	fi
 +	if [ -n "$wifi" ]; then
 +		wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
- 	fi
--	#eth0_graph ${DOCUMENTROOT}/system-$2-eth0_bandwidth-$4.png ${DB}/$1/$ether "$3" "$4" "$5"
--	#wlan0_graph ${DOCUMENTROOT}/system-$2-wlan0_bandwidth-$4.png ${DB}/$1/$wifi "$3" "$4" "$5"
++	fi
  }
  
  dump1090_receiver_graphs() {

@@ -159,6 +159,7 @@ parts:
     plugin: nil
     stage-packages:
       - lighttpd
+      - lighttpd-mod-deflate
       - libgamin0
 
   tcllauncher:

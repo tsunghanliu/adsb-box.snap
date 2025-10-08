@@ -66,9 +66,9 @@ if [ ! -f "$CONF" ]; then
 	cp "$SNAP/etc/dump1090-fa/config-template" "$CONF"
 fi
 
-# Read configuration variable file if it is present
+# Read configuration variable file
 # shellcheck source=/dev/null
-[ -r "$CONF" ] && . "$CONF"
+. "$CONF"
 
 # overwrite $JSON_DIR defined in $CONF
 JSON_DIR="/tmp/dump1090-fa"

@@ -159,6 +159,7 @@ parts:
     plugin: nil
     stage-packages:
       - lighttpd
+      - lighttpd-mod-deflate
       - libgamin0
 
   tcllauncher:
@@ -244,13 +245,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.51-0_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.54-0_amd64.tgz
       - else:
-        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.51-0_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.54-0_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.51-0_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.54-0_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.51-0_arm64.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.54-0_arm64.tgz
       - else fail
     build-packages:
       - wget
@@ -278,13 +279,13 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: http://client.planefinder.net/pfclient_5.0.162_amd64.deb
+      - on amd64: http://client.planefinder.net/pfclient_5.3.29_amd64.deb
       - else:
         - on i386: http://client.planefinder.net/pfclient_5.0.161_i386.deb
       - else:
-        - on armhf: http://client.planefinder.net/pfclient_5.3.2_armhf.deb
+        - on armhf: http://client.planefinder.net/pfclient_5.3.29_armhf.deb
       - else:
-        - on arm64: http://client.planefinder.net/pfclient_5.3.2_arm64.deb
+        - on arm64: http://client.planefinder.net/pfclient_5.3.29_arm64.deb
       - else fail
 
   rtlsdr:

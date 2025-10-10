@@ -21,8 +21,6 @@ MOUNTPOINT=
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
 
-PYTHON_LD_PRELOAD="$SNAP/usr/lib/python3.10/config-3.10-${ARCH_TRIPLET}/libpython3.10.so"
-
 # wait until all required interfaces are connected
 PLUGS="system-observe network-observe mount-observe hardware-observe"
 while true; do
@@ -144,6 +142,8 @@ eth0=$(ls /sys/class/net/ | grep -m1 '^e')
 eth0=${eth0:-eth0}
 wlan0=$(ls /sys/class/net/ | grep -m1 '^w')
 wlan0=${wlan0:-wlan0}
+
+PYTHON_LD_PRELOAD="$SNAP/usr/lib/python3.10/config-3.10-${ARCH_TRIPLET}/libpython3.10.so"
 
 cat << EOF > "$CONF"
 # Config file for collectd(1).

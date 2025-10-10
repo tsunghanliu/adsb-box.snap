@@ -16,7 +16,7 @@ PORT=${PORT:-8080}
 ## defined in bin/dump1090
 JSON_1090_DIR=/tmp/dump1090-fa
 JSON_978_DIR=/tmp/skyaware978
-COMPRESS_DIR=/tmp/lighttpd/compress
+DEFLATE_DIR=/tmp/lighttpd/deflate
 
 LC_ALL=C.UTF-8
 LANG=C.UTF-8
@@ -47,7 +47,7 @@ server.modules = (
     "mod_access",
     "mod_accesslog",
     "mod_alias",
-    "mod_compress",
+    "mod_deflate",
     #"mod_dirlisting",
     "mod_setenv",
     "mod_redirect",
@@ -66,8 +66,8 @@ server.port                 = $PORT
 index-file.names            = ( "index.html", "gmap.html" )
 url.access-deny             = ( "~", ".inc" )
 
-compress.cache-dir          = "$COMPRESS_DIR/"
-compress.filetype           = ( "application/javascript", "text/css", "text/html", "text/plain" )
+deflate.cache-dir           = "$DEFLATE_DIR/"
+deflate.filetype            = ( "application/javascript", "text/css", "text/html", "text/plain" )
 
 mimetype.assign = (
     ".js" => "application/javascript",
@@ -147,7 +147,7 @@ esac
 
 chmod 0600 "$CONF"
 
-[ -e "$COMPRESS_DIR" ] || mkdir -p "$COMPRESS_DIR"
+[ -e "$DEFLATE_DIR" ] || mkdir -p "$DEFLATE_DIR"
 
 # rotate logs
 for logfile in $ACCESS_LOG $ERROR_LOG; do

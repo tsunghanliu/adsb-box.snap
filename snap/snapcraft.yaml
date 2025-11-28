@@ -34,6 +34,7 @@ apps:
     daemon: simple
     plugs: [network, network-bind, network-observe]
     after: [dump1090]
+    restart-condition: always
   fr24uat-feed:
     command: bin/fr24uat-feed
     daemon: simple
@@ -279,7 +280,7 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: http://client.planefinder.net/pfclient_5.3.29_amd64.deb
+      - on amd64: http://client.planefinder.net/pfclient_5.3.2_amd64.deb
       - else:
         - on i386: http://client.planefinder.net/pfclient_5.0.161_i386.deb
       - else:

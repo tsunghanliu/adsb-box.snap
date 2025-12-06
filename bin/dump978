@@ -86,7 +86,8 @@ ARGS+=("--format" "CS8")
 ARGS+=("--raw-port" "localhost:30978")
 ARGS+=("--json-port" "localhost:30979")
 
-export SOAPY_SDR_PLUGIN_PATH=$SNAP/usr/lib/$ARCH_TRIPLET/SoapySDR/modules0.7
+SOAPY_SDR_PLUGIN_PATH="$(find "$SNAP/usr/lib/$ARCH_TRIPLET/SoapySDR" -mindepth 1 -type d)"
+export SOAPY_SDR_PLUGIN_PATH
 
 nice -n $NICE_LEVEL "$BIN" "${ARGS[@]}"
 

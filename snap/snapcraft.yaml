@@ -123,7 +123,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v10.2
+    source-branch: v11.0
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -189,7 +189,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v10.2
+    source-branch: v11.0
     source-depth: 1
     override-build: |
       echo 'patching piaware ...'
@@ -442,7 +442,7 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v10.2
+    source-branch: v11.0
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'

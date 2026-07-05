@@ -67,7 +67,7 @@ apps:
   graphs-gend:
     command: bin/graphs-gend
     daemon: simple
-    plugs: [process-control]
+    plugs: [process-control, system-observe]
     after: [dump1090, collectd, lighttpd]
   adsbexchange-netcat:
     command: bin/adsbexchange-netcat
@@ -123,7 +123,7 @@ parts:
     source: https://github.com/flightaware/dump1090.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v10.2
+    source-branch: v11.0
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'
@@ -189,7 +189,7 @@ parts:
     source: https://github.com/flightaware/piaware.git
     source-type: git
     # the branch should be the same with dump1090-fa
-    source-branch: v10.2
+    source-branch: v11.0
     source-depth: 1
     override-build: |
       echo 'patching piaware ...'
@@ -246,13 +246,13 @@ parts:
   fr24feed:
     plugin: dump
     source:
-      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.54-0_amd64.tgz
+      - on amd64: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.57-1_amd64.tgz
       - else:
-        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.54-0_i386.tgz
+        - on i386: http://repo.feed.flightradar24.com/linux_binaries/fr24feed_1.0.57-1_i386.tgz
       - else:
-        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.54-0_armhf.tgz
+        - on armhf: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.57-1_armhf.tgz
       - else:
-        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.54-0_arm64.tgz
+        - on arm64: http://repo.feed.flightradar24.com/rpi_binaries/fr24feed_1.0.57-1_arm64.tgz
       - else fail
     build-packages:
       - wget
@@ -280,7 +280,7 @@ parts:
     build-packages:
       - wget
     source:
-      - on amd64: http://client.planefinder.net/pfclient_5.3.2_amd64.deb
+      - on amd64: http://client.planefinder.net/pfclient_5.3.29_amd64.deb
       - else:
         - on i386: http://client.planefinder.net/pfclient_5.0.161_i386.deb
       - else:
@@ -326,7 +326,7 @@ parts:
     plugin: nil
     source: https://github.com/wiedehopf/graphs1090.git
     source-type: git
-    source-commit: 378fc7a72a1c665959c4901fd795d84dce6bc881
+    source-commit: 426c70c61889de2a8f63f2b40133ea72a08537ce
     source-depth: 1
     stage-packages:
       - rrdtool
@@ -442,7 +442,7 @@ parts:
     source: https://github.com/flightaware/dump978.git
     source-type: git
     # the branch should be the same with piaware
-    source-branch: v10.2
+    source-branch: v11.0
     source-depth: 1
     override-build: |
       echo 'patching dump1090 ...'

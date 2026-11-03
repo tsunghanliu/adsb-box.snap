@@ -103,6 +103,8 @@ Note: unit of altitude is meter.
 $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
 ```
 
+Note: `collectd.rrd-writes-per-seoncd` and `lighttpd.enable-log` were renamed to `collectd.rrd-writes-per-second` and `lighttpd.enable-localhost-log`. Old values are migrated automatically.
+
 ### logging
 
 On Ubuntu Core 16, the rsyslog service is default enabled. If you are using SD card or USB disk as the primary storage, to avoid the wearing, it would be better to disable rsyslog. For Ubuntu Core 18, this operation is not necessary, since the rsyslog service is disabled by default.

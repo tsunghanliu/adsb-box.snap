@@ -2,4 +2,15 @@
 
 #TODO: update existing configurations
 
+# migrate renamed keys: OLD NEW
+migrate_key() {
+	old_value="$(snapctl get "$1")"
+	[ -z "$old_value" ] && return 0
+	[ -z "$(snapctl get "$2")" ] && snapctl set "$2=$old_value"
+	snapctl unset "$1"
+}
+
+migrate_key collectd.rrd-writes-per-seoncd collectd.rrd-writes-per-second
+migrate_key lighttpd.enable-log lighttpd.enable-localhost-log
+
 exit 0

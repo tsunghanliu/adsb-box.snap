@@ -103,6 +103,27 @@ Note: unit of altitude is meter.
 $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
 ```
 
+### adsb-box.config
+
+`adsb-box.config` is a helper to view and change all settings of adsb-box. It validates the values before applying them and restarts the affected services automatically.
+
+``` sh
+# list all settings, their current values and descriptions
+$ sudo adsb-box.config list
+# show a setting
+$ sudo adsb-box.config get receiver.latitude
+# change settings, nothing is changed if any value is invalid
+$ sudo adsb-box.config set receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE]
+# an empty value unsets the setting
+$ sudo adsb-box.config set dump1090.location-accuracy=
+# interactive mode: press Enter to keep the current value, input - to unset it
+$ sudo adsb-box.config
+```
+
+Add `--json` before the command (e.g. `sudo adsb-box.config --json list`) to get machine-readable output.
+
+Note: openskyd reads `opensky-network.*` and the receiver location only when `/var/snap/adsb-box/current/openskyd/conf.d/10-debconf.conf` does not exist. Changing them later does not affect openskyd.
+
 Note: `collectd.rrd-writes-per-seoncd` and `lighttpd.enable-log` were renamed to `collectd.rrd-writes-per-second` and `lighttpd.enable-localhost-log`. Old values are migrated automatically.
 
 ### logging

@@ -1,0 +1,323 @@
+#!/bin/sh
+# adsb-box.config - view and change adsb-box settings
+
+usage() {
+	cat << EOF
+Usage: adsb-box.config [--json] [COMMAND]
+
+Commands:
+  list                       list all settings with current values
+  get KEY                    print the value of KEY
+  set KEY=VALUE [KEY=VALUE]  validate and apply settings, then restart
+                             affected services (empty VALUE unsets KEY)
+  (none)                     interactive mode
+
+Options:
+  --json                     machine-readable output
+  -h, --help                 show this help
+EOF
+}
+
+die() {
+	if [ "$JSON" = "1" ]; then
+		printf '{"ok":false,"errors":[{"key":"","message":%s}]}\n' "$(json_str "$*")"
+	else
+		echo "Error: $*" >&2
+	fi
+	exit 1
+}
+
+# print $1 as a JSON string
+json_str() {
+	printf '%s' "$1" | awk 'BEGIN { ORS = ""; print "\"" }
+		NR > 1 { print "\\n" }
+		{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r"); print }
+		END { print "\"" }'
+}
+
+# join lines of stdin as a JSON array of strings
+json_list() {
+	sep=""
+	printf '['
+	while IFS= read -r line; do
+		[ -z "$line" ] && continue
+		printf '%s%s' "$sep" "$(json_str "$line")"
+		sep=","
+	done
+	printf ']'
+}
+
+# KEY|TYPE|SERVICES (space separated, restarted on change)|DESCRIPTION
+KEYS_TABLE='receiver.latitude|latitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|latitude of the receiver (-90 ~ 90)
+receiver.longitude|longitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|longitude of the receiver (-180 ~ 180)
+receiver.altitude|number|adsbexchange-mlat openskyd rbfeeder-mlat|altitude of the receiver in meters
+receiver.dump1090.index|uint|dump1090|device index of the 1090MHz dongle
+receiver.dump1090.serial|serial|dump1090|serial (8 digits) of the 1090MHz dongle
+receiver.dump1090.enable-biast|bool|dump1090|enable bias-tee of the 1090MHz dongle (0/1)
+receiver.dump1090.biast-gpio|uint|dump1090|GPIO number of bias-tee of the 1090MHz dongle
+receiver.dump978.index|uint|dump978 skyaware978 fr24uat-feed|device index of the 978MHz dongle
+receiver.dump978.serial|serial|dump978 skyaware978 fr24uat-feed rbfeeder collectd lighttpd|serial (8 digits) of the 978MHz dongle
+receiver.dump978.enable-biast|bool|dump978|enable bias-tee of the 978MHz dongle (0/1)
+receiver.dump978.biast-gpio|uint|dump978|GPIO number of bias-tee of the 978MHz dongle
+dump1090.location-accuracy|accuracy|dump1090|location accuracy in dump1090 json (approximate/exact, empty to disable)
+lighttpd.port|port|lighttpd|port of the web interface
+lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)
+adsbexchange.enable-log|bool|adsbexchange-netcat adsbexchange-mlat|enable logs of ADSB Exchange feeders (0/1)
+adsbexchange.username|username|adsbexchange-mlat|feeder name of ADSB Exchange MLAT
+adsbexchange.receiverport|port|adsbexchange-netcat|receiver port of ADSB Exchange
+collectd.enable-log|bool|collectd|enable logs of collectd (0/1)
+collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache
+collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush
+collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout
+collectd.rrd-writes-per-second|uint|collectd|rrdtool WritesPerSecond
+collectd.rrd-backup-period|uint|collectd graphs-gend|period (seconds) to back up rrd files from tmpfs
+dump1090.enable-log|bool|dump1090|enable logs of dump1090 (0/1)
+dump978.enable-log|bool|dump978|enable logs of dump978 (0/1)
+fr24feed.enable-log|bool|fr24feed fr24uat-feed|enable logs of fr24feed (0/1)
+graphs-gend.enable-log|bool|graphs-gend|enable logs of graphs-gend (0/1)
+openskyd.enable-log|bool|openskyd|enable logs of openskyd (0/1)
+opensky-network.username|username|openskyd|username of OpenSky Network
+opensky-network.serial|int|openskyd|serial of OpenSky Network feeder
+piaware.enable-log|bool|piaware|enable logs of piaware (0/1)
+plane-finder.enable-log|bool|pfclient|enable logs of plane finder client (0/1)
+rbfeeder.enable-log|bool|rbfeeder rbfeeder-mlat|enable logs of RadarBox feeder (0/1)
+skyaware978.enable-log|bool|skyaware978|enable logs of skyaware978 (0/1)'
+
+# print the field ($2) of key ($1): 2=type 3=services 4=description
+key_field() {
+	echo "$KEYS_TABLE" | awk -F'|' -v k="$1" -v f="$2" '$1 == k { print $f; found=1 } END { exit !found }'
+}
+
+all_keys() {
+	echo "$KEYS_TABLE" | cut -d'|' -f1
+}
+
+cmd_list() {
+	if [ "$JSON" = "1" ]; then
+		sep=""
+		printf '{"ok":true,"settings":['
+		for k in $(all_keys); do
+			printf '%s{"key":%s,"value":%s,"description":%s}' "$sep" "$(json_str "$k")" \
+				"$(json_str "$(snapctl get "$k")")" "$(json_str "$(key_field "$k" 4)")"
+			sep=","
+		done
+		printf ']}\n'
+		return 0
+	fi
+	for k in $(all_keys); do
+		printf '%s=%s\n    %s\n' "$k" "$(snapctl get "$k")" "$(key_field "$k" 4)"
+	done
+}
+
+is_uint() {
+	case "$1" in
+		''|*[!0-9]*) return 1 ;;
+	esac
+}
+
+is_number() {
+	echo "$1" | grep -Eq '^-?[0-9]+(\.[0-9]+)?$'
+}
+
+# in_range VALUE MIN MAX
+in_range() {
+	is_number "$1" && awk -v v="$1" -v lo="$2" -v hi="$3" 'BEGIN { exit !(v >= lo && v <= hi) }'
+}
+
+# validate KEY VALUE: empty value is always valid (unset)
+validate() {
+	[ -z "$2" ] && return 0
+	# reject multi-line values, grep checks line by line
+	[ "$(printf '%s' "$2" | wc -l)" -eq 0 ] || return 1
+	case "$(key_field "$1" 2)" in
+		latitude) in_range "$2" -90 90 ;;
+		longitude) in_range "$2" -180 180 ;;
+		number) is_number "$2" ;;
+		uint) is_uint "$2" ;;
+		int) echo "$2" | grep -Eq '^-?[0-9]+$' ;;
+		port) is_uint "$2" && in_range "$2" 1 65535 ;;
+		bool) [ "$2" = "0" ] || [ "$2" = "1" ] ;;
+		serial) echo "$2" | grep -Eq '^[0-9]{8}$' ;;
+		accuracy) [ "$2" = "approximate" ] || [ "$2" = "exact" ] ;;
+		username) echo "$2" | grep -Eq '^[A-Za-z0-9._-]{1,64}$' ;;
+		*) return 1 ;;
+	esac
+}
+
+cmd_set() {
+	[ $# -gt 0 ] || die "usage: adsb-box.config set KEY=VALUE [KEY=VALUE ...]"
+
+	errors=""
+	for kv in "$@"; do
+		case "$kv" in
+			*=*) ;;
+			*) errors="$errors$kv|invalid argument, expect KEY=VALUE
+"; continue ;;
+		esac
+		k="${kv%%=*}"
+		v="${kv#*=}"
+		if ! key_field "$k" 2 > /dev/null; then
+			errors="$errors$k|unknown key
+"
+		elif ! validate "$k" "$v"; then
+			errors="$errors$k|invalid value: $(key_field "$k" 4)
+"
+		fi
+	done
+	if [ -n "$errors" ]; then
+		if [ "$JSON" = "1" ]; then
+			sep=""
+			printf '{"ok":false,"errors":['
+			printf '%s' "$errors" | while IFS='|' read -r k msg; do
+				printf '%s{"key":%s,"message":%s}' "$sep" "$(json_str "$k")" "$(json_str "$msg")"
+				sep=","
+			done
+			printf ']}\n'
+		else
+			printf '%s' "$errors" | while IFS='|' read -r k msg; do
+				echo "Error: $k: $msg" >&2
+			done
+			echo "Nothing changed." >&2
+		fi
+		exit 1
+	fi
+
+	changed=""
+	services=""
+	# TODO: values are validated above, but if snapctl fails in the middle,
+	# keys written before are not rolled back.
+	for kv in "$@"; do
+		k="${kv%%=*}"
+		v="${kv#*=}"
+		[ "$(snapctl get "$k")" = "$v" ] && continue
+		if [ -z "$v" ]; then
+			snapctl unset "$k" || die "failed to unset $k"
+		else
+			snapctl set "$k=$v" || die "failed to set $k"
+		fi
+		changed="$changed $k"
+		services="$services $(key_field "$k" 3)"
+	done
+
+	services=$(echo "$services" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')
+	restarted=""
+	warnings=""
+	for s in $services; do
+		[ "$JSON" = "1" ] || echo "Restarting $s ..."
+		if snapctl restart "adsb-box.$s"; then
+			restarted="$restarted $s"
+		else
+			warnings="${warnings}failed to restart $s
+"
+		fi
+	done
+
+	notes=""
+	case "$changed" in
+		*opensky-network.*|*receiver.latitude*|*receiver.longitude*|*receiver.altitude*)
+			notes="openskyd reads opensky-network.* and receiver location only when $SNAP_DATA/openskyd/conf.d/10-debconf.conf does not exist."
+			;;
+	esac
+
+	if [ "$JSON" = "1" ]; then
+		printf '{"ok":true,"changed":%s,"restarted":%s,"warnings":%s,"notes":%s}\n' \
+			"$(echo "$changed" | tr ' ' '\n' | json_list)" \
+			"$(echo "$restarted" | tr ' ' '\n' | json_list)" \
+			"$(printf '%s' "$warnings" | json_list)" \
+			"$(echo "$notes" | json_list)"
+	else
+		printf '%s' "$warnings" | while IFS= read -r w; do
+			echo "Warning: $w" >&2
+		done
+		[ -z "$changed" ] && echo "No changes."
+		[ -n "$notes" ] && echo "Note: $notes"
+	fi
+	return 0
+}
+
+cmd_interactive() {
+	[ "$JSON" = "1" ] && die "--json is not supported in interactive mode"
+	echo "Press Enter to keep the current value, input - to unset it."
+	set --
+	for k in $(all_keys); do
+		cur="$(snapctl get "$k")"
+		echo
+		echo "# $(key_field "$k" 4)"
+		while :; do
+			printf '%s [%s]: ' "$k" "$cur"
+			IFS= read -r v || { echo; die "aborted"; }
+			[ -z "$v" ] && break
+			[ "$v" = "-" ] && v=""
+			if [ "$v" = "$cur" ]; then
+				break
+			elif validate "$k" "$v"; then
+				set -- "$@" "$k=$v"
+				break
+			fi
+			echo "Invalid value, please try again."
+		done
+	done
+
+	echo
+	if [ $# -eq 0 ]; then
+		echo "No changes."
+		return 0
+	fi
+	echo "Changes:"
+	for kv in "$@"; do
+		echo "  $kv"
+	done
+	printf 'Apply? [y/N]: '
+	IFS= read -r ans || ans=""
+	case "$ans" in
+		y|Y|yes|YES) cmd_set "$@" ;;
+		*) echo "Cancelled, nothing changed." ;;
+	esac
+}
+
+cmd_get() {
+	[ $# -eq 1 ] || die "usage: adsb-box.config get KEY"
+	key_field "$1" 2 > /dev/null || die "unknown key: $1"
+	if [ "$JSON" = "1" ]; then
+		printf '{"ok":true,"key":%s,"value":%s}\n' "$(json_str "$1")" "$(json_str "$(snapctl get "$1")")"
+	else
+		snapctl get "$1"
+	fi
+}
+
+JSON=0
+if [ "$1" = "--json" ]; then
+	JSON=1
+	shift
+fi
+
+CMD="$1"
+[ $# -gt 0 ] && shift
+
+case "$CMD" in
+	-h|--help|help)
+		usage
+		exit 0
+		;;
+esac
+
+[ "$(id -u)" = "0" ] || die "root privilege is required, please use sudo"
+
+case "$CMD" in
+	list)
+		cmd_list
+		;;
+	get)
+		cmd_get "$@"
+		;;
+	set)
+		cmd_set "$@"
+		;;
+	"")
+		cmd_interactive
+		;;
+	*)
+		usage >&2
+		exit 1
+		;;
+esac

@@ -91,6 +91,8 @@ apps:
     command: bin/rbfeedercli
   generate-wisdom:
     command: bin/generate-wisdom
+  config:
+    command: bin/config
   dump978:
     command: bin/dump978
     daemon: simple

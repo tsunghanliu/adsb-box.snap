@@ -71,7 +71,7 @@ else
 	URL_1090="http://localhost:8080/dump1090"
 fi
 
-RRD_WRITES_PER_SECOND=$(snapctl get collectd.rrd-writes-per-seoncd)
+RRD_WRITES_PER_SECOND=$(snapctl get collectd.rrd-writes-per-second)
 RRD_WRITES_PER_SECOND=${RRD_WRITES_PER_SECOND:-50}
 RRD_CACHE_TIMEOUT=$(snapctl get collectd.rrd-cache-timeout)
 RRD_CACHE_TIMEOUT=${RRD_CACHE_TIMEOUT:-300}

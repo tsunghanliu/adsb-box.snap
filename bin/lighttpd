@@ -42,15 +42,31 @@ else
 	echo "has_uat=false;" > /tmp/config.js
 fi
 
+# password of the web settings page, also updated by "adsb-box.config passwd"
+HTPASSWD="$WORKDIR/htpasswd"
+PASSWORD_HASH=$(snapctl get web.password-hash)
+(
+	umask 077
+	if [ -n "$PASSWORD_HASH" ]; then
+		printf 'admin:%s\n' "$PASSWORD_HASH" > "$HTPASSWD.tmp"
+	else
+		: > "$HTPASSWD.tmp"
+	fi
+)
+mv -f "$HTPASSWD.tmp" "$HTPASSWD"
+
 cat << EOF > "$CONF"
 server.modules = (
     "mod_access",
+    "mod_auth",
+    "mod_authn_file",
     "mod_accesslog",
     "mod_alias",
     "mod_deflate",
     #"mod_dirlisting",
     "mod_setenv",
     "mod_redirect",
+    "mod_cgi",
 )
 
 #server.document-root        = "$SNAP/usr/share/dump1090-fa/html"
@@ -100,6 +116,35 @@ alias.url += (
     "/graphs/" => "/tmp/graphs1090/",
     "/status.json" => "/tmp/status.json",
     "/js/config.js" => "/tmp/config.js",
+    # web settings page, config-admin must be prior of config
+    "/cgi-bin/config-admin" => "$SNAP/bin/settings-cgi",
+    "/cgi-bin/config" => "$SNAP/bin/settings-cgi",
+)
+
+# CGI programs get a clean environment, pass what snapctl and the scripts need
+\$HTTP["url"] =~ "^/cgi-bin/" {
+    cgi.assign = ( "" => "" )
+    setenv.add-environment = (
+        "PATH" => "$PATH",
+        "SNAP" => "$SNAP",
+        "SNAP_NAME" => "$SNAP_NAME",
+        "SNAP_DATA" => "$SNAP_DATA",
+        "SNAP_COMMON" => "$SNAP_COMMON",
+        "SNAP_COOKIE" => "$SNAP_COOKIE",
+        "SNAP_CONTEXT" => "$SNAP_CONTEXT",
+    )
+    setenv.add-response-header = ( "Cache-Control" => "no-store" )
+}
+
+# only config-admin needs the login, the password file is read on every request
+auth.backend = "htpasswd"
+auth.backend.htpasswd.userfile = "$HTPASSWD"
+auth.require = (
+    "/cgi-bin/config-admin" => (
+        "method" => "basic",
+        "realm" => "adsb-box settings",
+        "require" => "user=admin",
+    ),
 )
 
 \$SERVER["socket"] == ":8978" {

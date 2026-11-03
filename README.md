@@ -126,6 +126,24 @@ Note: openskyd reads `opensky-network.*` and the receiver location only when `/v
 
 Note: `collectd.rrd-writes-per-seoncd` and `lighttpd.enable-log` were renamed to `collectd.rrd-writes-per-second` and `lighttpd.enable-localhost-log`. Old values are migrated automatically.
 
+### web settings page
+
+The settings can also be viewed and changed on the **Settings** tab of the web interface (`http://your-device-ip:8080/settings.html`).
+
+- Without a password, the page is read-only. OpenSky Network username and serial and ADSB Exchange feeder name are hidden until you log in.
+- Set a password to change the settings on the page. Click **Log in** and use the user name `admin`.
+
+``` sh
+# set or change the password, it asks for the new password twice
+$ sudo adsb-box.config passwd
+# remove the password, the page becomes read-only
+$ sudo adsb-box.config passwd --disable
+```
+
+Only a SHA-512 hash of the password is stored. Changing the password takes effect immediately, without restarting any service.
+
+Note: the page is served over plain HTTP, so the password is sent unencrypted. Use it only on a trusted network. Changing `lighttpd.port`, `lighttpd.enable-localhost-log` or `receiver.dump978.serial` restarts the web server; the settings are saved, reload the page (or open the new port) in a moment.
+
 ### logging
 
 On Ubuntu Core 16, the rsyslog service is default enabled. If you are using SD card or USB disk as the primary storage, to avoid the wearing, it would be better to disable rsyslog. For Ubuntu Core 18, this operation is not necessary, since the rsyslog service is disabled by default.

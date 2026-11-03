@@ -52,6 +52,14 @@
 					</a>
 				</label>
 			</li>
+			<li class="tab">
+				<label for="settings">
+					<a>
+						<span class="icon is-small"><i class="fas fa-cog" aria-hidden="true"></i></span>
+						<span>Settings</span>
+					</a>
+				</label>
+			</li>
 		</ul>
 	</div>
 	<div id="container">
@@ -67,6 +75,7 @@
 				$(this).addClass('is-active');
 				target='';
 				dump1090 = false;
+				settings = false;
 				switch($(this).children("label").attr('for'))
 				{
 					case "dump1090":
@@ -75,9 +84,15 @@
 					case "graphs":
 						target="/graphs.html";
 						break;
+					case "settings":
+						settings = true;
+						break;
 				};
 				if (dump1090 == true) {
 					$('.content').html("<iframe id=\"map\" src=\"/dump1090/\"></iframe>");
+				}
+				else if (settings == true) {
+					$('.content').html("<iframe id=\"map\" src=\"/settings.html\"></iframe>");
 				}
 				else {
 					$.ajaxPrefilter(function( options, originalOptions, jqXHR ) {    options.async = true; });

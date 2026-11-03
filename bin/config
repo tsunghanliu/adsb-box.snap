@@ -10,6 +10,8 @@ Commands:
   get KEY                    print the value of KEY
   set KEY=VALUE [KEY=VALUE]  validate and apply settings, then restart
                              affected services (empty VALUE unsets KEY)
+  passwd [--disable]         set (or remove) the password of user admin
+                             for the web settings page
   (none)                     interactive mode
 
 Options:
@@ -92,13 +94,40 @@ all_keys() {
 	echo "$KEYS_TABLE" | cut -d'|' -f1
 }
 
+# shown only to logged-in users of the web settings page
+SENSITIVE_KEYS="opensky-network.username opensky-network.serial adsbexchange.username"
+
+is_sensitive() {
+	case " $SENSITIVE_KEYS " in
+		*" $1 "*) return 0 ;;
+	esac
+	return 1
+}
+
+# print the allowed values of an enum type, one per line
+type_options() {
+	case "$1" in
+		accuracy) printf '\napproximate\nexact\n' ;;
+	esac
+}
+
 cmd_list() {
+	# TODO: slow on small devices (~5s for --json, ~2s for text on a Pi):
+	# each key forks snapctl and several awk. Read all values with a single
+	# "snapctl get KEY..." and format the output in one awk instead.
 	if [ "$JSON" = "1" ]; then
 		sep=""
 		printf '{"ok":true,"settings":['
 		for k in $(all_keys); do
-			printf '%s{"key":%s,"value":%s,"description":%s}' "$sep" "$(json_str "$k")" \
-				"$(json_str "$(snapctl get "$k")")" "$(json_str "$(key_field "$k" 4)")"
+			t="$(key_field "$k" 2)"
+			options=""
+			[ -n "$(type_options "$t")" ] && options=",\"options\":[\"\",$(type_options "$t" | json_list | sed 's/^\[//')"
+			sensitive=false
+			is_sensitive "$k" && sensitive=true
+			printf '%s{"key":%s,"value":%s,"description":%s,"type":%s%s,"services":%s,"sensitive":%s}' \
+				"$sep" "$(json_str "$k")" "$(json_str "$(snapctl get "$k")")" \
+				"$(json_str "$(key_field "$k" 4)")" "$(json_str "$t")" "$options" \
+				"$(key_field "$k" 3 | tr ' ' '\n' | json_list)" "$sensitive"
 			sep=","
 		done
 		printf ']}\n'
@@ -200,6 +229,11 @@ cmd_set() {
 	done
 
 	services=$(echo "$services" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')
+	# restart lighttpd last: from the web settings page, this script runs as
+	# a child of lighttpd and is stopped together with it
+	case " $services " in
+		*" lighttpd "*) services="$(echo " $services " | sed 's/ lighttpd / /') lighttpd" ;;
+	esac
 	restarted=""
 	warnings=""
 	for s in $services; do
@@ -275,6 +309,61 @@ cmd_interactive() {
 	esac
 }
 
+# the web settings page: user "admin", password in htpasswd format of lighttpd
+HTPASSWD="$SNAP_DATA/lighttpd/htpasswd"
+
+# write_htpasswd HASH: empty HASH disables the login
+write_htpasswd() {
+	mkdir -p "$(dirname "$HTPASSWD")" || return 1
+	tmp="$HTPASSWD.tmp.$$"
+	(
+		umask 077
+		if [ -n "$1" ]; then
+			printf 'admin:%s\n' "$1" > "$tmp"
+		else
+			: > "$tmp"
+		fi
+	) && mv -f "$tmp" "$HTPASSWD"
+}
+
+cmd_passwd() {
+	[ "$JSON" = "1" ] && die "--json is not supported by passwd"
+	if [ "$1" = "--disable" ]; then
+		write_htpasswd "" || die "failed to write $HTPASSWD"
+		snapctl unset web.password-hash || die "failed to unset web.password-hash"
+		echo "Password removed, the web settings page is read-only now."
+		return 0
+	fi
+	[ $# -eq 0 ] || die "usage: adsb-box.config passwd [--disable]"
+
+	if [ -t 0 ]; then
+		stty -echo
+		trap 'stty echo' EXIT
+	fi
+	printf 'New password for user admin: '
+	IFS= read -r pw1 || pw1=""
+	echo
+	printf 'Retype new password: '
+	IFS= read -r pw2 || pw2=""
+	echo
+	if [ -t 0 ]; then
+		stty echo
+		trap - EXIT
+	fi
+
+	[ -n "$pw1" ] || die "empty password, nothing changed"
+	[ "$pw1" = "$pw2" ] || die "passwords do not match, nothing changed"
+
+	hash="$(printf '%s\n' "$pw1" | openssl passwd -6 -stdin)"
+	case "$hash" in
+		'$6$'*) ;;
+		*) die "failed to hash the password, nothing changed" ;;
+	esac
+	snapctl set "web.password-hash=$hash" || die "failed to save the password"
+	write_htpasswd "$hash" || die "failed to write $HTPASSWD"
+	echo "Password updated. Log in to the web settings page as admin."
+}
+
 cmd_get() {
 	[ $# -eq 1 ] || die "usage: adsb-box.config get KEY"
 	key_field "$1" 2 > /dev/null || die "unknown key: $1"
@@ -312,6 +401,9 @@ case "$CMD" in
 		;;
 	set)
 		cmd_set "$@"
+		;;
+	passwd)
+		cmd_passwd "$@"
 		;;
 	"")
 		cmd_interactive

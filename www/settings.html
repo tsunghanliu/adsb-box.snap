@@ -35,7 +35,7 @@
 			outline: 3px solid #485fc7;
 			outline-offset: 2px;
 		}
-		#message-live .notification {
+		#message-live .message {
 			margin-bottom: 1.5rem;
 		}
 		#settings .setting-key {
@@ -67,7 +67,7 @@
 				<code>sudo adsb-box.config passwd</code>, then log in as <code>admin</code>.
 			</div>
 			<!-- live region stays in the page, so screen readers notice when a message is added -->
-			<div id="message-live" role="status" aria-live="polite"><div class="notification is-hidden" id="message"></div></div>
+			<div id="message-live" role="status" aria-live="polite"><div class="message is-hidden" id="message"><div class="message-body"></div></div></div>
 			<form id="settings"></form>
 		</div>
 	</section>
@@ -83,11 +83,13 @@
 			$('#message-live')
 				.attr('role', error ? 'alert' : 'status')
 				.attr('aria-live', error ? 'assertive' : 'polite');
-			$('#message').attr('class', 'notification is-light ' + cls).html(html);
+			$('#message').attr('class', 'message ' + cls).children('.message-body').html(html);
+			// the Apply button is at the bottom, bring the message into view
+			document.getElementById('message').scrollIntoView({ block: 'nearest' });
 		}
 
 		function hideMessage() {
-			$('#message').attr('class', 'notification is-hidden').empty();
+			$('#message').attr('class', 'message is-hidden').children('.message-body').empty();
 		}
 
 		function fieldId(key) {
@@ -223,8 +225,8 @@
 					listHtml('Restarted:', res.restarted) +
 					listHtml('Warnings:', res.warnings) +
 					listHtml('Note:', res.notes));
-				var msg = $('#message').html();
-				load(true).done(function() { $('#message').html(msg); });
+				var msg = $('#message .message-body').html();
+				load(true).done(function() { $('#message .message-body').html(msg); });
 			}).fail(function(xhr) {
 				var res = xhr.responseJSON;
 				if (xhr.status === 401) {

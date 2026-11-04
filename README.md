@@ -112,6 +112,8 @@ $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGIT
 $ sudo adsb-box.config list
 # show a setting
 $ sudo adsb-box.config get receiver.latitude
+# show several settings in a table
+$ sudo adsb-box.config get receiver.latitude receiver.longitude receiver.altitude
 # change settings, nothing is changed if any value is invalid
 $ sudo adsb-box.config set receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE]
 # an empty value unsets the setting

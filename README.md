@@ -108,8 +108,10 @@ $ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGIT
 `adsb-box.config` is a helper to view and change all settings of adsb-box. It validates the values before applying them and restarts the affected services automatically.
 
 ``` sh
-# list all settings, their current values and descriptions
+# list all settings and their current values
 $ sudo adsb-box.config list
+# also show the name and description of each setting
+$ sudo adsb-box.config list --details
 # show a setting
 $ sudo adsb-box.config get receiver.latitude
 # show several settings in a table

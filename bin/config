@@ -6,7 +6,8 @@ usage() {
 Usage: adsb-box.config [--json] [COMMAND]
 
 Commands:
-  list                       list all settings with current values
+  list [--details]           list all settings with current values,
+                             --details adds names and descriptions
   get KEY [KEY ...]          print the value of KEY, or a table of the
                              values of several KEYs
   set KEY=VALUE [KEY=VALUE]  validate and apply settings, then restart
@@ -50,43 +51,44 @@ json_list() {
 	printf ']'
 }
 
-# KEY|TYPE|SERVICES (space separated, restarted on change)|DESCRIPTION
-KEYS_TABLE='receiver.latitude|latitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|latitude of the receiver (-90 ~ 90)
-receiver.longitude|longitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|longitude of the receiver (-180 ~ 180)
-receiver.altitude|number|adsbexchange-mlat openskyd rbfeeder-mlat|altitude of the receiver in meters
-receiver.dump1090.index|uint|dump1090|device index of the 1090MHz dongle
-receiver.dump1090.serial|serial|dump1090|serial (8 digits) of the 1090MHz dongle
-receiver.dump1090.enable-biast|bool|dump1090|enable bias-tee of the 1090MHz dongle (0/1)
-receiver.dump1090.biast-gpio|uint|dump1090|GPIO number of bias-tee of the 1090MHz dongle
-receiver.dump978.index|uint|dump978 skyaware978 fr24uat-feed|device index of the 978MHz dongle
-receiver.dump978.serial|serial|dump978 skyaware978 fr24uat-feed rbfeeder collectd lighttpd|serial (8 digits) of the 978MHz dongle
-receiver.dump978.enable-biast|bool|dump978|enable bias-tee of the 978MHz dongle (0/1)
-receiver.dump978.biast-gpio|uint|dump978|GPIO number of bias-tee of the 978MHz dongle
-dump1090.location-accuracy|accuracy|dump1090|location accuracy in dump1090 json (approximate/exact, empty to disable)
-lighttpd.port|port|lighttpd|port of the web interface
-lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)
-adsbexchange.enable-log|bool|adsbexchange-netcat adsbexchange-mlat|enable logs of ADSB Exchange feeders (0/1)
-adsbexchange.username|username|adsbexchange-mlat|feeder name of ADSB Exchange MLAT
-adsbexchange.receiverport|port|adsbexchange-netcat|receiver port of ADSB Exchange
-collectd.enable-log|bool|collectd|enable logs of collectd (0/1)
-collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache
-collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush
-collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout
-collectd.rrd-writes-per-second|uint|collectd|rrdtool WritesPerSecond
-collectd.rrd-backup-period|uint|collectd graphs-gend|period (seconds) to back up rrd files from tmpfs
-dump1090.enable-log|bool|dump1090|enable logs of dump1090 (0/1)
-dump978.enable-log|bool|dump978|enable logs of dump978 (0/1)
-fr24feed.enable-log|bool|fr24feed fr24uat-feed|enable logs of fr24feed (0/1)
-graphs-gend.enable-log|bool|graphs-gend|enable logs of graphs-gend (0/1)
-openskyd.enable-log|bool|openskyd|enable logs of openskyd (0/1)
-opensky-network.username|username|openskyd|username of OpenSky Network
-opensky-network.serial|int|openskyd|serial of OpenSky Network feeder
-piaware.enable-log|bool|piaware|enable logs of piaware (0/1)
-plane-finder.enable-log|bool|pfclient|enable logs of plane finder client (0/1)
-rbfeeder.enable-log|bool|rbfeeder rbfeeder-mlat|enable logs of RadarBox feeder (0/1)
-skyaware978.enable-log|bool|skyaware978|enable logs of skyaware978 (0/1)'
+# KEY|TYPE|SERVICES (space separated, restarted on change)|DESCRIPTION|NAME|GROUP
+# rows are ordered by group, the web settings page shows the groups in this order
+KEYS_TABLE='receiver.latitude|latitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|latitude of the receiver (-90 ~ 90)|Latitude|Receiver location
+receiver.longitude|longitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|longitude of the receiver (-180 ~ 180)|Longitude|Receiver location
+receiver.altitude|number|adsbexchange-mlat openskyd rbfeeder-mlat|altitude of the receiver in meters|Altitude|Receiver location
+receiver.dump1090.index|uint|dump1090|device index of the 1090MHz dongle|1090MHz dongle index|Receivers
+receiver.dump1090.serial|serial|dump1090|serial (8 digits) of the 1090MHz dongle|1090MHz dongle serial|Receivers
+receiver.dump1090.enable-biast|bool|dump1090|enable bias-tee of the 1090MHz dongle (0/1)|1090MHz bias-tee|Receivers
+receiver.dump1090.biast-gpio|uint|dump1090|GPIO number of bias-tee of the 1090MHz dongle|1090MHz bias-tee GPIO|Receivers
+receiver.dump978.index|uint|dump978 skyaware978 fr24uat-feed|device index of the 978MHz dongle|978MHz dongle index|Receivers
+receiver.dump978.serial|serial|dump978 skyaware978 fr24uat-feed rbfeeder collectd lighttpd|serial (8 digits) of the 978MHz dongle|978MHz dongle serial|Receivers
+receiver.dump978.enable-biast|bool|dump978|enable bias-tee of the 978MHz dongle (0/1)|978MHz bias-tee|Receivers
+receiver.dump978.biast-gpio|uint|dump978|GPIO number of bias-tee of the 978MHz dongle|978MHz bias-tee GPIO|Receivers
+dump1090.location-accuracy|accuracy|dump1090|location accuracy in dump1090 json (approximate/exact, empty to disable)|Location accuracy|Receivers
+adsbexchange.username|username|adsbexchange-mlat|feeder name of ADSB Exchange MLAT|ADSB Exchange feeder name|Accounts
+adsbexchange.receiverport|port|adsbexchange-netcat|receiver port of ADSB Exchange|ADSB Exchange receiver port|Accounts
+opensky-network.username|username|openskyd|username of OpenSky Network|OpenSky username|Accounts
+opensky-network.serial|int|openskyd|serial of OpenSky Network feeder|OpenSky serial|Accounts
+lighttpd.port|port|lighttpd|port of the web interface|Web port|Web interface
+lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)|Localhost access log|Web interface
+collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache|RRD cache timeout|collectd
+collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush|RRD cache flush|collectd
+collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout|RRD random timeout|collectd
+collectd.rrd-writes-per-second|uint|collectd|rrdtool WritesPerSecond|RRD writes per second|collectd
+collectd.rrd-backup-period|uint|collectd graphs-gend|period (seconds) to back up rrd files from tmpfs|RRD backup period|collectd
+adsbexchange.enable-log|bool|adsbexchange-netcat adsbexchange-mlat|enable logs of ADSB Exchange feeders (0/1)|ADSB Exchange logs|Logs
+collectd.enable-log|bool|collectd|enable logs of collectd (0/1)|collectd logs|Logs
+dump1090.enable-log|bool|dump1090|enable logs of dump1090 (0/1)|dump1090 logs|Logs
+dump978.enable-log|bool|dump978|enable logs of dump978 (0/1)|dump978 logs|Logs
+fr24feed.enable-log|bool|fr24feed fr24uat-feed|enable logs of fr24feed (0/1)|FR24 feeder logs|Logs
+graphs-gend.enable-log|bool|graphs-gend|enable logs of graphs-gend (0/1)|Graphs generator logs|Logs
+openskyd.enable-log|bool|openskyd|enable logs of openskyd (0/1)|OpenSky feeder logs|Logs
+piaware.enable-log|bool|piaware|enable logs of piaware (0/1)|PiAware logs|Logs
+plane-finder.enable-log|bool|pfclient|enable logs of plane finder client (0/1)|Plane Finder logs|Logs
+rbfeeder.enable-log|bool|rbfeeder rbfeeder-mlat|enable logs of RadarBox feeder (0/1)|RadarBox feeder logs|Logs
+skyaware978.enable-log|bool|skyaware978|enable logs of skyaware978 (0/1)|SkyAware978 logs|Logs'
 
-# print the field ($2) of key ($1): 2=type 3=services 4=description
+# print the field ($2) of key ($1): 2=type 3=services 4=description 5=name 6=group
 key_field() {
 	echo "$KEYS_TABLE" | awk -F'|' -v k="$1" -v f="$2" '$1 == k { print $f; found=1 } END { exit !found }'
 }
@@ -99,7 +101,7 @@ all_keys() {
 SENSITIVE_KEYS="opensky-network.username opensky-network.serial adsbexchange.username"
 
 # render FORMAT KEY...: read the values of KEYs with a single snapctl call and
-# print them in FORMAT: list, json-list, get, json-get, json-get-multi, table.
+# print them in FORMAT: list, list-details, json-list, get, json-get, json-get-multi, table.
 # Values which are not a single value (JSON objects or arrays) are (invalid).
 render() {
 	format="$1"
@@ -172,7 +174,7 @@ render() {
 		n = split(ENVIRON["KEYS_TABLE"], lines, "\n")
 		for (i = 1; i <= n; i++) {
 			split(lines[i], f, "|")
-			type[f[1]] = f[2]; services[f[1]] = f[3]; desc[f[1]] = f[4]
+			type[f[1]] = f[2]; services[f[1]] = f[3]; desc[f[1]] = f[4]; name[f[1]] = f[5]; group[f[1]] = f[6]
 		}
 		m = split(ENVIRON["SENSITIVE_KEYS"], a, " ")
 		for (i = 1; i <= m; i++) sensitive[a[i]] = 1
@@ -202,13 +204,16 @@ render() {
 	END {
 		if (format == "list") {
 			for (i = 1; i <= nkeys; i++)
-				printf "%s=%s\n    %s\n", key[i], chomp(value[key[i]]), desc[key[i]]
+				printf "%s=%s\n", key[i], chomp(value[key[i]])
+		} else if (format == "list-details") {
+			for (i = 1; i <= nkeys; i++)
+				printf "%s=%s\n    %s: %s\n", key[i], chomp(value[key[i]]), name[key[i]], desc[key[i]]
 		} else if (format == "json-list") {
 			printf "{\"ok\":true,\"settings\":["
 			for (i = 1; i <= nkeys; i++) {
 				k = key[i]
-				printf "%s{\"key\":%s,\"value\":%s,\"description\":%s,\"type\":%s%s,\"services\":%s,\"sensitive\":%s}",
-					(i > 1 ? "," : ""), jstr(k), jstr(chomp(value[k])), jstr(desc[k]), jstr(type[k]),
+				printf "%s{\"key\":%s,\"value\":%s,\"name\":%s,\"group\":%s,\"description\":%s,\"type\":%s%s,\"services\":%s,\"sensitive\":%s}",
+					(i > 1 ? "," : ""), jstr(k), jstr(chomp(value[k])), jstr(name[k]), jstr(group[k]), jstr(desc[k]), jstr(type[k]),
 					(type[k] == "accuracy" ? ",\"options\":[\"\",\"approximate\",\"exact\"]" : ""),
 					jlist(services[k]), (k in sensitive ? "true" : "false")
 			}
@@ -232,11 +237,13 @@ render() {
 }
 
 cmd_list() {
-	if [ "$JSON" = "1" ]; then
-		render json-list $(all_keys) || die "failed to read settings"
-	else
-		render list $(all_keys) || die "failed to read settings"
-	fi
+	case "$1" in
+		'') format=list ;;
+		--details) format=list-details ;;
+		*) die "usage: adsb-box.config list [--details]" ;;
+	esac
+	[ "$JSON" = "1" ] && format=json-list
+	render "$format" $(all_keys) || die "failed to read settings"
 }
 
 is_uint() {
@@ -377,7 +384,7 @@ cmd_interactive() {
 	for k in $(all_keys); do
 		cur="$(snapctl get "$k")"
 		echo
-		echo "# $(key_field "$k" 4)"
+		echo "# $(key_field "$k" 5): $(key_field "$k" 4)"
 		while :; do
 			printf '%s [%s]: ' "$k" "$cur"
 			IFS= read -r v || { echo; die "aborted"; }
@@ -506,7 +513,7 @@ esac
 
 case "$CMD" in
 	list)
-		cmd_list
+		cmd_list "$@"
 		;;
 	get)
 		cmd_get "$@"

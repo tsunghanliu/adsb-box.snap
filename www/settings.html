@@ -1,11 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>ADS-B Box Settings</title>
 	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
 	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
+	<style type="text/css">
+		#settings .help {
+			font-size: 1rem;
+		}
+		#settings .help:not(.is-danger) {
+			color: #4a4a4a;
+		}
+		/* errors and read-only values need a 4.5:1 contrast */
+		#settings .help.is-danger {
+			color: #cc0f35;
+		}
+		#settings .input[disabled],
+		#settings .select select[disabled] {
+			color: #4a4a4a;
+		}
+		#settings fieldset.box legend {
+			float: left;
+			width: 100%;
+			padding: 0;
+			margin-bottom: 1.5rem;
+		}
+		#settings fieldset.box legend + * {
+			clear: both;
+		}
+		#settings input[type="checkbox"]:focus-visible,
+		.button:focus-visible {
+			outline: 3px solid #485fc7;
+			outline-offset: 2px;
+		}
+		#message-live .notification {
+			margin-bottom: 1.5rem;
+		}
+		#settings .setting-key {
+			font-family: monospace;
+			font-weight: bold;
+			color: #257942;
+			background-color: #effaf5;
+			padding: 0.1em 0.35em;
+			border-radius: 3px;
+		}
+	</style>
 </head>
 <body>
 	<section class="section">
@@ -16,7 +57,7 @@
 				</div>
 				<div class="level-right">
 					<button class="button is-link is-hidden" id="login">
-						<span class="icon"><i class="fas fa-sign-in-alt"></i></span>
+						<span class="icon" aria-hidden="true"><i class="fas fa-sign-in-alt"></i></span>
 						<span>Log in</span>
 					</button>
 				</div>
@@ -25,45 +66,28 @@
 				The settings are read-only. To change them here, set a password first with
 				<code>sudo adsb-box.config passwd</code>, then log in as <code>admin</code>.
 			</div>
-			<div class="notification is-hidden" id="message"></div>
+			<!-- live region stays in the page, so screen readers notice when a message is added -->
+			<div id="message-live" role="status" aria-live="polite"><div class="notification is-hidden" id="message"></div></div>
 			<form id="settings"></form>
 		</div>
 	</section>
 
 	<script src="/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript">
-		// TODO: improve the layout and design of this page
-		// - use a short name as the label, e.g. "Latitude" for receiver.latitude
-		// - put the detailed description and the setting key in the help text,
-		//   e.g. "latitude of the receiver (-90 ~ 90) (receiver.latitude)",
-		//   with the key highlighted (bold or a different color)
-		// - the default red color of <code> is too strong, use green instead
-		// - consider accessibility
-		var GROUPS = [
-			{ title: "Receiver location", match: /^receiver\.(latitude|longitude|altitude)$/ },
-			{ title: "Receivers", match: /^(receiver\.dump(1090|978)\.|dump1090\.location-accuracy$)/ },
-			{ title: "Accounts", match: /^(opensky-network\.|adsbexchange\.(username|receiverport)$)/ },
-			{ title: "Web interface", match: /^lighttpd\./ },
-			{ title: "collectd", match: /^collectd\.rrd-/ },
-			{ title: "Logs", match: /\.enable-log$/ },
-		];
-
 		var settings = [];
 		var loggedIn = false;
 
+		// errors are announced at once by screen readers, other messages politely
 		function showMessage(cls, html) {
-			$('#message').attr('class', 'notification ' + cls).html(html);
+			var error = cls === 'is-danger';
+			$('#message-live')
+				.attr('role', error ? 'alert' : 'status')
+				.attr('aria-live', error ? 'assertive' : 'polite');
+			$('#message').attr('class', 'notification is-light ' + cls).html(html);
 		}
 
 		function hideMessage() {
 			$('#message').attr('class', 'notification is-hidden').empty();
-		}
-
-		function groupOf(key) {
-			for (var i = 0; i < GROUPS.length; i++) {
-				if (GROUPS[i].match.test(key)) return i;
-			}
-			return GROUPS.length - 1;
 		}
 
 		function fieldId(key) {
@@ -77,7 +101,7 @@
 			var input;
 			if (s.type === 'bool') {
 				input = $('<input type="checkbox">').prop('checked', s.value === '1');
-				control.append($('<label class="checkbox"></label>').append(input, ' ', $('<code></code>').text(s.key)));
+				control.append($('<label class="checkbox"></label>').attr('for', id).append(input, ' ', $('<strong></strong>').text(s.name)));
 				field.append(control);
 			} else {
 				if (s.options) {
@@ -91,11 +115,14 @@
 					input = $('<input class="input" type="text">').val(s.value);
 					control.append(input);
 				}
-				field.append($('<label class="label"></label>').attr('for', id).append($('<code></code>').text(s.key)), control);
+				field.append($('<label class="label"></label>').attr('for', id).text(s.name), control);
 			}
-			input.attr('id', id).prop('disabled', !editable);
-			field.append($('<p class="help"></p>').text(s.description));
-			field.append($('<p class="help is-danger error"></p>'));
+			input.attr('id', id).attr('aria-describedby', id + '-help ' + id + '-error').prop('disabled', !editable);
+			field.append($('<p class="help"></p>').attr('id', id + '-help').append(
+				document.createTextNode(s.description + ' ('),
+				$('<span class="setting-key"></span>').text(s.key),
+				document.createTextNode(')')));
+			field.append($('<p class="help is-danger error"></p>').attr('id', id + '-error'));
 			return field;
 		}
 
@@ -106,17 +133,19 @@
 			$('#no-password').toggleClass('is-hidden', data.password_set);
 			$('#login').toggleClass('is-hidden', !data.password_set || loggedIn);
 
+			// groups in the order they first appear in the settings
 			var form = $('#settings').empty();
-			var boxes = $.map(GROUPS, function(g) {
-				return $('<div class="box"></div>').append($('<h2 class="subtitle"></h2>').text(g.title));
-			});
+			var boxes = {};
 			$.each(settings, function(i, s) {
-				boxes[groupOf(s.key)].append(renderField(s, editable));
+				if (!boxes[s.group]) {
+					boxes[s.group] = $('<fieldset class="box"></fieldset>').append($('<legend class="subtitle"></legend>').text(s.group));
+					form.append(boxes[s.group]);
+				}
+				boxes[s.group].append(renderField(s, editable));
 			});
-			form.append(boxes);
 			if (editable) {
 				form.append($('<div class="field"><div class="control">' +
-					'<button type="submit" class="button is-primary" id="apply">Apply</button>' +
+					'<button type="submit" class="button is-link" id="apply">Apply</button>' +
 					'</div></div>'));
 			}
 		}
@@ -153,6 +182,7 @@
 			hideMessage();
 			$('#settings .field').removeClass('has-error').find('.error').text('');
 			$('#settings .input, #settings .select').removeClass('is-danger');
+			$('#settings [aria-invalid]').removeAttr('aria-invalid');
 
 			var changes = {};
 			var count = 0;
@@ -206,12 +236,14 @@
 						if (e.key && field.length) {
 							field.find('.error').text(e.message);
 							field.find('.input, .select').addClass('is-danger');
+							field.find('input, select').attr('aria-invalid', 'true');
 						} else {
 							general.push(e.key ? e.key + ': ' + e.message : e.message);
 						}
 					});
 					showMessage('is-danger', '<p>Nothing changed, please fix the marked fields.</p>' +
 						listHtml('', general));
+					$('#settings [aria-invalid="true"]').first().trigger('focus');
 				} else if (restartsWeb && xhr.status === 0) {
 					showMessage('is-warning', 'The web server is restarting. ' +
 						(newUrl ? 'Open <a href="' + escapeHtml(newUrl) + '">' + escapeHtml(newUrl) + '</a> in a moment.'

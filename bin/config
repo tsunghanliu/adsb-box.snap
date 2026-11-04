@@ -34,7 +34,7 @@ die() {
 json_str() {
 	printf '%s' "$1" | awk 'BEGIN { ORS = ""; print "\"" }
 		NR > 1 { print "\\n" }
-		{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r"); print }
+		{ gsub(/\\/, "&&"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r"); print }
 		END { print "\"" }'
 }
 
@@ -148,8 +148,9 @@ render() {
 		return out
 	}
 	# encode as a JSON string, the same rules as json_str()
+	# ("&&" doubles a backslash, older mawk turns "\\\\" into a single one)
 	function jstr(s) {
-		gsub(/\\/, "\\\\", s)
+		gsub(/\\/, "&&", s)
 		gsub(/"/, "\\\"", s)
 		gsub(/\t/, "\\t", s)
 		gsub(/\r/, "\\r", s)

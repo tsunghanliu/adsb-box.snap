@@ -395,8 +395,11 @@ parts:
       set -x
       case $SNAPCRAFT_ARCH_TRIPLET in
         aarch64-*)
-          sudo dpkg --add-architecture armhf
-          sudo apt update
+          # newer builders run as root without sudo
+          SUDO=""
+          [ "$(id -u)" -ne 0 ] && SUDO=sudo
+          $SUDO dpkg --add-architecture armhf
+          $SUDO apt update
           ;;
       esac
       snapcraftctl pull

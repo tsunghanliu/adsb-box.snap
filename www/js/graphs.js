@@ -41,6 +41,7 @@ $(document).ready(function () {
 		// Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
 		$(".navbar-burger").toggleClass("is-active");
 		$(".navbar-menu").toggleClass("is-active");
+		$(this).attr('aria-expanded', $(this).hasClass('is-active') ? 'true' : 'false');
 	});
 
 	// UAT978 block
@@ -131,6 +132,9 @@ $(document).ready(function () {
 			break;
 	}
 
+	markCurrentOptions();
+	closeDropdowns();
+
 	// Display the images for the supplied time frame.
 	switchView($timeFrame);
 
@@ -141,9 +145,9 @@ $(document).ready(function () {
 
 	$(".report-period").on('click', function(){
 		$(".report-period").removeClass("is-active");
-		switchView($(this).children("label").attr("for"));
+		switchView($(this).data("value"));
 		$(this).addClass("is-active");
-		setCookie('report_period', $(this).children("label").attr("for"));
+		setCookie('report_period', $(this).data("value"));
 	});
 
 	$(".range-unit").on('click', function(){
@@ -172,29 +176,104 @@ $(document).ready(function () {
 
 	setGraphLinkClickCB();
 
-	$(".modal-close").on('click', function(){
-		document.documentElement.classList.remove('is-clipped');
-		$(".modal").removeClass("is-active");
+	$(".modal-close, .modal-background").on('click', closeModal);
+
+	// the dropdowns open on mouse hover, and also on click, Enter and Space
+	// for touch screens and keyboards
+	$(".navbar-link").on('click', function(){
+		var open = $(this).attr('aria-expanded') !== 'true';
+		closeDropdowns();
+		if (open) {
+			$(this).siblings('.navbar-dropdown').removeClass('is-hidden-mobile');
+			$(this).parent().addClass('is-active');
+			$(this).attr('aria-expanded', 'true');
+			$(this).siblings('.navbar-dropdown').find('.navbar-item').attr('tabindex', '0');
+		}
 	});
 
-	$(".navbar-link").on('click', function(){
-		$(this).siblings().toggleClass('is-hidden-mobile');
+	// an option is chosen: mark it and close its dropdown
+	$(".navbar-dropdown .navbar-item").on('click', function(){
+		markCurrentOptions();
+		var link = $(this).closest('.has-dropdown').children('.navbar-link');
+		closeDropdowns();
+		link.trigger('focus');
+	});
+
+	// Esc closes the dropdown and puts the focus back on its button
+	$(".has-dropdown").on('keydown', function(e){
+		if (e.key === 'Escape' && $(this).hasClass('is-active')) {
+			e.stopPropagation();
+			closeDropdowns();
+			$(this).children('.navbar-link').trigger('focus');
+		}
+	});
+
+	// a click outside closes the open dropdown
+	$(document).on('click', function(e){
+		if ($(e.target).closest('.has-dropdown').length === 0) {
+			closeDropdowns();
+		}
 	});
 });
 
+function closeDropdowns() {
+	$(".has-dropdown").removeClass('is-active');
+	$(".navbar-dropdown").addClass('is-hidden-mobile');
+	$(".navbar-link").attr('aria-expanded', 'false');
+	// the options of closed dropdowns are skipped by Tab
+	$(".navbar-dropdown .navbar-item").attr('tabindex', '-1');
+}
+
+// screen readers announce the current choice of each dropdown
+function markCurrentOptions() {
+	$(".navbar-dropdown .navbar-item").each(function(){
+		if ($(this).hasClass('is-active')) {
+			$(this).attr('aria-current', 'true');
+		} else {
+			$(this).removeAttr('aria-current');
+		}
+	});
+}
+
+// the graph which opened the full size view, it gets the focus back
+var modalOpener = null;
+
+function closeModal() {
+	document.documentElement.classList.remove('is-clipped');
+	$(".modal").removeClass("is-active");
+	$(document).off('keyup.modal');
+	if (modalOpener) {
+		modalOpener.trigger('focus');
+		modalOpener = null;
+	}
+}
+
 function setGraphLinkClickCB() {
-	$(".graph-link").on('click', function(){
+	// graphs open the full size view with a click, Enter or Space
+	$(".graph-link").attr('tabindex', '0').attr('role', 'button')
+		.each(function(){
+			$(this).attr('aria-label', 'Open full size: ' + $(this).find('img').attr('alt'));
+		});
+	$(".graph-link").off('click.graph keydown.graph');
+	$(".graph-link").on('keydown.graph', function(e){
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			$(this).trigger('click');
+		}
+	});
+	$(".graph-link").on('click.graph', function(){
 		var img = $(this).children('figure').children('img');
 		var modal = $("#modal-of-image");
+		modalOpener = $(this);
 		document.documentElement.classList.add('is-clipped');
 		modal.attr('src', img.attr('src'));
 		modal.attr('alt', img.attr('alt'));
-		$("#modal-main").addClass('is-active');
+		$("#modal-main").attr('aria-label', img.attr('alt')).addClass('is-active');
+		$("#modal-main .modal-close").trigger('focus');
 
-		$(document).on('keyup', function(e){
-			if (e.keyCode === 27) {
-				$('.modal-close').click();	// Esc
-				$(document).off('keyup');
+		$(document).off('keyup.modal').on('keyup.modal', function(e){
+			if (e.key === 'Escape') {
+				closeModal();
 			}
 		});
 	});

@@ -128,7 +128,7 @@ while true; do
 	## 12hr work
 	if [ "$now" -ge "$TIMEOUT_12h" ]; then
 		gen_graphs 12h &
-		TIMEOUT_24h=$((TIMEOUT_12h+PERIOD_12h))
+		TIMEOUT_12h=$((TIMEOUT_12h+PERIOD_12h))
 	fi
 
 	## 24hr work

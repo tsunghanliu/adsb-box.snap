@@ -119,6 +119,7 @@ alias.url += (
     # web settings page, config-admin must be prior of config
     "/cgi-bin/config-admin" => "$SNAP/bin/settings-cgi",
     "/cgi-bin/config" => "$SNAP/bin/settings-cgi",
+    "/cgi-bin/graphs-wanted" => "$SNAP/bin/graphs-wanted-cgi",
 )
 
 # CGI programs get a clean environment, pass what snapctl and the scripts need

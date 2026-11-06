@@ -137,6 +137,7 @@ $(document).ready(function () {
 
 	// Display the images for the supplied time frame.
 	switchView($timeFrame);
+	refreshSoon();
 
 	// Refresh images contained within the page every X milliseconds.
 	window.setInterval(function() {
@@ -146,6 +147,7 @@ $(document).ready(function () {
 	$(".report-period").on('click', function(){
 		$(".report-period").removeClass("is-active");
 		switchView($(this).data("value"));
+		refreshSoon();
 		$(this).addClass("is-active");
 		setCookie('report_period', $(this).data("value"));
 	});
@@ -215,6 +217,17 @@ $(document).ready(function () {
 		}
 	});
 });
+
+// graphs are drawn on demand: after the page is opened or the period is
+// changed, reload the images a few times sooner to show the new graphs
+var refreshSoonTimers = [];
+
+function refreshSoon() {
+	$.each(refreshSoonTimers, function(i, t) { window.clearTimeout(t); });
+	refreshSoonTimers = $.map([10, 20, 30], function(s) {
+		return window.setTimeout(function() { switchView($timeFrame); }, s * 1000);
+	});
+}
 
 function closeDropdowns() {
 	$(".has-dropdown").removeClass('is-active');
@@ -401,6 +414,10 @@ function switchNetBandwidthGraph(nic) {
 function switchView(newTimeFrame) {
 	// Set the the $timeFrame variable to the one selected.
 	$timeFrame = newTimeFrame;
+
+	// tell graphs-gend that the graphs of this period are viewed, so they are
+	// drawn on demand
+	$.ajax({ url: '/cgi-bin/graphs-wanted', data: { period: $timeFrame } });
 
 	// Set the timestamp variable to be used in querystring.
 	$timestamp = new Date().getTime() / 1000

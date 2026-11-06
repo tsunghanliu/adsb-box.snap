@@ -179,6 +179,19 @@ It's not allow to change the configuration of lighttpd currently.
 
 ### performance graphs
 
+To save CPU, the graphs are drawn on demand: only while the **Performance Graphs** page is open, for the report period being viewed. They are redrawn at the same intervals as before (e.g. every 5 minutes for the hourly graphs, every 15 minutes for the daily graphs) and stop 5 minutes after the page is closed. When the page is opened after a while, it shows the old graphs first; the new ones appear within about 10-20 seconds.
+
+On a Raspberry Pi 4B, this lowered the overall CPU utilization (all 4 cores, see the CPU graph of the Performance Graphs page) from about 19% to about 9% while nobody views the graphs. Drawing all graphs on schedule takes about 7% of one core.
+
+To draw the graphs of all report periods on schedule, even if nobody views them:
+``` sh
+$ sudo adsb-box.config set graphs.always-generate=1
+# back to on demand
+$ sudo adsb-box.config set graphs.always-generate=0
+```
+
+Installations updated from an older version keep drawing on schedule (`graphs.always-generate` is set to `1` once, at the first update). New installations draw on demand.
+
 Without a 978MHz receiver (`receiver.dump978.index` and `receiver.dump978.serial` are not set), the UAT graphs are not drawn.
 
 ### collectd

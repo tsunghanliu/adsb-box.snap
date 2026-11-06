@@ -71,6 +71,7 @@ opensky-network.username|username|openskyd|username of OpenSky Network|OpenSky u
 opensky-network.serial|int|openskyd|serial of OpenSky Network feeder|OpenSky serial|Accounts
 lighttpd.port|port|lighttpd|port of the web interface|Web port|Web interface
 lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)|Localhost access log|Web interface
+graphs.always-generate|bool|graphs-gend|generate graphs on schedule even if nobody views them, otherwise only on demand (0/1)|Always generate graphs|Web interface
 collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache|RRD cache timeout|collectd
 collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush|RRD cache flush|collectd
 collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout|RRD random timeout|collectd

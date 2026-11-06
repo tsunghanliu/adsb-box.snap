@@ -1,0 +1,6 @@
+#!/bin/sh
+# Fresh installations draw the graphs on demand (graphs.always-generate is not
+# set), mark the migration in post-refresh as done.
+touch "$SNAP_COMMON/graphs-mode-migrated"
+
+exit 0

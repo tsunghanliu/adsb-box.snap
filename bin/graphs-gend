@@ -77,6 +77,13 @@ gen_graphs()
 	if [ "$ENABLE_LOG" != "0" ]; then
 		echo "[$(date +"%F %T")] run cmd, arg=$*"
 	fi
+	# without a 978MHz receiver, skip the UAT graphs (the same check as
+	# bin/collectd and bin/lighttpd)
+	if [ -z "$(snapctl get receiver.dump978.index)" ] && [ -z "$(snapctl get receiver.dump978.serial)" ]; then
+		export SKIP_UAT=1
+	else
+		unset SKIP_UAT
+	fi
 	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" 0.7 >/dev/null 2>&1
 }
 

@@ -177,6 +177,10 @@ Use 0 instead of 1 to disable logging again.
 
 It's not allow to change the configuration of lighttpd currently.
 
+### performance graphs
+
+Without a 978MHz receiver (`receiver.dump978.index` and `receiver.dump978.serial` are not set), the UAT graphs are not drawn.
+
 ### collectd
 To reduce the number/overhead of rrd file updating, the cache mechanism of rrdtool plugin is enabled. _The trade off is that the graphs kind of "drag behind" and that more memory is used._ The [manual of collectd](https://collectd.org/documentation/manpages/collectd.conf.5.shtml#plugin_rrdtool) provides more explanations. To disable or adjust the settings, please refer to the following commands:
 ``` sh

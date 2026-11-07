@@ -120,6 +120,10 @@ With a 978MHz receiver, the UAT map (SkyAware978) is at `http://<your-device-ip>
 
 On narrow screens (phones), the tabs show only their icons. The pages can be used with the keyboard and screen readers.
 
+### Dark mode
+
+The pages follow the light or dark setting of your system. To choose a theme, use the switch on the right of the tab bar: **Auto** (follow the system, the default), **Light** or **Dark**. Each browser remembers its own choice, and the graphs and settings pages use it too, also when they are opened on their own. The Skyview map and the UAT map (FlightAware pages) stay light.
+
 ### Performance graphs
 
 To save CPU, the graphs are drawn on demand: only while the **Performance Graphs** page is open, for the report period being viewed. They are redrawn at the same intervals as the schedule (e.g. every 5 minutes for the hourly graphs, every 15 minutes for the daily graphs) and are no longer drawn 5 minutes after the page is closed. When the page is opened after a while, it shows the old graphs first; the new ones appear within about 10-20 seconds.
@@ -139,6 +143,12 @@ $ sudo adsb-box.config set graphs.always-generate=0
 ```
 
 Installations updated from an older version keep drawing on schedule (`graphs.always-generate` is set to `1` once, at the first update). New installations draw on demand.
+
+In dark mode, the graphs are drawn in the dark colour scheme of graphs1090. Each colour scheme is drawn only when it is viewed, so a theme switch shows the other graphs within about 10-20 seconds the first time. With `graphs.always-generate=1`, only one colour scheme is drawn on schedule, the light one by default; the other one is still drawn on demand. To draw the dark graphs on schedule instead:
+
+``` sh
+$ sudo adsb-box.config set graphs.default-dark-theme=1
+```
 
 Without a 978MHz receiver (`receiver.dump978.index` and `receiver.dump978.serial` are not set), the UAT graphs are not drawn.
 

@@ -4,22 +4,47 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>ADS-B Box Settings</title>
-	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
+	<link rel="stylesheet" href="/css/bulma-1.0.4.min.css">
+	<script src="/js/theme.js"></script>
 	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
 	<style type="text/css">
+		/* colours of our own: light, and dark (forced or following the system) */
+		:root {
+			--adsb-focus: #485fc7;
+			--adsb-help: #4a4a4a;
+			--adsb-error: #cc0f35;
+			--adsb-key: #257942;
+			--adsb-key-bg: #effaf5;
+		}
+		:root[data-theme="dark"] {
+			--adsb-focus: #8c9cff;
+			--adsb-help: #c8ccd4;
+			--adsb-error: #ff8fa3;
+			--adsb-key: #8fe0b5;
+			--adsb-key-bg: #1d3a2b;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--adsb-focus: #8c9cff;
+				--adsb-help: #c8ccd4;
+				--adsb-error: #ff8fa3;
+				--adsb-key: #8fe0b5;
+				--adsb-key-bg: #1d3a2b;
+			}
+		}
 		#settings .help {
 			font-size: 1rem;
 		}
 		#settings .help:not(.is-danger) {
-			color: #4a4a4a;
+			color: var(--adsb-help);
 		}
 		/* errors and read-only values need a 4.5:1 contrast */
 		#settings .help.is-danger {
-			color: #cc0f35;
+			color: var(--adsb-error);
 		}
 		#settings .input[disabled],
 		#settings .select select[disabled] {
-			color: #4a4a4a;
+			color: var(--adsb-help);
 		}
 		#settings fieldset.box legend {
 			float: left;
@@ -32,7 +57,7 @@
 		}
 		#settings input[type="checkbox"]:focus-visible,
 		.button:focus-visible {
-			outline: 3px solid #485fc7;
+			outline: 3px solid var(--adsb-focus);
 			outline-offset: 2px;
 		}
 		#message-live .message {
@@ -41,15 +66,15 @@
 		#settings .setting-key {
 			font-family: monospace;
 			font-weight: bold;
-			color: #257942;
-			background-color: #effaf5;
+			color: var(--adsb-key);
+			background-color: var(--adsb-key-bg);
 			padding: 0.1em 0.35em;
 			border-radius: 3px;
 		}
 	</style>
 </head>
 <body>
-	<section class="section">
+	<main class="section">
 		<div class="container">
 			<div class="level">
 				<div class="level-left">
@@ -70,7 +95,7 @@
 			<div id="message-live" role="status" aria-live="polite"><div class="message is-hidden" id="message"><div class="message-body"></div></div></div>
 			<form id="settings"></form>
 		</div>
-	</section>
+	</main>
 
 	<script src="/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript">

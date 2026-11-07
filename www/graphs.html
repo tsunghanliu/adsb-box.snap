@@ -4,9 +4,38 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Performance Graphs</title>
-	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
+	<link rel="stylesheet" href="/css/bulma-1.0.4.min.css">
+	<script src="/js/theme.js"></script>
 	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
 	<style>
+		/* colours of our own: light, and dark (forced or following the system) */
+		:root {
+			--adsb-focus: #485fc7;
+			--adsb-heading-bg: #00796b;
+			--adsb-heading-text: #fff;
+		}
+		:root[data-theme="dark"] {
+			--adsb-focus: #8c9cff;
+			--adsb-heading-bg: #004d40;
+			--adsb-heading-text: #e8f5f2;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--adsb-focus: #8c9cff;
+				--adsb-heading-bg: #004d40;
+				--adsb-heading-text: #e8f5f2;
+			}
+		}
+		/* tiles were removed in Bulma 1.0, the rules of Bulma 0.9.3 */
+		.tile { align-items: stretch; display: block; flex-basis: 0; flex-grow: 1; flex-shrink: 1; min-height: min-content; }
+		.tile.is-ancestor { margin-left: -.75rem; margin-right: -.75rem; margin-top: -.75rem; }
+		.tile.is-ancestor:last-child { margin-bottom: -.75rem; }
+		.tile.is-ancestor:not(:last-child) { margin-bottom: .75rem; }
+		.tile.is-child { margin: 0 !important; }
+		.tile.is-parent { padding: .75rem; }
+		@media screen and (min-width: 769px), print {
+			.tile:not(.is-child) { display: flex; }
+		}
 		/* full size graph: scroll inside the view when it is wider than the screen */
 		.modal-content {
 			width: fit-content;
@@ -33,12 +62,12 @@
 		}
 		/* section headings: white on a darker teal for a 4.5:1 contrast */
 		.notification.graph-heading {
-			background-color: #00796b;
-			color: #fff;
+			background-color: var(--adsb-heading-bg);
+			color: var(--adsb-heading-text);
 		}
 		.notification.graph-heading .title,
 		.notification.graph-heading .subtitle {
-			color: #fff;
+			color: var(--adsb-heading-text);
 		}
 		.sr-only {
 			position: absolute;
@@ -56,7 +85,7 @@
 			display: none;
 		}
 		.navbar button:focus-visible {
-			outline: 3px solid #485fc7;
+			outline: 3px solid var(--adsb-focus);
 			outline-offset: -3px;
 		}
 	</style>

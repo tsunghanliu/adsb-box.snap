@@ -72,6 +72,7 @@ opensky-network.serial|int|openskyd|serial of OpenSky Network feeder|OpenSky ser
 lighttpd.port|port|lighttpd|port of the web interface|Web port|Web interface
 lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)|Localhost access log|Web interface
 graphs.always-generate|bool|graphs-gend|generate graphs on schedule even if nobody views them, otherwise only on demand (0/1)|Always generate graphs|Web interface
+graphs.default-dark-theme|bool|graphs-gend|with graphs.always-generate=1, draw the graphs on schedule in the dark colour scheme instead of the light one (0/1)|Dark graphs by default|Web interface
 collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache|RRD cache timeout|collectd
 collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush|RRD cache flush|collectd
 collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout|RRD random timeout|collectd

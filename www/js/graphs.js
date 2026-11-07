@@ -139,6 +139,15 @@ $(document).ready(function () {
 	switchView($timeFrame);
 	refreshSoon();
 
+	// another theme: show its graphs at once, they may be drawn first
+	var shownTheme = graphsDir();
+	document.addEventListener('adsb-themechange', function() {
+		if (graphsDir() === shownTheme) return;
+		shownTheme = graphsDir();
+		switchView($timeFrame);
+		refreshSoon();
+	});
+
 	// Refresh images contained within the page every X milliseconds.
 	window.setInterval(function() {
 		switchView($timeFrame)
@@ -221,6 +230,11 @@ $(document).ready(function () {
 // graphs are drawn on demand: after the page is opened or the period is
 // changed, reload the images a few times sooner to show the new graphs
 var refreshSoonTimers = [];
+
+// the graphs are drawn in the theme of the page (js/theme.js)
+function graphsDir() {
+	return window.adsbTheme && adsbTheme.effective() === 'dark' ? 'graphs/dark/' : 'graphs/';
+}
 
 function refreshSoon() {
 	$.each(refreshSoonTimers, function(i, t) { window.clearTimeout(t); });
@@ -417,7 +431,7 @@ function switchView(newTimeFrame) {
 
 	// tell graphs-gend that the graphs of this period are viewed, so they are
 	// drawn on demand
-	$.ajax({ url: '/cgi-bin/graphs-wanted', data: { period: $timeFrame } });
+	$.ajax({ url: '/cgi-bin/graphs-wanted', data: { period: $timeFrame, theme: window.adsbTheme ? adsbTheme.effective() : 'light' } });
 
 	// Set the timestamp variable to be used in querystring.
 	$timestamp = new Date().getTime() / 1000
@@ -425,90 +439,90 @@ function switchView(newTimeFrame) {
 	// Display images for the requested time frame and create links to full sized images for the requested time frame.
 	var element;
 
-	$("#dump1090-local_trailing_rate-image").attr("src", "graphs/dump1090-" + $hostName + "-local_trailing_rate-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-local_trailing_rate-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-local_trailing_rate-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-local_rate-image").attr("src", "graphs/dump1090-" + $hostName + "-local_rate-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-local_rate-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-local_rate-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-aircraft_message_rate-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft_message_rate-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-aircraft_message_rate-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-aircraft_message_rate-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-aircraft-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-aircraft-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-aircraft-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-tracks-image").attr("src", "graphs/dump1090-" + $hostName + "-tracks-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-tracks-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-tracks-" + $timeFrame + ".png?time=" + $timestamp);
 
 	element =  document.getElementById('dump1090-range_imperial_nautical-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#dump1090-range_imperial_nautical-image").attr("src", "graphs/dump1090-" + $hostName + "-range_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-range_imperial_nautical-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
 	element =  document.getElementById('dump1090-range_imperial_statute-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#dump1090-range_imperial_statute-image").attr("src", "graphs/dump1090-" + $hostName + "-range_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-range_imperial_statute-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
 	element =  document.getElementById('dump1090-range_metric-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#dump1090-range_metric-image").attr("src", "graphs/dump1090-" + $hostName + "-range_metric-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-range_metric-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_metric-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#dump1090-signal-image").attr("src", "graphs/dump1090-" + $hostName + "-signal-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-signal-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-signal-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-cpu-image").attr("src", "graphs/dump1090-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-cpu-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-misc-image").attr("src", "graphs/dump1090-" + $hostName + "-misc-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-misc-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-misc-" + $timeFrame + ".png?time=" + $timestamp);
 
 	if (has_uat == true) {
-		$("#dump1090-messages_978-image").attr("src", "graphs/dump1090-" + $hostName + "-messages_978-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-messages_978-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-messages_978-" + $timeFrame + ".png?time=" + $timestamp);
 
-		$("#dump1090-aircraft_978-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft_978-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-aircraft_978-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-aircraft_978-" + $timeFrame + ".png?time=" + $timestamp);
 
 		element =  document.getElementById('dump1090-range_978_imperial_nautical-image');
 		if (typeof(element) != 'undefined' && element != null) {
-			$("#dump1090-range_978_imperial_nautical-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
+			$("#dump1090-range_978_imperial_nautical-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_978_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
 		}
 
 		element =  document.getElementById('dump1090-range_978_imperial_statute-image');
 		if (typeof(element) != 'undefined' && element != null) {
-			$("#dump1090-range_978_imperial_statute-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
+			$("#dump1090-range_978_imperial_statute-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_978_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
 		}
 
 		element =  document.getElementById('dump1090-range_978_metric-image');
 		if (typeof(element) != 'undefined' && element != null) {
-			$("#dump1090-range_978_metric-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_metric-" + $timeFrame + ".png?time=" + $timestamp);
+			$("#dump1090-range_978_metric-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_978_metric-" + $timeFrame + ".png?time=" + $timestamp);
 		}
 
-		$("#dump1090-signal_978-image").attr("src", "graphs/dump1090-" + $hostName + "-signal_978-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-signal_978-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-signal_978-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#system-cpu-image").attr("src", "graphs/system-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-cpu-image").attr("src", graphsDir() + "system-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 
 	element =  document.getElementById('system-network_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-network_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-network_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-network_bandwidth-image").attr("src", graphsDir() + "system-" + $hostName + "-network_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 	element =  document.getElementById('system-eth0_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-eth0_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-eth0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-eth0_bandwidth-image").attr("src", graphsDir() + "system-" + $hostName + "-eth0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 	element =  document.getElementById('system-wlan0_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-wlan0_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-wlan0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-wlan0_bandwidth-image").attr("src", graphsDir() + "system-" + $hostName + "-wlan0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#system-memory-image").attr("src", "graphs/system-" + $hostName + "-memory-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-memory-image").attr("src", graphsDir() + "system-" + $hostName + "-memory-" + $timeFrame + ".png?time=" + $timestamp);
 
 	element =  document.getElementById('system-temperature_imperial-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-temperature_imperial-image").attr("src", "graphs/system-" + $hostName + "-temperature_imperial-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-temperature_imperial-image").attr("src", graphsDir() + "system-" + $hostName + "-temperature_imperial-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 	element =  document.getElementById('system-temperature_metric-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-temperature_metric-image").attr("src", "graphs/system-" + $hostName + "-temperature_metric-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-temperature_metric-image").attr("src", graphsDir() + "system-" + $hostName + "-temperature_metric-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#system-df_root-image").attr("src", "graphs/system-" + $hostName + "-df_root-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-df_root-image").attr("src", graphsDir() + "system-" + $hostName + "-df_root-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#system-disk_io_iops-image").attr("src", "graphs/system-" + $hostName + "-disk_io_iops-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-disk_io_iops-image").attr("src", graphsDir() + "system-" + $hostName + "-disk_io_iops-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#system-disk_io_octets-image").attr("src", "graphs/system-" + $hostName + "-disk_io_octets-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-disk_io_octets-image").attr("src", graphsDir() + "system-" + $hostName + "-disk_io_octets-" + $timeFrame + ".png?time=" + $timestamp);
 }
 

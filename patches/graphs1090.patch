@@ -27,21 +27,22 @@ index 65e1ea1..ef20a19 100644
      try:
          with closing(urlopen(url + '/data/stats.json', None, 5.0)) as stats_file:
 diff --git a/graphs1090.sh b/graphs1090.sh
-index bd26321..7ba4a74 100755
+index bd26321..003551f 100755
 --- a/graphs1090.sh
 +++ b/graphs1090.sh
-@@ -1,6 +1,9 @@
+@@ -1,6 +1,10 @@
  #!/bin/bash
  
 -DOCUMENTROOT=/run/graphs1090
-+DOCUMENTROOT=/tmp/graphs1090
++# graphs-gend can choose the output directory and the colour scheme
++DOCUMENTROOT=${GRAPHS1090_DOCUMENTROOT:-/tmp/graphs1090}
 +if [ ! -d ${DOCUMENTROOT} ]; then
 +	mkdir -p ${DOCUMENTROOT}
 +fi
  
  renice -n 20 -p $$
  
-@@ -61,17 +64,27 @@ AYELLOW=ffcc00
+@@ -61,17 +65,30 @@ AYELLOW=ffcc00
  AGRAY=dddddd
  
  
@@ -49,15 +50,18 @@ index bd26321..7ba4a74 100755
 +DB=$SNAP_COMMON/var/lib/collectd/rrd
 +
 +source $SNAP/etc/default/graphs1090
- 
--source /etc/default/graphs1090
++if [ -n "$GRAPHS1090_COLORSCHEME" ]; then
++    colorscheme=$GRAPHS1090_COLORSCHEME
++fi
++
 +# use rrd db in tmp if exist
 +PERIOD_BACKUP=$(snapctl get collectd.rrd-backup-period)
 +PERIOD_BACKUP=${PERIOD_BACKUP:-0}
 +if [ "$PERIOD_BACKUP" -ne 0 ]; then
 +    DB=/tmp/rrd
 +fi
-+
+ 
+-source /etc/default/graphs1090
 +source $SNAP_DATA/disk.conf
 +DFDIR=$(echo $MOUNTPOINT | tr '/' '-')
  
@@ -74,7 +78,7 @@ index bd26321..7ba4a74 100755
  
  if [[ "$colorscheme" == "dark" ]]; then
      CANVAS=161618
-@@ -114,24 +127,22 @@ if [[ "$colorscheme" == "dark" ]]; then
+@@ -114,24 +131,22 @@ if [[ "$colorscheme" == "dark" ]]; then
      AGRAY=2a2e31
  fi
  
@@ -102,7 +106,7 @@ index bd26321..7ba4a74 100755
  fi
  
  
-@@ -559,6 +570,9 @@ memory_graph() {
+@@ -559,6 +574,9 @@ memory_graph() {
  
  network_graph() {
  	prefunc
@@ -112,7 +116,7 @@ index bd26321..7ba4a74 100755
  	if [[ $(ls ${DB}/localhost | grep -v 'interface-lo' | grep interface -c) < 2 ]]
  	then
  		interfaces=(\
-@@ -1297,13 +1311,25 @@ dump1090_graphs() {
+@@ -1297,13 +1315,25 @@ dump1090_graphs() {
  	local_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  	local_trailing_rate_graph ${DOCUMENTROOT}/dump1090-$2-local_trailing_rate-$4.png ${DB}/$1/dump1090-$2 "$3" "$4" "$5"
  
@@ -142,7 +146,7 @@ index bd26321..7ba4a74 100755
  		978_aircraft ${DOCUMENTROOT}/dump1090-$2-aircraft_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		978_messages ${DOCUMENTROOT}/dump1090-$2-messages_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
  		signal_graph ${DOCUMENTROOT}/dump1090-$2-signal_978-$4.png ${DB}/$1/dump1090-$2 "UAT" "$4" "$5"
-@@ -1326,14 +1352,25 @@ dump1090_graphs() {
+@@ -1326,14 +1356,25 @@ dump1090_graphs() {
  
  system_graphs() {
  	cpu_graph ${DOCUMENTROOT}/system-$2-cpu-$4.png ${DB}/$1/aggregation-cpu-average "$3" "$4" "$5"

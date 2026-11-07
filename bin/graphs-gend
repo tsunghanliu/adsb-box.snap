@@ -72,7 +72,8 @@ PERIOD_BACKUP=${PERIOD_BACKUP:-0}
 # create output directory which is defined in make-collectd-graphs.sh
 mkdir -p /tmp/graphs
 
-# draw all graphs of a period ($1), $2 is the pause between the graphs
+# draw all graphs of a period ($1) in a theme ($3: light or dark), $2 is the
+# pause between the graphs
 gen_graphs()
 {
 	if [ "$ENABLE_LOG" != "0" ]; then
@@ -85,27 +86,40 @@ gen_graphs()
 	else
 		unset SKIP_UAT
 	fi
+	if [ "$3" = "dark" ]; then
+		export GRAPHS1090_COLORSCHEME=dark GRAPHS1090_DOCUMENTROOT=$GRAPHS_DIR/dark
+	else
+		export GRAPHS1090_COLORSCHEME=default GRAPHS1090_DOCUMENTROOT=$GRAPHS_DIR
+	fi
 	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" "$2" >/dev/null 2>&1
 }
 
-# graphs.always-generate=1: draw the graphs of every period on schedule;
-# otherwise draw only the periods which the graphs page asked for recently
+# graphs.always-generate=1: draw the graphs of every period on schedule in the
+# default theme (graphs.default-dark-theme); otherwise, and for the other
+# theme, draw only the periods and themes which the graphs page asked for
+# recently
 ALWAYS_GENERATE=$(snapctl get graphs.always-generate)
+DEFAULT_THEME=light
+[ "$(snapctl get graphs.default-dark-theme)" = "1" ] && DEFAULT_THEME=dark
 WANTED_DIR=/tmp/graphs-wanted	# written by bin/graphs-wanted-cgi
-GRAPHS_DIR=/tmp/graphs1090	# DOCUMENTROOT of graphs1090.sh
+GRAPHS_DIR=/tmp/graphs1090	# light graphs, the dark ones are in $GRAPHS_DIR/dark
 IDLE_TIMEOUT=300
 
-# wanted PERIOD: somebody viewed the graphs of PERIOD in the last 5 minutes
+# wanted PERIOD THEME: somebody viewed the graphs of PERIOD in THEME in the
+# last 5 minutes
 wanted()
 {
-	[ -f "$WANTED_DIR/$1" ] && [ $((now - $(stat -c %Y "$WANTED_DIR/$1"))) -lt "$IDLE_TIMEOUT" ]
+	f="$WANTED_DIR/$1-$2"
+	[ -f "$f" ] && [ $((now - $(stat -c %Y "$f"))) -lt "$IDLE_TIMEOUT" ]
 }
 
-# stale PERIOD INTERVAL: the graphs of PERIOD are missing or older than INTERVAL
+# stale PERIOD THEME INTERVAL: the graphs of PERIOD in THEME are missing or
+# older than INTERVAL
 stale()
 {
 	img="$GRAPHS_DIR/dump1090-localhost-aircraft-$1.png"
-	[ ! -f "$img" ] || [ $((now - $(stat -c %Y "$img"))) -ge "$2" ]
+	[ "$2" = "dark" ] && img="$GRAPHS_DIR/dark/dump1090-localhost-aircraft-$1.png"
+	[ ! -f "$img" ] || [ $((now - $(stat -c %Y "$img"))) -ge "$3" ]
 }
 
 # check_period PERIOD: draw the graphs of PERIOD if needed
@@ -118,20 +132,22 @@ check_period()
 		eval "TIMEOUT_$1=$((timeout + interval))"
 	fi
 
-	if [ "$ALWAYS_GENERATE" = "1" ]; then
-		[ "$due" -eq 1 ] && gen_graphs "$1" 0.7 &
-		return 0
-	fi
+	for theme in light dark; do
+		if [ "$ALWAYS_GENERATE" = "1" ] && [ "$theme" = "$DEFAULT_THEME" ]; then
+			[ "$due" -eq 1 ] && gen_graphs "$1" 0.7 "$theme" &
+			continue
+		fi
 
-	wanted "$1" || return 0
-	# while somebody views the graphs, redraw them at the same intervals as
-	# the schedule; draw at once without pauses if they are missing or much
-	# older (first view after a while)
-	if stale "$1" $((interval * 2)); then
-		gen_graphs "$1" 0 &
-	elif stale "$1" "$interval"; then
-		gen_graphs "$1" 0.7 &
-	fi
+		wanted "$1" "$theme" || continue
+		# while somebody views the graphs, redraw them at the same intervals
+		# as the schedule; draw at once without pauses if they are missing or
+		# much older (first view after a while)
+		if stale "$1" "$theme" $((interval * 2)); then
+			gen_graphs "$1" 0 "$theme" &
+		elif stale "$1" "$theme" "$interval"; then
+			gen_graphs "$1" 0.7 "$theme" &
+		fi
+	done
 }
 
 init_timeouts()

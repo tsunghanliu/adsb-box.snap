@@ -323,20 +323,27 @@ cmd_set() {
 
 	changed=""
 	services=""
-	# TODO: values are validated above, but if snapctl fails in the middle,
-	# keys written before are not rolled back.
-	for kv in "$@"; do
+	# write all changes with one snapctl call ("key!" unsets a key), snapd
+	# saves them all or none
+	n=$#
+	while [ "$n" -gt 0 ]; do
+		kv="$1"
+		shift
+		n=$((n - 1))
 		k="${kv%%=*}"
 		v="${kv#*=}"
 		[ "$(snapctl get "$k")" = "$v" ] && continue
 		if [ -z "$v" ]; then
-			snapctl unset "$k" || die "failed to unset $k"
+			set -- "$@" "$k!"
 		else
-			snapctl set "$k=$v" || die "failed to set $k"
+			set -- "$@" "$k=$v"
 		fi
 		changed="$changed $k"
 		services="$services $(key_field "$k" 3)"
 	done
+	if [ $# -gt 0 ]; then
+		snapctl set "$@" || die "failed to save the settings, nothing was changed"
+	fi
 
 	services=$(echo "$services" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')
 	# restart lighttpd last: from the web settings page, this script runs as

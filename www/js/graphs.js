@@ -41,6 +41,7 @@ $(document).ready(function () {
 		// Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
 		$(".navbar-burger").toggleClass("is-active");
 		$(".navbar-menu").toggleClass("is-active");
+		$(this).attr('aria-expanded', $(this).hasClass('is-active') ? 'true' : 'false');
 	});
 
 	// UAT978 block
@@ -131,8 +132,21 @@ $(document).ready(function () {
 			break;
 	}
 
+	markCurrentOptions();
+	closeDropdowns();
+
 	// Display the images for the supplied time frame.
 	switchView($timeFrame);
+	refreshSoon();
+
+	// another theme: show its graphs at once, they may be drawn first
+	var shownTheme = graphsDir();
+	document.addEventListener('adsb-themechange', function() {
+		if (graphsDir() === shownTheme) return;
+		shownTheme = graphsDir();
+		switchView($timeFrame);
+		refreshSoon();
+	});
 
 	// Refresh images contained within the page every X milliseconds.
 	window.setInterval(function() {
@@ -141,9 +155,10 @@ $(document).ready(function () {
 
 	$(".report-period").on('click', function(){
 		$(".report-period").removeClass("is-active");
-		switchView($(this).children("label").attr("for"));
+		switchView($(this).data("value"));
+		refreshSoon();
 		$(this).addClass("is-active");
-		setCookie('report_period', $(this).children("label").attr("for"));
+		setCookie('report_period', $(this).data("value"));
 	});
 
 	$(".range-unit").on('click', function(){
@@ -172,29 +187,120 @@ $(document).ready(function () {
 
 	setGraphLinkClickCB();
 
-	$(".modal-close").on('click', function(){
-		document.documentElement.classList.remove('is-clipped');
-		$(".modal").removeClass("is-active");
+	$(".modal-close, .modal-background").on('click', closeModal);
+
+	// the dropdowns open on mouse hover, and also on click, Enter and Space
+	// for touch screens and keyboards
+	$(".navbar-link").on('click', function(){
+		var open = $(this).attr('aria-expanded') !== 'true';
+		closeDropdowns();
+		if (open) {
+			$(this).siblings('.navbar-dropdown').removeClass('is-hidden-mobile');
+			$(this).parent().addClass('is-active');
+			$(this).attr('aria-expanded', 'true');
+			$(this).siblings('.navbar-dropdown').find('.navbar-item').attr('tabindex', '0');
+		}
 	});
 
-	$(".navbar-link").on('click', function(){
-		$(this).siblings().toggleClass('is-hidden-mobile');
+	// an option is chosen: mark it and close its dropdown
+	$(".navbar-dropdown .navbar-item").on('click', function(){
+		markCurrentOptions();
+		var link = $(this).closest('.has-dropdown').children('.navbar-link');
+		closeDropdowns();
+		link.trigger('focus');
+	});
+
+	// Esc closes the dropdown and puts the focus back on its button
+	$(".has-dropdown").on('keydown', function(e){
+		if (e.key === 'Escape' && $(this).hasClass('is-active')) {
+			e.stopPropagation();
+			closeDropdowns();
+			$(this).children('.navbar-link').trigger('focus');
+		}
+	});
+
+	// a click outside closes the open dropdown
+	$(document).on('click', function(e){
+		if ($(e.target).closest('.has-dropdown').length === 0) {
+			closeDropdowns();
+		}
 	});
 });
 
+// graphs are drawn on demand: after the page is opened or the period is
+// changed, reload the images a few times sooner to show the new graphs
+var refreshSoonTimers = [];
+
+// the graphs are drawn in the theme of the page (js/theme.js)
+function graphsDir() {
+	return window.adsbTheme && adsbTheme.effective() === 'dark' ? 'graphs/dark/' : 'graphs/';
+}
+
+function refreshSoon() {
+	$.each(refreshSoonTimers, function(i, t) { window.clearTimeout(t); });
+	refreshSoonTimers = $.map([10, 20, 30], function(s) {
+		return window.setTimeout(function() { switchView($timeFrame); }, s * 1000);
+	});
+}
+
+function closeDropdowns() {
+	$(".has-dropdown").removeClass('is-active');
+	$(".navbar-dropdown").addClass('is-hidden-mobile');
+	$(".navbar-link").attr('aria-expanded', 'false');
+	// the options of closed dropdowns are skipped by Tab
+	$(".navbar-dropdown .navbar-item").attr('tabindex', '-1');
+}
+
+// screen readers announce the current choice of each dropdown
+function markCurrentOptions() {
+	$(".navbar-dropdown .navbar-item").each(function(){
+		if ($(this).hasClass('is-active')) {
+			$(this).attr('aria-current', 'true');
+		} else {
+			$(this).removeAttr('aria-current');
+		}
+	});
+}
+
+// the graph which opened the full size view, it gets the focus back
+var modalOpener = null;
+
+function closeModal() {
+	document.documentElement.classList.remove('is-clipped');
+	$(".modal").removeClass("is-active");
+	$(document).off('keyup.modal');
+	if (modalOpener) {
+		modalOpener.trigger('focus');
+		modalOpener = null;
+	}
+}
+
 function setGraphLinkClickCB() {
-	$(".graph-link").on('click', function(){
+	// graphs open the full size view with a click, Enter or Space
+	$(".graph-link").attr('tabindex', '0').attr('role', 'button')
+		.each(function(){
+			$(this).attr('aria-label', 'Open full size: ' + $(this).find('img').attr('alt'));
+		});
+	$(".graph-link").off('click.graph keydown.graph');
+	$(".graph-link").on('keydown.graph', function(e){
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			$(this).trigger('click');
+		}
+	});
+	$(".graph-link").on('click.graph', function(){
 		var img = $(this).children('figure').children('img');
 		var modal = $("#modal-of-image");
+		modalOpener = $(this);
 		document.documentElement.classList.add('is-clipped');
 		modal.attr('src', img.attr('src'));
 		modal.attr('alt', img.attr('alt'));
-		$("#modal-main").addClass('is-active');
+		$("#modal-main").attr('aria-label', img.attr('alt')).addClass('is-active');
+		$("#modal-main .modal-close").trigger('focus');
 
-		$(document).on('keyup', function(e){
-			if (e.keyCode === 27) {
-				$('.modal-close').click();	// Esc
-				$(document).off('keyup');
+		$(document).off('keyup.modal').on('keyup.modal', function(e){
+			if (e.key === 'Escape') {
+				closeModal();
 			}
 		});
 	});
@@ -323,96 +429,100 @@ function switchView(newTimeFrame) {
 	// Set the the $timeFrame variable to the one selected.
 	$timeFrame = newTimeFrame;
 
+	// tell graphs-gend that the graphs of this period are viewed, so they are
+	// drawn on demand
+	$.ajax({ url: '/cgi-bin/graphs-wanted', data: { period: $timeFrame, theme: window.adsbTheme ? adsbTheme.effective() : 'light' } });
+
 	// Set the timestamp variable to be used in querystring.
 	$timestamp = new Date().getTime() / 1000
 
 	// Display images for the requested time frame and create links to full sized images for the requested time frame.
 	var element;
 
-	$("#dump1090-local_trailing_rate-image").attr("src", "graphs/dump1090-" + $hostName + "-local_trailing_rate-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-local_trailing_rate-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-local_trailing_rate-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-local_rate-image").attr("src", "graphs/dump1090-" + $hostName + "-local_rate-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-local_rate-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-local_rate-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-aircraft_message_rate-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft_message_rate-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-aircraft_message_rate-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-aircraft_message_rate-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-aircraft-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-aircraft-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-aircraft-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-tracks-image").attr("src", "graphs/dump1090-" + $hostName + "-tracks-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-tracks-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-tracks-" + $timeFrame + ".png?time=" + $timestamp);
 
 	element =  document.getElementById('dump1090-range_imperial_nautical-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#dump1090-range_imperial_nautical-image").attr("src", "graphs/dump1090-" + $hostName + "-range_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-range_imperial_nautical-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
 	element =  document.getElementById('dump1090-range_imperial_statute-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#dump1090-range_imperial_statute-image").attr("src", "graphs/dump1090-" + $hostName + "-range_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-range_imperial_statute-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
 	element =  document.getElementById('dump1090-range_metric-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#dump1090-range_metric-image").attr("src", "graphs/dump1090-" + $hostName + "-range_metric-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-range_metric-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_metric-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#dump1090-signal-image").attr("src", "graphs/dump1090-" + $hostName + "-signal-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-signal-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-signal-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-cpu-image").attr("src", "graphs/dump1090-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-cpu-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#dump1090-misc-image").attr("src", "graphs/dump1090-" + $hostName + "-misc-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#dump1090-misc-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-misc-" + $timeFrame + ".png?time=" + $timestamp);
 
 	if (has_uat == true) {
-		$("#dump1090-messages_978-image").attr("src", "graphs/dump1090-" + $hostName + "-messages_978-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-messages_978-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-messages_978-" + $timeFrame + ".png?time=" + $timestamp);
 
-		$("#dump1090-aircraft_978-image").attr("src", "graphs/dump1090-" + $hostName + "-aircraft_978-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-aircraft_978-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-aircraft_978-" + $timeFrame + ".png?time=" + $timestamp);
 
 		element =  document.getElementById('dump1090-range_978_imperial_nautical-image');
 		if (typeof(element) != 'undefined' && element != null) {
-			$("#dump1090-range_978_imperial_nautical-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
+			$("#dump1090-range_978_imperial_nautical-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_978_imperial_nautical-" + $timeFrame + ".png?time=" + $timestamp);
 		}
 
 		element =  document.getElementById('dump1090-range_978_imperial_statute-image');
 		if (typeof(element) != 'undefined' && element != null) {
-			$("#dump1090-range_978_imperial_statute-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
+			$("#dump1090-range_978_imperial_statute-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_978_imperial_statute-" + $timeFrame + ".png?time=" + $timestamp);
 		}
 
 		element =  document.getElementById('dump1090-range_978_metric-image');
 		if (typeof(element) != 'undefined' && element != null) {
-			$("#dump1090-range_978_metric-image").attr("src", "graphs/dump1090-" + $hostName + "-range_978_metric-" + $timeFrame + ".png?time=" + $timestamp);
+			$("#dump1090-range_978_metric-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-range_978_metric-" + $timeFrame + ".png?time=" + $timestamp);
 		}
 
-		$("#dump1090-signal_978-image").attr("src", "graphs/dump1090-" + $hostName + "-signal_978-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#dump1090-signal_978-image").attr("src", graphsDir() + "dump1090-" + $hostName + "-signal_978-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#system-cpu-image").attr("src", "graphs/system-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-cpu-image").attr("src", graphsDir() + "system-" + $hostName + "-cpu-" + $timeFrame + ".png?time=" + $timestamp);
 
 	element =  document.getElementById('system-network_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-network_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-network_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-network_bandwidth-image").attr("src", graphsDir() + "system-" + $hostName + "-network_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 	element =  document.getElementById('system-eth0_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-eth0_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-eth0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-eth0_bandwidth-image").attr("src", graphsDir() + "system-" + $hostName + "-eth0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 	element =  document.getElementById('system-wlan0_bandwidth-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-wlan0_bandwidth-image").attr("src", "graphs/system-" + $hostName + "-wlan0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-wlan0_bandwidth-image").attr("src", graphsDir() + "system-" + $hostName + "-wlan0_bandwidth-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#system-memory-image").attr("src", "graphs/system-" + $hostName + "-memory-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-memory-image").attr("src", graphsDir() + "system-" + $hostName + "-memory-" + $timeFrame + ".png?time=" + $timestamp);
 
 	element =  document.getElementById('system-temperature_imperial-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-temperature_imperial-image").attr("src", "graphs/system-" + $hostName + "-temperature_imperial-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-temperature_imperial-image").attr("src", graphsDir() + "system-" + $hostName + "-temperature_imperial-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 	element =  document.getElementById('system-temperature_metric-image');
 	if (typeof(element) != 'undefined' && element != null) {
-		$("#system-temperature_metric-image").attr("src", "graphs/system-" + $hostName + "-temperature_metric-" + $timeFrame + ".png?time=" + $timestamp);
+		$("#system-temperature_metric-image").attr("src", graphsDir() + "system-" + $hostName + "-temperature_metric-" + $timeFrame + ".png?time=" + $timestamp);
 	}
 
-	$("#system-df_root-image").attr("src", "graphs/system-" + $hostName + "-df_root-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-df_root-image").attr("src", graphsDir() + "system-" + $hostName + "-df_root-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#system-disk_io_iops-image").attr("src", "graphs/system-" + $hostName + "-disk_io_iops-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-disk_io_iops-image").attr("src", graphsDir() + "system-" + $hostName + "-disk_io_iops-" + $timeFrame + ".png?time=" + $timestamp);
 
-	$("#system-disk_io_octets-image").attr("src", "graphs/system-" + $hostName + "-disk_io_octets-" + $timeFrame + ".png?time=" + $timestamp);
+	$("#system-disk_io_octets-image").attr("src", graphsDir() + "system-" + $hostName + "-disk_io_octets-" + $timeFrame + ".png?time=" + $timestamp);
 }
 

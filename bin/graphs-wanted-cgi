@@ -1,0 +1,33 @@
+#!/bin/sh
+# CGI of the graphs page: record that somebody is viewing the graphs of a
+# period in a colour scheme, graphs-gend draws them on demand
+#   GET /cgi-bin/graphs-wanted?period=24h&theme=dark
+# theme is light or dark, light if it is not given
+
+WANTED_DIR=/tmp/graphs-wanted
+
+reply() {
+	printf 'Status: %s\r\nContent-Type: application/json\r\n\r\n%s\n' "$1" "$2"
+	exit 0
+}
+
+[ "$REQUEST_METHOD" = "GET" ] || reply "405 Method Not Allowed" '{"ok":false}'
+
+case "$QUERY_STRING" in
+	*\&theme=light) theme=light; query="${QUERY_STRING%&theme=light}" ;;
+	*\&theme=dark) theme=dark; query="${QUERY_STRING%&theme=dark}" ;;
+	*) theme=light; query="$QUERY_STRING" ;;
+esac
+
+case "$query" in
+	period=1h|period=6h|period=12h|period=24h|period=7d|period=30d|period=90d|period=180d|period=365d)
+		period="${query#period=}"
+		;;
+	*)
+		reply "400 Bad Request" '{"ok":false}'
+		;;
+esac
+
+# the modification time of the file is the time of the last request
+mkdir -p "$WANTED_DIR" && touch "$WANTED_DIR/$period-$theme" || reply "500 Internal Server Error" '{"ok":false}'
+reply "200 OK" '{"ok":true}'

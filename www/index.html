@@ -1,97 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>ADS-B Box Snap</title>
-	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
+	<link rel="stylesheet" href="/css/bulma-1.0.4.min.css">
+	<script src="/js/theme.js"></script>
 	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
 	<style type="text/css">
+		/* colours of our own: light, and dark (forced or following the system) */
+		:root {
+			--adsb-focus: #485fc7;
+		}
+		:root[data-theme="dark"] {
+			--adsb-focus: #8c9cff;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--adsb-focus: #8c9cff;
+			}
+		}
 		html, body {
 			height: 100%;
 			width: 100%;
 			margin: 0;
 		}
-		div#container {
+		#container {
 			position: fixed;
 			top: 33px;
 			bottom: 0px;
 			width: 100%;
 		}
-		div#content  {
+		#panel {
 			display: block;
 			width: 100%;
 			height: 100%;
 			border: 0;
 		}
-		#map  {
+		#page {
 			display: block;
 			width: 100%;
 			height: 100%;
 			border: 0;
+		}
+		.tabbar {
+			display: flex;
+			align-items: flex-end;
+			height: 33px;
+			border-bottom: 1px solid var(--bulma-border);
+		}
+		.tabbar .tabs {
+			flex: 1;
+			margin-bottom: -1px;
+		}
+		.theme-switch {
+			flex: none;
+			margin: 0 6px 3px 6px;
+		}
+		.theme-switch.buttons .button {
+			margin-bottom: 0;
+		}
+		.tabs a:focus-visible,
+		.theme-switch .button:focus-visible {
+			outline: 3px solid var(--adsb-focus);
+			outline-offset: -3px;
+		}
+		/* narrow screens: icons only, the text is still read by screen readers */
+		@media (max-width: 399px) {
+			.tab-text,
+			.switch-text {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				padding: 0;
+				margin: -1px;
+				overflow: hidden;
+				clip: rect(0, 0, 0, 0);
+				white-space: nowrap;
+				border: 0;
+			}
+			.tabs .icon:first-child {
+				margin-right: 0;
+			}
 		}
 	</style>
 </head>
 <body>
-	<!-- Nav tabs -->
-	<div class="tabs is-centered is-boxed is-small">
-		<ul>
-			<li class="tab is-active">
-				<label for="dump1090">
-					<a>
-						<span class="icon is-small"><i class="fas fa-plane" aria-hidden="true"></i></span>
-						<span>Skyview Map</span>
-					</a>
-				</label>
+	<header class="tabbar">
+	<nav class="tabs is-centered is-boxed is-small" aria-label="Pages">
+		<ul role="tablist">
+			<li class="is-active" role="presentation">
+				<a role="tab" id="tab-map" href="#" aria-selected="true" aria-controls="panel" tabindex="0"
+					data-src="/dump1090/" data-title="Skyview Map">
+					<span class="icon is-small" aria-hidden="true"><i class="fas fa-plane"></i></span>
+					<span class="tab-text">Skyview Map</span>
+				</a>
 			</li>
-			<li class="tab">
-				<label for="graphs">
-					<a>
-						<span class="icon is-small"><i class="fas fa-chart-area" aria-hidden="true"></i></span>
-						<span>Performance Graphs</span>
-					</a>
-				</label>
+			<li role="presentation">
+				<a role="tab" id="tab-graphs" href="#" aria-selected="false" aria-controls="panel" tabindex="-1"
+					data-src="/graphs.html" data-title="Performance Graphs">
+					<span class="icon is-small" aria-hidden="true"><i class="fas fa-chart-area"></i></span>
+					<span class="tab-text">Performance Graphs</span>
+				</a>
+			</li>
+			<li role="presentation">
+				<a role="tab" id="tab-settings" href="#" aria-selected="false" aria-controls="panel" tabindex="-1"
+					data-src="/settings.html" data-title="Settings">
+					<span class="icon is-small" aria-hidden="true"><i class="fas fa-cog"></i></span>
+					<span class="tab-text">Settings</span>
+				</a>
 			</li>
 		</ul>
+	</nav>
+	<div class="theme-switch buttons has-addons" role="radiogroup" aria-label="Theme">
+		<button type="button" class="button is-small" role="radio" data-theme-value="auto" title="Follow the system setting">
+			<span class="icon is-small" aria-hidden="true"><i class="fas fa-adjust"></i></span>
+			<span class="switch-text">Auto</span>
+		</button>
+		<button type="button" class="button is-small" role="radio" data-theme-value="light">
+			<span class="icon is-small" aria-hidden="true"><i class="fas fa-sun"></i></span>
+			<span class="switch-text">Light</span>
+		</button>
+		<button type="button" class="button is-small" role="radio" data-theme-value="dark">
+			<span class="icon is-small" aria-hidden="true"><i class="fas fa-moon"></i></span>
+			<span class="switch-text">Dark</span>
+		</button>
 	</div>
-	<div id="container">
-		<div class="content" id="content" style="overflow-y: auto;"><iframe id="map" src="/dump1090/"></iframe></div>
-	</div>
+	</header>
+	<main id="container">
+		<div id="panel" role="tabpanel" aria-labelledby="tab-map">
+			<iframe id="page" src="/dump1090/" title="Skyview Map"></iframe>
+		</div>
+	</main>
 
 	<script src="/js/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript">
-		$(document).ready(function(){
-			// set up the click event
-			$('li.tab').on('click', function() {
-				$('li.tab').removeClass('is-active');
-				$(this).addClass('is-active');
-				target='';
-				dump1090 = false;
-				switch($(this).children("label").attr('for'))
-				{
-					case "dump1090":
-						dump1090 = true;
-						break;
-					case "graphs":
-						target="/graphs.html";
-						break;
-				};
-				if (dump1090 == true) {
-					$('.content').html("<iframe id=\"map\" src=\"/dump1090/\"></iframe>");
-				}
-				else {
-					$.ajaxPrefilter(function( options, originalOptions, jqXHR ) {    options.async = true; });
-					$('.content').slideDown('fast');
-					$('.content').html("<div class=\"modal is-active\"><div class=modal-background\"></div><div class=\"modal-content\"><span class=\"icon is-large\" style=\"width: 100%; scroll: no\"><i class=\"fas fa-spinner fa-3x is-centered\"></i></span></div></div>").delay(1000);
-					$('.content').load(target, '', function(response, status, xhr) {
-						if (status == 'error') {
-							var msg = "Sorry but there was an error: ";
-							$(".content").html(msg + xhr.status + " " + xhr.statusText);
-						}
-					}).fadeIn('slow');
-				}
-				return false;
+		$(document).ready(function() {
+			var tabs = $('[role="tab"]');
+
+			function select(tab) {
+				tabs.attr('aria-selected', 'false').attr('tabindex', '-1').parent().removeClass('is-active');
+				tab.attr('aria-selected', 'true').attr('tabindex', '0').parent().addClass('is-active');
+				$('#panel').attr('aria-labelledby', tab.attr('id'));
+				// a new iframe reloads the page, the same as before
+				$('#panel').empty().append($('<iframe id="page"></iframe>')
+					.attr('src', tab.data('src')).attr('title', tab.data('title')));
+			}
+
+			tabs.on('click', function(e) {
+				e.preventDefault();
+				select($(this));
 			});
+
+			// keyboard: left/right arrows, Home and End move between the tabs
+			tabs.on('keydown', function(e) {
+				var i = tabs.index(this);
+				var next = -1;
+				switch (e.key) {
+					case 'ArrowLeft': next = (i + tabs.length - 1) % tabs.length; break;
+					case 'ArrowRight': next = (i + 1) % tabs.length; break;
+					case 'Home': next = 0; break;
+					case 'End': next = tabs.length - 1; break;
+					case ' ': e.preventDefault(); select($(this)); return;
+					default: return;
+				}
+				e.preventDefault();
+				select(tabs.eq(next));
+				tabs.eq(next).trigger('focus');
+			});
+
+			// theme switch: a radio group, arrows move and select
+			var radios = $('.theme-switch [role="radio"]');
+
+			function showTheme() {
+				var t = adsbTheme.get();
+				radios.each(function() {
+					var on = $(this).data('theme-value') === t;
+					$(this).attr('aria-checked', on ? 'true' : 'false').attr('tabindex', on ? '0' : '-1')
+						.toggleClass('is-link is-selected', on);
+				});
+			}
+
+			radios.on('click', function() {
+				adsbTheme.set($(this).data('theme-value'));
+			});
+
+			radios.on('keydown', function(e) {
+				var i = radios.index(this);
+				var next = -1;
+				switch (e.key) {
+					case 'ArrowLeft': case 'ArrowUp': next = (i + radios.length - 1) % radios.length; break;
+					case 'ArrowRight': case 'ArrowDown': next = (i + 1) % radios.length; break;
+					default: return;
+				}
+				e.preventDefault();
+				adsbTheme.set(radios.eq(next).data('theme-value'));
+				radios.eq(next).trigger('focus');
+			});
+
+			document.addEventListener('adsb-themechange', showTheme);
+			showTheme();
 		});
 	</script>
 </body>

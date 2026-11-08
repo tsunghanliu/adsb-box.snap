@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ADS-B Box Settings</title>
+	<link rel="stylesheet" href="/css/bulma-1.0.4.min.css">
+	<script src="/js/theme.js"></script>
+	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
+	<style type="text/css">
+		/* colours of our own: light, and dark (forced or following the system) */
+		:root {
+			--adsb-focus: #485fc7;
+			--adsb-help: #4a4a4a;
+			--adsb-error: #cc0f35;
+			--adsb-key: #257942;
+			--adsb-key-bg: #effaf5;
+			--adsb-heading-bg: #00796b;
+			--adsb-heading-text: #fff;
+		}
+		:root[data-theme="dark"] {
+			--adsb-focus: #8c9cff;
+			--adsb-help: #c8ccd4;
+			--adsb-error: #ff8fa3;
+			--adsb-key: #8fe0b5;
+			--adsb-key-bg: #1d3a2b;
+			--adsb-heading-bg: #004d40;
+			--adsb-heading-text: #e8f5f2;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--adsb-focus: #8c9cff;
+				--adsb-help: #c8ccd4;
+				--adsb-error: #ff8fa3;
+				--adsb-key: #8fe0b5;
+				--adsb-key-bg: #1d3a2b;
+				--adsb-heading-bg: #004d40;
+				--adsb-heading-text: #e8f5f2;
+			}
+		}
+		#settings .help {
+			font-size: 1rem;
+		}
+		#settings .help:not(.is-danger) {
+			color: var(--adsb-help);
+		}
+		/* errors and read-only values need a 4.5:1 contrast */
+		#settings .help.is-danger {
+			color: var(--adsb-error);
+		}
+		#settings .input[disabled],
+		#settings .select select[disabled] {
+			color: var(--adsb-help);
+		}
+		/* group names: a header bar, the same colours as the graph headings */
+		#settings fieldset.box {
+			padding-top: 0;
+		}
+		#settings fieldset.box legend {
+			float: left;
+			width: calc(100% + 2.5rem);
+			margin: 0 -1.25rem 1.5rem;
+			padding: 0.6rem 1.25rem;
+			font-weight: 600;
+			color: var(--adsb-heading-text);
+			background-color: var(--adsb-heading-bg);
+			border-radius: var(--bulma-box-radius) var(--bulma-box-radius) 0 0;
+		}
+		#settings fieldset.box legend + * {
+			clear: both;
+		}
+		#settings input[type="checkbox"]:focus-visible,
+		.button:focus-visible {
+			outline: 3px solid var(--adsb-focus);
+			outline-offset: 2px;
+		}
+		#message-live .message {
+			margin-bottom: 1.5rem;
+		}
+		#settings .setting-key {
+			font-family: monospace;
+			font-weight: bold;
+			color: var(--adsb-key);
+			background-color: var(--adsb-key-bg);
+			padding: 0.1em 0.35em;
+			border-radius: 3px;
+		}
+	</style>
+</head>
+<body>
+	<main class="section">
+		<div class="container">
+			<div class="level">
+				<div class="level-left">
+					<h1 class="title">Settings</h1>
+				</div>
+				<div class="level-right">
+					<button class="button is-link is-hidden" id="login">
+						<span class="icon" aria-hidden="true"><i class="fas fa-sign-in-alt"></i></span>
+						<span>Log in</span>
+					</button>
+				</div>
+			</div>
+			<div class="notification is-warning is-hidden" id="no-password">
+				The settings are read-only. To change them here, set a password first with
+				<code>sudo adsb-box.config passwd</code>, then log in as <code>admin</code>.
+			</div>
+			<!-- live region stays in the page, so screen readers notice when a message is added -->
+			<div id="message-live" role="status" aria-live="polite"><div class="message is-hidden" id="message"><div class="message-body"></div></div></div>
+			<form id="settings"></form>
+		</div>
+	</main>
+
+	<script src="/js/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript">
+		var settings = [];
+		var loggedIn = false;
+
+		// errors are announced at once by screen readers, other messages politely
+		function showMessage(cls, html) {
+			var error = cls === 'is-danger';
+			$('#message-live')
+				.attr('role', error ? 'alert' : 'status')
+				.attr('aria-live', error ? 'assertive' : 'polite');
+			$('#message').attr('class', 'message ' + cls).children('.message-body').html(html);
+			// the Apply button is at the bottom, bring the message into view
+			document.getElementById('message').scrollIntoView({ block: 'nearest' });
+		}
+
+		function hideMessage() {
+			$('#message').attr('class', 'message is-hidden').children('.message-body').empty();
+		}
+
+		function fieldId(key) {
+			return 'f-' + key.replace(/[^a-z0-9]/g, '_');
+		}
+
+		function renderField(s, editable) {
+			var id = fieldId(s.key);
+			var field = $('<div class="field"></div>').attr('data-key', s.key);
+			var control = $('<div class="control"></div>');
+			var input;
+			if (s.type === 'bool') {
+				input = $('<input type="checkbox">').prop('checked', s.value === '1');
+				control.append($('<label class="checkbox"></label>').attr('for', id).append(input, ' ', $('<strong></strong>').text(s.name)));
+				field.append(control);
+			} else {
+				if (s.options) {
+					input = $('<select></select>');
+					$.each(s.options, function(i, o) {
+						input.append($('<option></option>').val(o).text(o === '' ? '(not set)' : o));
+					});
+					input.val(s.value);
+					control.append($('<div class="select"></div>').append(input));
+				} else {
+					input = $('<input class="input" type="text">').val(s.value);
+					control.append(input);
+				}
+				field.append($('<label class="label"></label>').attr('for', id).text(s.name), control);
+			}
+			input.attr('id', id).attr('aria-describedby', id + '-help ' + id + '-error').prop('disabled', !editable);
+			field.append($('<p class="help"></p>').attr('id', id + '-help').append(
+				document.createTextNode(s.description + ' ('),
+				$('<span class="setting-key"></span>').text(s.key),
+				document.createTextNode(')')));
+			field.append($('<p class="help is-danger error"></p>').attr('id', id + '-error'));
+			return field;
+		}
+
+		function render(data) {
+			settings = data.settings;
+			loggedIn = data.logged_in;
+			var editable = data.password_set && loggedIn;
+			$('#no-password').toggleClass('is-hidden', data.password_set);
+			$('#login').toggleClass('is-hidden', !data.password_set || loggedIn);
+
+			// groups in the order they first appear in the settings
+			var form = $('#settings').empty();
+			var boxes = {};
+			$.each(settings, function(i, s) {
+				if (!boxes[s.group]) {
+					boxes[s.group] = $('<fieldset class="box"></fieldset>').append($('<legend class="subtitle"></legend>').text(s.group));
+					form.append(boxes[s.group]);
+				}
+				boxes[s.group].append(renderField(s, editable));
+			});
+			if (editable) {
+				form.append($('<div class="field"><div class="control">' +
+					'<button type="submit" class="button is-link" id="apply">Apply</button>' +
+					'</div></div>'));
+			}
+		}
+
+		function load(admin) {
+			return $.ajax({
+				url: admin ? '/cgi-bin/config-admin' : '/cgi-bin/config',
+				dataType: 'json',
+				cache: false,
+			}).done(render);
+		}
+
+		function currentValue(s) {
+			var input = $('#' + fieldId(s.key));
+			if (s.type === 'bool') {
+				var checked = input.prop('checked');
+				// keep an unset value when the box is still unchecked
+				if (!checked && s.value !== '1') return s.value;
+				return checked ? '1' : '0';
+			}
+			return input.val();
+		}
+
+		function escapeHtml(text) {
+			return $('<div></div>').text(text).html();
+		}
+
+		function listHtml(title, items) {
+			if (!items || items.length === 0) return '';
+			return '<p>' + title + ' ' + $.map(items, escapeHtml).join(', ') + '</p>';
+		}
+
+		function apply() {
+			hideMessage();
+			$('#settings .field').removeClass('has-error').find('.error').text('');
+			$('#settings .input, #settings .select').removeClass('is-danger');
+			$('#settings [aria-invalid]').removeAttr('aria-invalid');
+
+			var changes = {};
+			var count = 0;
+			var restartsWeb = false;
+			$.each(settings, function(i, s) {
+				var v = currentValue(s);
+				if (v === s.value) return;
+				changes[s.key] = v;
+				count++;
+				if ($.inArray('lighttpd', s.services) >= 0) restartsWeb = true;
+			});
+			if (count === 0) {
+				showMessage('is-info', 'No changes.');
+				return;
+			}
+
+			var newUrl = '';
+			if (restartsWeb) {
+				var warning = 'The web server will restart and the connection may drop. ' +
+					'The settings are saved; reload this page in a moment.';
+				if ('lighttpd.port' in changes) {
+					var port = changes['lighttpd.port'] || '8080';
+					newUrl = location.protocol + '//' + location.hostname + ':' + port + '/';
+					warning += '\n\nThe new address is ' + newUrl;
+				}
+				if (!window.confirm(warning)) return;
+			}
+
+			$('#apply').addClass('is-loading');
+			$.ajax({
+				url: '/cgi-bin/config-admin',
+				method: 'POST',
+				data: changes,
+				dataType: 'json',
+			}).done(function(res) {
+				showMessage('is-success', '<p>Settings applied.</p>' +
+					listHtml('Changed:', res.changed) +
+					listHtml('Restarted:', res.restarted) +
+					listHtml('Warnings:', res.warnings) +
+					listHtml('Note:', res.notes));
+				var msg = $('#message .message-body').html();
+				load(true).done(function() { $('#message .message-body').html(msg); });
+			}).fail(function(xhr) {
+				var res = xhr.responseJSON;
+				if (xhr.status === 401) {
+					showMessage('is-danger', 'Login failed.');
+				} else if (res && res.errors) {
+					var general = [];
+					$.each(res.errors, function(i, e) {
+						var field = $('#settings .field[data-key="' + e.key + '"]');
+						if (e.key && field.length) {
+							field.find('.error').text(e.message);
+							field.find('.input, .select').addClass('is-danger');
+							field.find('input, select').attr('aria-invalid', 'true');
+						} else {
+							general.push(e.key ? e.key + ': ' + e.message : e.message);
+						}
+					});
+					showMessage('is-danger', '<p>Nothing changed, please fix the marked fields.</p>' +
+						listHtml('', general));
+					$('#settings [aria-invalid="true"]').first().trigger('focus');
+				} else if (restartsWeb && xhr.status === 0) {
+					showMessage('is-warning', 'The web server is restarting. ' +
+						(newUrl ? 'Open <a href="' + escapeHtml(newUrl) + '">' + escapeHtml(newUrl) + '</a> in a moment.'
+							: 'Reload this page in a moment.'));
+				} else {
+					showMessage('is-danger', 'Failed to apply the settings: ' + xhr.status + ' ' + xhr.statusText);
+				}
+			}).always(function() {
+				$('#apply').removeClass('is-loading');
+			});
+		}
+
+		$(document).ready(function() {
+			load(false).fail(function(xhr) {
+				showMessage('is-danger', 'Failed to load the settings: ' + xhr.status + ' ' + xhr.statusText);
+			});
+
+			$('#settings').on('submit', function(e) {
+				e.preventDefault();
+				apply();
+			});
+
+			$('#login').on('click', function() {
+				hideMessage();
+				// the browser asks for the user name and password on 401
+				load(true).fail(function(xhr) {
+					if (xhr.status === 401) {
+						showMessage('is-danger', 'Login failed.');
+					} else {
+						showMessage('is-danger', 'Failed to load the settings: ' + xhr.status + ' ' + xhr.statusText);
+					}
+				});
+			});
+		});
+	</script>
+</body>
+</html>

@@ -6,10 +6,14 @@ usage() {
 Usage: adsb-box.config [--json] [COMMAND]
 
 Commands:
-  list                       list all settings with current values
-  get KEY                    print the value of KEY
+  list [--details]           list all settings with current values,
+                             --details adds names and descriptions
+  get KEY [KEY ...]          print the value of KEY, or a table of the
+                             values of several KEYs
   set KEY=VALUE [KEY=VALUE]  validate and apply settings, then restart
                              affected services (empty VALUE unsets KEY)
+  passwd [--disable]         set (or remove) the password of user admin
+                             for the web settings page
   (none)                     interactive mode
 
 Options:
@@ -31,7 +35,7 @@ die() {
 json_str() {
 	printf '%s' "$1" | awk 'BEGIN { ORS = ""; print "\"" }
 		NR > 1 { print "\\n" }
-		{ gsub(/\\/, "\\\\"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r"); print }
+		{ gsub(/\\/, "&&"); gsub(/"/, "\\\""); gsub(/\t/, "\\t"); gsub(/\r/, "\\r"); print }
 		END { print "\"" }'
 }
 
@@ -47,43 +51,46 @@ json_list() {
 	printf ']'
 }
 
-# KEY|TYPE|SERVICES (space separated, restarted on change)|DESCRIPTION
-KEYS_TABLE='receiver.latitude|latitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|latitude of the receiver (-90 ~ 90)
-receiver.longitude|longitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|longitude of the receiver (-180 ~ 180)
-receiver.altitude|number|adsbexchange-mlat openskyd rbfeeder-mlat|altitude of the receiver in meters
-receiver.dump1090.index|uint|dump1090|device index of the 1090MHz dongle
-receiver.dump1090.serial|serial|dump1090|serial (8 digits) of the 1090MHz dongle
-receiver.dump1090.enable-biast|bool|dump1090|enable bias-tee of the 1090MHz dongle (0/1)
-receiver.dump1090.biast-gpio|uint|dump1090|GPIO number of bias-tee of the 1090MHz dongle
-receiver.dump978.index|uint|dump978 skyaware978 fr24uat-feed|device index of the 978MHz dongle
-receiver.dump978.serial|serial|dump978 skyaware978 fr24uat-feed rbfeeder collectd lighttpd|serial (8 digits) of the 978MHz dongle
-receiver.dump978.enable-biast|bool|dump978|enable bias-tee of the 978MHz dongle (0/1)
-receiver.dump978.biast-gpio|uint|dump978|GPIO number of bias-tee of the 978MHz dongle
-dump1090.location-accuracy|accuracy|dump1090|location accuracy in dump1090 json (approximate/exact, empty to disable)
-lighttpd.port|port|lighttpd|port of the web interface
-lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)
-adsbexchange.enable-log|bool|adsbexchange-netcat adsbexchange-mlat|enable logs of ADSB Exchange feeders (0/1)
-adsbexchange.username|username|adsbexchange-mlat|feeder name of ADSB Exchange MLAT
-adsbexchange.receiverport|port|adsbexchange-netcat|receiver port of ADSB Exchange
-collectd.enable-log|bool|collectd|enable logs of collectd (0/1)
-collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache
-collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush
-collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout
-collectd.rrd-writes-per-second|uint|collectd|rrdtool WritesPerSecond
-collectd.rrd-backup-period|uint|collectd graphs-gend|period (seconds) to back up rrd files from tmpfs
-dump1090.enable-log|bool|dump1090|enable logs of dump1090 (0/1)
-dump978.enable-log|bool|dump978|enable logs of dump978 (0/1)
-fr24feed.enable-log|bool|fr24feed fr24uat-feed|enable logs of fr24feed (0/1)
-graphs-gend.enable-log|bool|graphs-gend|enable logs of graphs-gend (0/1)
-openskyd.enable-log|bool|openskyd|enable logs of openskyd (0/1)
-opensky-network.username|username|openskyd|username of OpenSky Network
-opensky-network.serial|int|openskyd|serial of OpenSky Network feeder
-piaware.enable-log|bool|piaware|enable logs of piaware (0/1)
-plane-finder.enable-log|bool|pfclient|enable logs of plane finder client (0/1)
-rbfeeder.enable-log|bool|rbfeeder rbfeeder-mlat|enable logs of RadarBox feeder (0/1)
-skyaware978.enable-log|bool|skyaware978|enable logs of skyaware978 (0/1)'
+# KEY|TYPE|SERVICES (space separated, restarted on change)|DESCRIPTION|NAME|GROUP
+# rows are ordered by group, the web settings page shows the groups in this order
+KEYS_TABLE='receiver.latitude|latitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|latitude of the receiver (-90 ~ 90)|Latitude|Receiver location
+receiver.longitude|longitude|dump1090 skyaware978 adsbexchange-mlat openskyd rbfeeder-mlat|longitude of the receiver (-180 ~ 180)|Longitude|Receiver location
+receiver.altitude|number|adsbexchange-mlat openskyd rbfeeder-mlat|altitude of the receiver in meters|Altitude|Receiver location
+receiver.dump1090.index|uint|dump1090|device index of the 1090MHz dongle|1090MHz dongle index|Receivers
+receiver.dump1090.serial|serial|dump1090|serial (8 digits) of the 1090MHz dongle|1090MHz dongle serial|Receivers
+receiver.dump1090.enable-biast|bool|dump1090|enable bias-tee of the 1090MHz dongle (0/1)|1090MHz bias-tee|Receivers
+receiver.dump1090.biast-gpio|uint|dump1090|GPIO number of bias-tee of the 1090MHz dongle|1090MHz bias-tee GPIO|Receivers
+receiver.dump978.index|uint|dump978 skyaware978 fr24uat-feed|device index of the 978MHz dongle|978MHz dongle index|Receivers
+receiver.dump978.serial|serial|dump978 skyaware978 fr24uat-feed rbfeeder collectd lighttpd|serial (8 digits) of the 978MHz dongle|978MHz dongle serial|Receivers
+receiver.dump978.enable-biast|bool|dump978|enable bias-tee of the 978MHz dongle (0/1)|978MHz bias-tee|Receivers
+receiver.dump978.biast-gpio|uint|dump978|GPIO number of bias-tee of the 978MHz dongle|978MHz bias-tee GPIO|Receivers
+dump1090.location-accuracy|accuracy|dump1090|location accuracy in dump1090 json (approximate/exact, empty to disable)|Location accuracy|Receivers
+adsbexchange.username|username|adsbexchange-mlat|feeder name of ADSB Exchange MLAT|ADSB Exchange feeder name|Accounts
+adsbexchange.receiverport|port|adsbexchange-netcat|receiver port of ADSB Exchange|ADSB Exchange receiver port|Accounts
+opensky-network.username|username|openskyd|username of OpenSky Network|OpenSky username|Accounts
+opensky-network.serial|int|openskyd|serial of OpenSky Network feeder|OpenSky serial|Accounts
+lighttpd.port|port|lighttpd|port of the web interface|Web port|Web interface
+lighttpd.enable-localhost-log|bool|lighttpd|log accesses from localhost (0/1)|Localhost access log|Web interface
+graphs.always-generate|bool|graphs-gend|generate graphs on schedule even if nobody views them, otherwise only on demand (0/1)|Always generate graphs|Web interface
+graphs.default-dark-theme|bool|graphs-gend|with graphs.always-generate=1, draw the graphs on schedule in the dark colour scheme instead of the light one (0/1)|Dark graphs by default|Web interface
+collectd.rrd-cache-timeout|uint|collectd|rrdtool CacheTimeout, 0 to disable cache|RRD cache timeout|collectd
+collectd.rrd-cache-flush|uint|collectd|rrdtool CacheFlush|RRD cache flush|collectd
+collectd.rrd-random-timeout|uint|collectd|rrdtool RandomTimeout|RRD random timeout|collectd
+collectd.rrd-writes-per-second|uint|collectd|rrdtool WritesPerSecond|RRD writes per second|collectd
+collectd.rrd-backup-period|uint|collectd graphs-gend|period (seconds) to back up rrd files from tmpfs|RRD backup period|collectd
+adsbexchange.enable-log|bool|adsbexchange-netcat adsbexchange-mlat|enable logs of ADSB Exchange feeders (0/1)|ADSB Exchange logs|Logs
+collectd.enable-log|bool|collectd|enable logs of collectd (0/1)|collectd logs|Logs
+dump1090.enable-log|bool|dump1090|enable logs of dump1090 (0/1)|dump1090 logs|Logs
+dump978.enable-log|bool|dump978|enable logs of dump978 (0/1)|dump978 logs|Logs
+fr24feed.enable-log|bool|fr24feed fr24uat-feed|enable logs of fr24feed (0/1)|FR24 feeder logs|Logs
+graphs-gend.enable-log|bool|graphs-gend|enable logs of graphs-gend (0/1)|Graphs generator logs|Logs
+openskyd.enable-log|bool|openskyd|enable logs of openskyd (0/1)|OpenSky feeder logs|Logs
+piaware.enable-log|bool|piaware|enable logs of piaware (0/1)|PiAware logs|Logs
+plane-finder.enable-log|bool|pfclient|enable logs of plane finder client (0/1)|Plane Finder logs|Logs
+rbfeeder.enable-log|bool|rbfeeder rbfeeder-mlat|enable logs of RadarBox feeder (0/1)|RadarBox feeder logs|Logs
+skyaware978.enable-log|bool|skyaware978|enable logs of skyaware978 (0/1)|SkyAware978 logs|Logs'
 
-# print the field ($2) of key ($1): 2=type 3=services 4=description
+# print the field ($2) of key ($1): 2=type 3=services 4=description 5=name 6=group
 key_field() {
 	echo "$KEYS_TABLE" | awk -F'|' -v k="$1" -v f="$2" '$1 == k { print $f; found=1 } END { exit !found }'
 }
@@ -92,21 +99,153 @@ all_keys() {
 	echo "$KEYS_TABLE" | cut -d'|' -f1
 }
 
+# shown only to logged-in users of the web settings page
+SENSITIVE_KEYS="opensky-network.username opensky-network.serial adsbexchange.username"
+
+# render FORMAT KEY...: read the values of KEYs with a single snapctl call and
+# print them in FORMAT: list, list-details, json-list, get, json-get, json-get-multi, table.
+# Values which are not a single value (JSON objects or arrays) are (invalid).
+render() {
+	format="$1"
+	shift
+	doc="$(snapctl get -d "$@")" || return 1
+	printf '%s\n' "$doc" | KEYS_TABLE="$KEYS_TABLE" SENSITIVE_KEYS="$SENSITIVE_KEYS" \
+		LC_ALL=C awk -v format="$format" -v keys="$*" '
+	function utf8(c) {
+		if (c < 128) return sprintf("%c", c)
+		if (c < 2048) return sprintf("%c%c", 192 + int(c / 64), 128 + c % 64)
+		if (c < 65536) return sprintf("%c%c%c", 224 + int(c / 4096), 128 + int(c / 64) % 64, 128 + c % 64)
+		return sprintf("%c%c%c%c", 240 + int(c / 262144), 128 + int(c / 4096) % 64, 128 + int(c / 64) % 64, 128 + c % 64)
+	}
+	function hex4(s,    i, n) {
+		n = 0
+		for (i = 1; i <= 4; i++) n = n * 16 + index("0123456789abcdef", tolower(substr(s, i, 1))) - 1
+		return n
+	}
+	# decode a JSON string literal (with the quotes)
+	function decode(s,    out, i, c, n, lo) {
+		out = ""
+		s = substr(s, 2, length(s) - 2)
+		for (i = 1; i <= length(s); i++) {
+			c = substr(s, i, 1)
+			if (c != "\\") { out = out c; continue }
+			c = substr(s, ++i, 1)
+			if (c == "n") out = out "\n"
+			else if (c == "t") out = out "\t"
+			else if (c == "r") out = out "\r"
+			else if (c == "b") out = out "\b"
+			else if (c == "f") out = out "\f"
+			else if (c == "u") {
+				n = hex4(substr(s, i + 1, 4))
+				i += 4
+				if (n >= 55296 && n < 56320 && substr(s, i + 1, 2) == "\\u") {
+					lo = hex4(substr(s, i + 3, 4))
+					if (lo >= 56320 && lo < 57344) {
+						n = 65536 + (n - 55296) * 1024 + (lo - 56320)
+						i += 6
+					}
+				}
+				out = out utf8(n)
+			}
+			else out = out c
+		}
+		return out
+	}
+	# encode as a JSON string, the same rules as json_str()
+	# ("&&" doubles a backslash, older mawk turns "\\\\" into a single one)
+	function jstr(s) {
+		gsub(/\\/, "&&", s)
+		gsub(/"/, "\\\"", s)
+		gsub(/\t/, "\\t", s)
+		gsub(/\r/, "\\r", s)
+		gsub(/\n/, "\\n", s)
+		return "\"" s "\""
+	}
+	function jlist(s,    a, n, i, out) {
+		n = split(s, a, " ")
+		out = "["
+		for (i = 1; i <= n; i++) out = out (i > 1 ? "," : "") jstr(a[i])
+		return out "]"
+	}
+	# like $(...) in the shell
+	function chomp(s) {
+		sub(/\n+$/, "", s)
+		return s
+	}
+	BEGIN {
+		n = split(ENVIRON["KEYS_TABLE"], lines, "\n")
+		for (i = 1; i <= n; i++) {
+			split(lines[i], f, "|")
+			type[f[1]] = f[2]; services[f[1]] = f[3]; desc[f[1]] = f[4]; name[f[1]] = f[5]; group[f[1]] = f[6]
+		}
+		m = split(ENVIRON["SENSITIVE_KEYS"], a, " ")
+		for (i = 1; i <= m; i++) sensitive[a[i]] = 1
+		nkeys = split(keys, key, " ")
+		depth = 0
+	}
+	# skip the lines of an object or array value
+	depth > 0 {
+		if ($0 ~ /[{[]$/) depth++
+		else if ($0 ~ /^\t*[]}]/) depth--
+		next
+	}
+	/^\t"/ {
+		p = index($0, "\": ")
+		k = substr($0, 3, p - 3)
+		v = substr($0, p + 3)
+		sub(/,$/, "", v)
+		if (v ~ /^[{[]/) {
+			value[k] = "(invalid)"
+			if (v == "{" || v == "[") depth = 1
+		} else if (v ~ /^"/) {
+			value[k] = decode(v)
+		} else {
+			value[k] = v
+		}
+	}
+	END {
+		if (format == "list") {
+			for (i = 1; i <= nkeys; i++)
+				printf "%s=%s\n", key[i], chomp(value[key[i]])
+		} else if (format == "list-details") {
+			for (i = 1; i <= nkeys; i++)
+				printf "%s=%s\n    %s: %s\n", key[i], chomp(value[key[i]]), name[key[i]], desc[key[i]]
+		} else if (format == "json-list") {
+			printf "{\"ok\":true,\"settings\":["
+			for (i = 1; i <= nkeys; i++) {
+				k = key[i]
+				printf "%s{\"key\":%s,\"value\":%s,\"name\":%s,\"group\":%s,\"description\":%s,\"type\":%s%s,\"services\":%s,\"sensitive\":%s}",
+					(i > 1 ? "," : ""), jstr(k), jstr(chomp(value[k])), jstr(name[k]), jstr(group[k]), jstr(desc[k]), jstr(type[k]),
+					(type[k] == "accuracy" ? ",\"options\":[\"\",\"approximate\",\"exact\"]" : ""),
+					jlist(services[k]), (k in sensitive ? "true" : "false")
+			}
+			printf "]}\n"
+		} else if (format == "get") {
+			print value[key[1]]
+		} else if (format == "json-get") {
+			printf "{\"ok\":true,\"key\":%s,\"value\":%s}\n", jstr(key[1]), jstr(chomp(value[key[1]]))
+		} else if (format == "json-get-multi") {
+			printf "{\"ok\":true,\"settings\":["
+			for (i = 1; i <= nkeys; i++)
+				printf "%s{\"key\":%s,\"value\":%s}", (i > 1 ? "," : ""), jstr(key[i]), jstr(chomp(value[key[i]]))
+			printf "]}\n"
+		} else if (format == "table") {
+			w = 3
+			for (i = 1; i <= nkeys; i++) if (length(key[i]) > w) w = length(key[i])
+			printf "%-" (w + 2) "s%s\n", "Key", "Value"
+			for (i = 1; i <= nkeys; i++) printf "%-" (w + 2) "s%s\n", key[i], value[key[i]]
+		}
+	}'
+}
+
 cmd_list() {
-	if [ "$JSON" = "1" ]; then
-		sep=""
-		printf '{"ok":true,"settings":['
-		for k in $(all_keys); do
-			printf '%s{"key":%s,"value":%s,"description":%s}' "$sep" "$(json_str "$k")" \
-				"$(json_str "$(snapctl get "$k")")" "$(json_str "$(key_field "$k" 4)")"
-			sep=","
-		done
-		printf ']}\n'
-		return 0
-	fi
-	for k in $(all_keys); do
-		printf '%s=%s\n    %s\n' "$k" "$(snapctl get "$k")" "$(key_field "$k" 4)"
-	done
+	case "$1" in
+		'') format=list ;;
+		--details) format=list-details ;;
+		*) die "usage: adsb-box.config list [--details]" ;;
+	esac
+	[ "$JSON" = "1" ] && format=json-list
+	render "$format" $(all_keys) || die "failed to read settings"
 }
 
 is_uint() {
@@ -200,6 +339,11 @@ cmd_set() {
 	done
 
 	services=$(echo "$services" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')
+	# restart lighttpd last: from the web settings page, this script runs as
+	# a child of lighttpd and is stopped together with it
+	case " $services " in
+		*" lighttpd "*) services="$(echo " $services " | sed 's/ lighttpd / /') lighttpd" ;;
+	esac
 	restarted=""
 	warnings=""
 	for s in $services; do
@@ -242,7 +386,7 @@ cmd_interactive() {
 	for k in $(all_keys); do
 		cur="$(snapctl get "$k")"
 		echo
-		echo "# $(key_field "$k" 4)"
+		echo "# $(key_field "$k" 5): $(key_field "$k" 4)"
 		while :; do
 			printf '%s [%s]: ' "$k" "$cur"
 			IFS= read -r v || { echo; die "aborted"; }
@@ -275,14 +419,80 @@ cmd_interactive() {
 	esac
 }
 
-cmd_get() {
-	[ $# -eq 1 ] || die "usage: adsb-box.config get KEY"
-	key_field "$1" 2 > /dev/null || die "unknown key: $1"
-	if [ "$JSON" = "1" ]; then
-		printf '{"ok":true,"key":%s,"value":%s}\n' "$(json_str "$1")" "$(json_str "$(snapctl get "$1")")"
-	else
-		snapctl get "$1"
+# the web settings page: user "admin", password in htpasswd format of lighttpd
+HTPASSWD="$SNAP_DATA/lighttpd/htpasswd"
+
+# write_htpasswd HASH: empty HASH disables the login
+write_htpasswd() {
+	mkdir -p "$(dirname "$HTPASSWD")" || return 1
+	tmp="$HTPASSWD.tmp.$$"
+	(
+		umask 077
+		if [ -n "$1" ]; then
+			printf 'admin:%s\n' "$1" > "$tmp"
+		else
+			: > "$tmp"
+		fi
+	) && mv -f "$tmp" "$HTPASSWD"
+}
+
+cmd_passwd() {
+	[ "$JSON" = "1" ] && die "--json is not supported by passwd"
+	if [ "$1" = "--disable" ]; then
+		write_htpasswd "" || die "failed to write $HTPASSWD"
+		snapctl unset web.password-hash || die "failed to unset web.password-hash"
+		echo "Password removed, the web settings page is read-only now."
+		return 0
 	fi
+	[ $# -eq 0 ] || die "usage: adsb-box.config passwd [--disable]"
+
+	if [ -t 0 ]; then
+		stty -echo
+		trap 'stty echo' EXIT
+	fi
+	printf 'New password for user admin: '
+	IFS= read -r pw1 || pw1=""
+	echo
+	printf 'Retype new password: '
+	IFS= read -r pw2 || pw2=""
+	echo
+	if [ -t 0 ]; then
+		stty echo
+		trap - EXIT
+	fi
+
+	[ -n "$pw1" ] || die "empty password, nothing changed"
+	[ "$pw1" = "$pw2" ] || die "passwords do not match, nothing changed"
+
+	hash="$(printf '%s\n' "$pw1" | openssl passwd -6 -stdin)"
+	case "$hash" in
+		'$6$'*) ;;
+		*) die "failed to hash the password, nothing changed" ;;
+	esac
+	snapctl set "web.password-hash=$hash" || die "failed to save the password"
+	write_htpasswd "$hash" || die "failed to write $HTPASSWD"
+	echo "Password updated. Log in to the web settings page as admin."
+}
+
+cmd_get() {
+	[ $# -ge 1 ] || die "usage: adsb-box.config get KEY [KEY ...]"
+	known=" $(all_keys | tr '\n' ' ') "
+	unknown=""
+	for k in "$@"; do
+		case "$known" in
+			*" $k "*) ;;
+			*) unknown="$unknown $k" ;;
+		esac
+	done
+	[ -z "$unknown" ] || die "unknown key:$unknown"
+	if [ $# -eq 1 ]; then
+		format=get
+		[ "$JSON" = "1" ] && format=json-get
+	else
+		format=table
+		[ "$JSON" = "1" ] && format=json-get-multi
+	fi
+	render "$format" "$@" || die "failed to read settings"
 }
 
 JSON=0
@@ -305,13 +515,16 @@ esac
 
 case "$CMD" in
 	list)
-		cmd_list
+		cmd_list "$@"
 		;;
 	get)
 		cmd_get "$@"
 		;;
 	set)
 		cmd_set "$@"
+		;;
+	passwd)
+		cmd_passwd "$@"
 		;;
 	"")
 		cmd_interactive

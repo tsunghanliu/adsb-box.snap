@@ -1,0 +1,13 @@
+#!/bin/sh
+# Installations from before graphs.always-generate existed drew the graphs on
+# schedule. Keep that once after the refresh; later changes by the user stay.
+MARKER="$SNAP_COMMON/graphs-mode-migrated"
+
+if [ ! -e "$MARKER" ]; then
+	if [ -z "$(snapctl get graphs.always-generate)" ]; then
+		snapctl set graphs.always-generate=1
+	fi
+	touch "$MARKER"
+fi
+
+exit 0

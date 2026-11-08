@@ -1,0 +1,118 @@
+#!/bin/sh
+# CGI backend of the web settings page, a thin wrapper of adsb-box.config
+#   /cgi-bin/config        GET: settings, sensitive values are masked
+#   /cgi-bin/config-admin  GET: settings; POST: change settings
+#                          (lighttpd requires the login and sets REMOTE_USER)
+
+CONFIG="$SNAP/bin/config"
+
+# reply STATUS JSON
+reply() {
+	printf 'Status: %s\r\nContent-Type: application/json\r\n\r\n%s\n' "$1" "$2"
+}
+
+error() {
+	reply "$1" "{\"ok\":false,\"errors\":[{\"key\":\"\",\"message\":\"$2\"}]}"
+	exit 0
+}
+
+LOGGED_IN=false
+case "$SCRIPT_NAME" in
+	/cgi-bin/config-admin) [ -n "$REMOTE_USER" ] && LOGGED_IN=true ;;
+esac
+
+PASSWORD_SET=false
+[ -n "$(snapctl get web.password-hash)" ] && PASSWORD_SET=true
+
+do_get() {
+	out="$("$CONFIG" --json list)" || error "500 Internal Server Error" "failed to read settings"
+	if [ "$LOGGED_IN" != "true" ]; then
+		# one setting per line; inside JSON strings a quote is always escaped,
+		# so the separator cannot appear in a value
+		out="$(printf '%s\n' "$out" | sed 's/},{"key":/},\n{"key":/g' |
+			sed '/"sensitive":true}/ s/"value":"\([^"\\]\|\\.\)\{1,\}"/"value":"********"/' |
+			tr -d '\n')"
+	fi
+	out="$(printf '%s' "$out" | sed "s/^{\"ok\":true,/{\"ok\":true,\"password_set\":$PASSWORD_SET,\"logged_in\":$LOGGED_IN,/")"
+	reply "200 OK" "$out"
+}
+
+# decode an urlencoded form from stdin, print one KEY=VALUE per line;
+# print a line "!" if a key or value contains a line break or NUL
+decode_form() {
+	tr '&' '\n' | awk '
+		BEGIN { hex = "0123456789abcdef" }
+		function decode(s,    out, i, c, h, n) {
+			gsub(/\+/, " ", s)
+			out = ""
+			for (i = 1; i <= length(s); i++) {
+				c = substr(s, i, 1)
+				if (c == "%" && substr(s, i + 1, 2) ~ /^[0-9A-Fa-f][0-9A-Fa-f]$/) {
+					h = tolower(substr(s, i + 1, 2))
+					n = (index(hex, substr(h, 1, 1)) - 1) * 16 + index(hex, substr(h, 2, 1)) - 1
+					if (n == 0 || n == 10 || n == 13) bad = 1
+					c = sprintf("%c", n)
+					i += 2
+				}
+				out = out c
+			}
+			return out
+		}
+		NF == 0 { next }
+		{
+			p = index($0, "=")
+			if (p == 0) { k = decode($0); v = "" } else { k = decode(substr($0, 1, p - 1)); v = decode(substr($0, p + 1)) }
+			print k "=" v
+		}
+		END { if (bad) print "!" }'
+}
+
+do_post() {
+	[ "$LOGGED_IN" = "true" ] || error "403 Forbidden" "login is required"
+	len="${CONTENT_LENGTH:-0}"
+	case "$len" in
+		''|*[!0-9]*) error "400 Bad Request" "invalid content length" ;;
+	esac
+	[ "$len" -le 65536 ] || error "413 Payload Too Large" "request is too large"
+
+	form="$(head -c "$len" | decode_form)"
+	case "$form" in
+		'!'|*'
+!') error "400 Bad Request" "values must not contain line breaks" ;;
+	esac
+
+	keys="$("$CONFIG" list | grep -E '^[a-z]' | cut -d= -f1)"
+	set --
+	unknown=""
+	while IFS= read -r kv; do
+		[ -z "$kv" ] && continue
+		k="${kv%%=*}"
+		if printf '%s\n' "$keys" | grep -qxF -- "$k"; then
+			set -- "$@" "$kv"
+		else
+			unknown="$unknown$k "
+		fi
+	done << EOF
+$form
+EOF
+	if [ -n "$unknown" ]; then
+		error "400 Bad Request" "unknown key"
+	fi
+	if [ $# -eq 0 ]; then
+		reply "200 OK" '{"ok":true,"changed":[],"restarted":[],"warnings":[],"notes":[]}'
+		exit 0
+	fi
+
+	out="$("$CONFIG" --json set "$@")"
+	case "$out" in
+		'{"ok":true'*) reply "200 OK" "$out" ;;
+		'{"ok":false'*) reply "400 Bad Request" "$out" ;;
+		*) error "500 Internal Server Error" "failed to change settings" ;;
+	esac
+}
+
+case "$REQUEST_METHOD" in
+	GET|HEAD) do_get ;;
+	POST) do_post ;;
+	*) error "405 Method Not Allowed" "method not allowed" ;;
+esac

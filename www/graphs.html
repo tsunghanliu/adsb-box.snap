@@ -1,76 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>graphs</title>
-	<link rel="stylesheet" href="/css/bulma-0.9.3.min.css">
+	<title>Performance Graphs</title>
+	<link rel="stylesheet" href="/css/bulma-1.0.4.min.css">
+	<script src="/js/theme.js"></script>
 	<link rel="stylesheet" href="/fontawesome/css/all.min.css">
-	<style>.modal-content { width: fit-content; }</style>
+	<style>
+		/* colours of our own: light, and dark (forced or following the system) */
+		:root {
+			--adsb-focus: #485fc7;
+			--adsb-heading-bg: #00796b;
+			--adsb-heading-text: #fff;
+		}
+		:root[data-theme="dark"] {
+			--adsb-focus: #8c9cff;
+			--adsb-heading-bg: #004d40;
+			--adsb-heading-text: #e8f5f2;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root:not([data-theme="light"]) {
+				--adsb-focus: #8c9cff;
+				--adsb-heading-bg: #004d40;
+				--adsb-heading-text: #e8f5f2;
+			}
+		}
+		/* tiles were removed in Bulma 1.0, the rules of Bulma 0.9.3 */
+		.tile { align-items: stretch; display: block; flex-basis: 0; flex-grow: 1; flex-shrink: 1; min-height: min-content; }
+		.tile.is-ancestor { margin-left: -.75rem; margin-right: -.75rem; margin-top: -.75rem; }
+		.tile.is-ancestor:last-child { margin-bottom: -.75rem; }
+		.tile.is-ancestor:not(:last-child) { margin-bottom: .75rem; }
+		.tile.is-child { margin: 0 !important; }
+		.tile.is-parent { padding: .75rem; }
+		@media screen and (min-width: 769px), print {
+			.tile:not(.is-child) { display: flex; }
+		}
+		/* full size graph: scroll inside the view when it is wider than the screen */
+		.modal-content {
+			width: fit-content;
+			max-width: calc(100vw - 40px);
+			overflow: auto;
+		}
+		#modal-of-image {
+			width: auto;
+			max-width: none;
+		}
+		/* buttons in the settings bar look like the former links */
+		.navbar button.navbar-link,
+		.navbar button.navbar-item,
+		.navbar button.navbar-burger {
+			background-color: transparent;
+			border: 0;
+			font: inherit;
+			cursor: pointer;
+		}
+		.navbar button.navbar-link,
+		.navbar .navbar-dropdown button.navbar-item {
+			width: 100%;
+			text-align: left;
+		}
+		/* section headings: white on a darker teal for a 4.5:1 contrast */
+		.notification.graph-heading {
+			background-color: var(--adsb-heading-bg);
+			color: var(--adsb-heading-text);
+		}
+		.notification.graph-heading .title,
+		.notification.graph-heading .subtitle {
+			color: var(--adsb-heading-text);
+		}
+		.sr-only {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			padding: 0;
+			margin: -1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
+			border: 0;
+		}
+		/* keyboard: closed dropdowns stay closed while their button has the focus */
+		.navbar-item.is-hoverable:focus-within:not(:hover):not(.is-active) .navbar-dropdown {
+			display: none;
+		}
+		.navbar button:focus-visible {
+			outline: 3px solid var(--adsb-focus);
+			outline-offset: -3px;
+		}
+	</style>
 </head>
 <body class="has-navbar-fixed-bottom">
 
 <section>
-	<nav class="navbar is-transparent is-fixed-bottom">
+	<nav class="navbar is-transparent is-fixed-bottom" aria-label="Graph settings">
 		<div class="navbar-brand">
-			<a class="navbar-item">
+			<span class="navbar-item" aria-hidden="true">
 				<span class="icon">
 					<i class="fas fa-cog"></i>
 				</span>
-			</a>
-			<div class="navbar-burger burger" data-target="navbar-graph-settings">
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
+			</span>
+			<button type="button" class="navbar-burger burger" aria-label="Graph settings" aria-expanded="false" aria-controls="navbar-graph-settings">
+				<span aria-hidden="true"></span>
+				<span aria-hidden="true"></span>
+				<span aria-hidden="true"></span>
+			</button>
 		</div>
 
 		<div id="navbar-graph-settings" class="navbar-menu">
 			<div class="navbar-start">
 				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
-					<a class="navbar-link">
-						Report Period
-					</a>
-					<div class="navbar-dropdown is-boxed is-hidden-mobile">
-						<a class="navbar-item report-period" id='report-period-1h'><label for='1h'>Hourly</label></a>
-						<a class="navbar-item report-period" id='report-period-6h'><label for='6h'>Six Hours</label></a>
-						<a class="navbar-item report-period" id='report-period-12h'><label for='12h'>Twelve Hours</label></a>
-						<a class="navbar-item report-period" id='report-period-24h'><label for='24h'>Daily</label></a>
+					<button type="button" class="navbar-link" aria-expanded="false" aria-controls="dropdown-report-period">Report Period</button>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile" id="dropdown-report-period" role="group" aria-label="Report Period">
+						<button type="button" class="navbar-item report-period" id="report-period-1h" data-value="1h">Hourly</button>
+						<button type="button" class="navbar-item report-period" id="report-period-6h" data-value="6h">Six Hours</button>
+						<button type="button" class="navbar-item report-period" id="report-period-12h" data-value="12h">Twelve Hours</button>
+						<button type="button" class="navbar-item report-period" id="report-period-24h" data-value="24h">Daily</button>
 						<hr class="navbar-divider">
-						<a class="navbar-item report-period" id='report-period-7d'><label for='7d'>Weekly</label></a>
-						<a class="navbar-item report-period" id='report-period-30d'><label for='30d'>Monthly</label></a>
-						<a class="navbar-item report-period" id='report-period-90d'><label for='90d'>Quarterly</label></a>
-						<a class="navbar-item report-period" id='report-period-180d'><label for='180d'>Half-Yearly</label></a>
-						<a class="navbar-item report-period" id='report-period-365d'><label for='365d'>Yearly</label></a>
+						<button type="button" class="navbar-item report-period" id="report-period-7d" data-value="7d">Weekly</button>
+						<button type="button" class="navbar-item report-period" id="report-period-30d" data-value="30d">Monthly</button>
+						<button type="button" class="navbar-item report-period" id="report-period-90d" data-value="90d">Quarterly</button>
+						<button type="button" class="navbar-item report-period" id="report-period-180d" data-value="180d">Half-Yearly</button>
+						<button type="button" class="navbar-item report-period" id="report-period-365d" data-value="365d">Yearly</button>
 					</div>
 				</div>
 				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
-					<a class="navbar-link">
-						Range Unit
-					</a>
-					<div class="navbar-dropdown is-boxed is-hidden-mobile">
-						<a class="navbar-item range-unit" id="range-unit-nautical-miles">Nautical Miles</a>
-						<a class="navbar-item range-unit" id="range-unit-statute-miles">Statute Miles</a>
-						<a class="navbar-item range-unit" id="range-unit-kilometers">Kilometers</a>
+					<button type="button" class="navbar-link" aria-expanded="false" aria-controls="dropdown-range-unit">Range Unit</button>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile" id="dropdown-range-unit" role="group" aria-label="Range Unit">
+						<button type="button" class="navbar-item range-unit" id="range-unit-nautical-miles">Nautical Miles</button>
+						<button type="button" class="navbar-item range-unit" id="range-unit-statute-miles">Statute Miles</button>
+						<button type="button" class="navbar-item range-unit" id="range-unit-kilometers">Kilometers</button>
 					</div>
 				</div>
 				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
-					<a class="navbar-link">
-						Temperature Unit
-					</a>
-					<div class="navbar-dropdown is-boxed is-hidden-mobile">
-						<a class="navbar-item temp-unit" id="temp-unit-metric">Metric</a>
-						<a class="navbar-item temp-unit" id="temp-unit-imperial">Imperial</a>
+					<button type="button" class="navbar-link" aria-expanded="false" aria-controls="dropdown-temp-unit">Temperature Unit</button>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile" id="dropdown-temp-unit" role="group" aria-label="Temperature Unit">
+						<button type="button" class="navbar-item temp-unit" id="temp-unit-metric">Metric</button>
+						<button type="button" class="navbar-item temp-unit" id="temp-unit-imperial">Imperial</button>
 					</div>
 				</div>
 				<div class="navbar-item has-dropdown has-dropdown-up is-hoverable">
-					<a class="navbar-link">
-						Network Interface
-					</a>
-					<div class="navbar-dropdown is-boxed is-hidden-mobile">
-						  <a class="navbar-item nic-name" id="nic-name-all">all interfaces</a>
-						  <a class="navbar-item nic-name" id="nic-name-eth0">eth0</a>
-						  <a class="navbar-item nic-name" id="nic-name-wlan0">wlan0</a>
+					<button type="button" class="navbar-link" aria-expanded="false" aria-controls="dropdown-nic-name">Network Interface</button>
+					<div class="navbar-dropdown is-boxed is-hidden-mobile" id="dropdown-nic-name" role="group" aria-label="Network Interface">
+						<button type="button" class="navbar-item nic-name" id="nic-name-all">all interfaces</button>
+						<button type="button" class="navbar-item nic-name" id="nic-name-eth0">eth0</button>
+						<button type="button" class="navbar-item nic-name" id="nic-name-wlan0">wlan0</button>
 					</div>
 				</div>
 			</div>
@@ -92,6 +166,8 @@
 </section>
 -->
 
+<main>
+<h1 class="sr-only">Performance Graphs</h1>
 <section class="section">
 	<!--
 	<div class="container">
@@ -141,8 +217,8 @@
 	<div class="container">
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification is-primary">
-					<p class="title">Dump1090 Graphs</p>
+				<article class="tile is-child notification graph-heading">
+					<h2 class="title">Dump1090 Graphs</h2>
 					<p class="subtitle">ADS-B performance and statistics</p>
 				</article>
 			</div>
@@ -254,8 +330,8 @@
 	<div class="container" id="uat978-block" style="display:none">
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification is-primary">
-					<p class="title">Dump978 Graphs</p>
+				<article class="tile is-child notification graph-heading">
+					<h2 class="title">Dump978 Graphs</h2>
 					<p class="subtitle">UAT performance and statistics</p>
 				</article>
 			</div>
@@ -318,8 +394,8 @@
 	<div class="container">
 		<div class="tile is-ancestor">
 			<div class="tile is-parent">
-				<article class="tile is-child notification is-primary">
-					<p class="title">System Graphs</p>
+				<article class="tile is-child notification graph-heading">
+					<h2 class="title">System Graphs</h2>
 					<p class="subtitle">System performance and statistics</p>
 				</article>
 			</div>
@@ -415,6 +491,7 @@
 			</div>
 		</div>
 </section>
+</main>
 
 <!--
 <footer class="container footer">
@@ -429,14 +506,14 @@
 -->
 
 <!-- modals: dump1090 -->
-<div id="modal-main" class="modal">
+<div id="modal-main" class="modal" role="dialog" aria-modal="true">
 	<div class="modal-background"></div>
 	<div class="modal-content">
 		<p class="image">
 		<img id="modal-of-image" src="#" alt="#">
 		</p>
 	</div>
-	<button class="modal-close" aria-label="close"></button>
+	<button type="button" class="modal-close is-large" aria-label="Close"></button>
 </div>
 
 <!-- modals: system -->

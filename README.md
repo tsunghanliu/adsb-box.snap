@@ -1,47 +1,52 @@
-# Snap of ADS-B Box
+# ADS-B Box snap
 
-This is a snap to establish a ADS-B receiver box.
+`adsb-box` turns a small computer with an RTL-SDR dongle into an ADS-B receiver station. It decodes the signals of nearby aircraft, shows them on a map, draws performance graphs and shares the data with several flight tracking services.
 
-# Components
+It is a snap, made for [Ubuntu Core](https://ubuntu.com/core), and also works on other Linux systems with snapd.
 
-* [dump1090 and faup1090](https://github.com/flightaware/dump1090/)
-* [lighttpd](https://www.lighttpd.net/)
-* [tcllauncher](https://github.com/flightaware/tcllauncher/)
-* [piaware](https://github.com/flightaware/piaware/)
-* [mlat-client](https://github.com/mutability/mlat-client/)
-* [fr24feed](https://www.flightradar24.com/share-your-data)
-* [opensky-network](https://opensky-network.org/contribute/improve-coverage)
-* [plane finder](https://planefinder.net/sharing/)
-* [RadarBox](https://www.radarbox24.com/)
-* [collectd](https://collectd.org)
-* [dump978](https://github.com/flightaware/dump978/)
-* graphs web (a fork of [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs web)
-  * performance graphs of [graph1090](https://github.com/wiedehopf/graphs1090)
-* other base tools and libraries, e.g python and tcl
+## Contents
 
-# Build
+- [Components](#components)
+- [Requirements](#requirements)
+- [Quick start](#quick-start)
+- [Web interface](#web-interface)
+- [Configuration](#configuration)
+- [Feeders](#feeders)
+- [UAT 978MHz](#uat-978mhz)
+- [Maintenance](#maintenance)
+- [Building the snap](#building-the-snap)
+- [Known issues](#known-issues)
+- [Bug reports and feedback](#bug-reports-and-feedback)
 
-To build the snap, you have to use *snapcraft*. Read the official [document](http://snapcraft.io/docs/build-snaps/) for the details. This command will produce a file named `adsb-box_<ver>_<arch>.snap`. `<ver>` means the version number and `<arch>` stands for the architecture of target machines.
+## Components
 
-``` sh
-$ snapcraft snap
-```
+- [dump1090 and faup1090](https://github.com/flightaware/dump1090/) (FlightAware): 1090MHz decoder and the Skyview map
+- [dump978](https://github.com/flightaware/dump978/) (FlightAware): 978MHz UAT decoder
+- [PiAware](https://github.com/flightaware/piaware/), [tcllauncher](https://github.com/flightaware/tcllauncher/) and [mlat-client](https://github.com/mutability/mlat-client/): feeder of FlightAware
+- [fr24feed](https://www.flightradar24.com/share-your-data): feeder of Flightradar24
+- [opensky-feeder](https://opensky-network.org/feed): feeder of OpenSky Network
+- [pfclient](https://planefinder.net/sharing/): feeder of Plane Finder
+- [rbfeeder](https://www.radarbox.com/sharing-data): feeder of RadarBox
+- ADS-B Exchange feeding with socat and mlat-client
+- [lighttpd](https://www.lighttpd.net/): web server
+- [collectd](https://collectd.org) and [graphs1090](https://github.com/wiedehopf/graphs1090): statistics and performance graphs (the graphs page is a fork of the [adsb-receiver](https://github.com/jprochazka/adsb-receiver/) graphs page)
+- other tools and libraries, e.g. Python, Tcl and rtl-sdr
 
-# Hardware requirement
+## Requirements
 
-* PC, Raspberry Pi or any platform can install Ubuntu Core
-* RTLSDR dongle
-* 1090MHz antenna
+- A computer which runs Ubuntu Core or another Linux system with snapd: a Raspberry Pi or a PC. The snap is built for `amd64`, `armhf` and `arm64`.
+- An RTL-SDR dongle and a 1090MHz antenna
+- Optional: a second RTL-SDR dongle and a 978MHz antenna for UAT (used in the USA), see [UAT 978MHz](#uat-978mhz)
 
-# Installation
+## Quick start
 
-## install Ubuntu Core
+### 1. Install Ubuntu Core
 
-Please read the official [document](https://developer.ubuntu.com/core/get-started) and install Ubuntu Core onto your hardware.
+Follow the [official guide](https://ubuntu.com/core/docs/get-started) to install Ubuntu Core on your hardware.
 
-## blacklist the drivers of RTLSDR devices
+### 2. Blacklist the kernel drivers of the RTL-SDR dongle
 
-The drivers have to be blacklisted, or the librtlsdr won't access the dongle.
+The kernel drivers of the dongle must be blacklisted, otherwise the dongle cannot be used by the snap.
 
 ``` sh
 $ cat << EOF | sudo tee /etc/modprobe.d/blacklist-rtl-sdr.conf
@@ -52,35 +57,27 @@ EOF
 $ sudo reboot
 ```
 
-## enable experimental feature
-It's necessary to enable the layouts feature of the core snap.
-``` sh
-$ sudo snap set core experimental.layouts=true
-```
+Note: older versions of this document asked to run `sudo snap set core experimental.layouts=true`. This is no longer needed: layouts are always enabled in snapd.
 
-## install adsb-box
+### 3. Install adsb-box
 
-Each snap has a revision (`<rev>`). A snap installed from the store always has a revision in number. But the revision of a local snap has a lead 'x'.
-
-### Use the store
+From the Snap Store:
 
 ``` sh
 $ sudo snap install adsb-box
+# or the latest development version
+$ sudo snap install adsb-box --edge
 ```
 
-If you want to try the latest/development version, you can add `--edge` to the above command.
-
-### Use local snap
-
-Upload the snap file to your target machine then install it.
+Or a snap file you built yourself (see [Building the snap](#building-the-snap)):
 
 ``` sh
-$ sudo snap install --dangerous adsb-box_<ver>_<arch>.snap
+$ sudo snap install --dangerous adsb-box_<version>_<arch>.snap
 ```
 
-## configure interfaces
+### 4. Connect the interfaces
 
-These interfaces **MUST** be correctly configured, otherwise the services will not start successfully.
+These interfaces **must** be connected, otherwise the services do not start.
 
 ``` sh
 $ sudo snap connect adsb-box:raw-usb
@@ -92,28 +89,106 @@ $ sudo snap connect adsb-box:mount-observe
 $ sudo snap restart adsb-box
 ```
 
-## optional configuration
+### 5. Set the location of the receiver
 
-### snap settings
+Several feeders and the range graphs need the location of the receiver. The altitude is in meters.
 
-There are some global settings which shared by several feeders. For now, it's the location of the receiver. Replace [LATITUDE], [LONGITUDE] and [ALTITUDE] with the real values.
-
-Note: unit of altitude is meter.
 ``` sh
-$ sudo snap set adsb-box receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE] receiver.altitude=[ALTITUDE]
+$ sudo adsb-box.config set receiver.latitude=<LATITUDE> receiver.longitude=<LONGITUDE> receiver.altitude=<ALTITUDE>
+# or
+$ sudo snap set adsb-box receiver.latitude=<LATITUDE> receiver.longitude=<LONGITUDE> receiver.altitude=<ALTITUDE>
+$ sudo snap restart adsb-box
 ```
+
+`adsb-box.config` checks the values and restarts the affected services, see [adsb-box.config](#adsb-boxconfig).
+
+### 6. Open the web interface
+
+Open `http://<your-device-ip>:8080/` in a web browser. You should see the aircraft around you on the map.
+
+Then set up the [feeders](#feeders) you want to use.
+
+## Web interface
+
+Open `http://<your-device-ip>:8080/`. The page has three tabs:
+
+- **Skyview Map**: the map and list of aircraft, provided by dump1090 (FlightAware SkyAware). The same page is also at `http://<your-device-ip>:8080/dump1090/`.
+- **Performance Graphs**: statistics of the receiver and the system, see [Performance graphs](#performance-graphs).
+- **Settings**: view and change the settings, see [Web settings page](#web-settings-page).
+
+With a 978MHz receiver, the UAT map (SkyAware978) is at `http://<your-device-ip>:8978/`.
+
+On narrow screens (phones), the tabs show only their icons. The pages can be used with the keyboard and screen readers.
+
+### Dark mode
+
+The pages follow the light or dark setting of your system. To choose a theme, use the switch on the right of the tab bar: **Auto** (follow the system, the default), **Light** or **Dark**. Each browser remembers its own choice, and the graphs and settings pages use it too, also when they are opened on their own. The Skyview map and the UAT map (FlightAware pages) stay light.
+
+### Performance graphs
+
+To save CPU, the graphs are drawn on demand: only while the **Performance Graphs** page is open, for the report period being viewed. They are redrawn at the same intervals as the schedule (e.g. every 5 minutes for the hourly graphs, every 15 minutes for the daily graphs) and are no longer drawn 5 minutes after the page is closed. When the page is opened after a while, it shows the old graphs first; the new ones appear within about 10-20 seconds.
+
+On a Raspberry Pi 4B, this lowered the overall CPU utilization (all 4 cores, see the CPU graph of the Performance Graphs page) from about 19% to about 9% while nobody views the graphs. Drawing all graphs on schedule takes about 7% of one core.
+
+To draw the graphs of all report periods on schedule, even if nobody views them:
+
+``` sh
+$ sudo adsb-box.config set graphs.always-generate=1
+# or
+$ sudo snap set adsb-box graphs.always-generate=1
+$ sudo snap restart adsb-box.graphs-gend
+
+# back to on demand
+$ sudo adsb-box.config set graphs.always-generate=0
+```
+
+Installations updated from an older version keep drawing on schedule (`graphs.always-generate` is set to `1` once, at the first update). New installations draw on demand.
+
+In dark mode, the graphs are drawn in the dark colour scheme of graphs1090. Each colour scheme is drawn only when it is viewed, so a theme switch shows the other graphs within about 10-20 seconds the first time. With `graphs.always-generate=1`, only one colour scheme is drawn on schedule, the light one by default; the other one is still drawn on demand. To draw the dark graphs on schedule instead:
+
+``` sh
+$ sudo adsb-box.config set graphs.default-dark-theme=1
+```
+
+Without a 978MHz receiver (`receiver.dump978.index` and `receiver.dump978.serial` are not set), the UAT graphs are not drawn.
+
+### Web settings page
+
+The **Settings** tab (`http://<your-device-ip>:8080/settings.html`) shows all settings of adsb-box, grouped by topic, with a short name and a description of each.
+
+- Without a password, the page is read-only. The OpenSky Network username and serial and the ADS-B Exchange feeder name are hidden until you log in.
+- To change the settings on the page, set a password, then click **Log in** and use the user name `admin`.
+
+``` sh
+# set or change the password, it asks for the new password twice
+$ sudo adsb-box.config passwd
+# remove the password, the page becomes read-only again
+$ sudo adsb-box.config passwd --disable
+```
+
+Only a SHA-512 hash of the password is stored. Changing the password takes effect immediately, without restarting any service.
+
+The page uses the same checks as `adsb-box.config` and restarts the affected services after **Apply**.
+
+Note: the page is served over plain HTTP, so the password is sent unencrypted. Use it only on a trusted network. Changing `lighttpd.port`, `lighttpd.enable-localhost-log` or `receiver.dump978.serial` restarts the web server: the settings are saved, reload the page (or open the new port) in a moment.
+
+## Configuration
 
 ### adsb-box.config
 
-`adsb-box.config` is a helper to view and change all settings of adsb-box. It validates the values before applying them and restarts the affected services automatically.
+The settings of adsb-box are snap settings, so they can be changed with `snap set`. `adsb-box.config` is a helper for the same settings: it checks the values before saving them and restarts the affected services automatically. With `snap set`, the values are not checked and you have to restart the services yourself.
 
 ``` sh
-# list all settings, their current values and descriptions
+# list all settings and their current values
 $ sudo adsb-box.config list
+# also show the name and description of each setting
+$ sudo adsb-box.config list --details
 # show a setting
 $ sudo adsb-box.config get receiver.latitude
-# change settings, nothing is changed if any value is invalid
-$ sudo adsb-box.config set receiver.latitude=[LATITUDE] receiver.longitude=[LONGITUDE]
+# show several settings in a table
+$ sudo adsb-box.config get receiver.latitude receiver.longitude receiver.altitude
+# change settings; nothing is changed if any value is invalid
+$ sudo adsb-box.config set receiver.latitude=<LATITUDE> receiver.longitude=<LONGITUDE>
 # an empty value unsets the setting
 $ sudo adsb-box.config set dump1090.location-accuracy=
 # interactive mode: press Enter to keep the current value, input - to unset it
@@ -122,307 +197,198 @@ $ sudo adsb-box.config
 
 Add `--json` before the command (e.g. `sudo adsb-box.config --json list`) to get machine-readable output.
 
-Note: openskyd reads `opensky-network.*` and the receiver location only when `/var/snap/adsb-box/current/openskyd/conf.d/10-debconf.conf` does not exist. Changing them later does not affect openskyd.
+The same changes with `snap set`:
+
+``` sh
+$ sudo snap set adsb-box receiver.latitude=<LATITUDE> receiver.longitude=<LONGITUDE>
+$ sudo snap unset adsb-box dump1090.location-accuracy
+# restart the affected services, or all of them
+$ sudo snap restart adsb-box
+```
+
+`sudo adsb-box.config list --details` shows every setting with its description. The examples in this document show both ways.
 
 Note: `collectd.rrd-writes-per-seoncd` and `lighttpd.enable-log` were renamed to `collectd.rrd-writes-per-second` and `lighttpd.enable-localhost-log`. Old values are migrated automatically.
 
-### logging
+### Logs
 
-On Ubuntu Core 16, the rsyslog service is default enabled. If you are using SD card or USB disk as the primary storage, to avoid the wearing, it would be better to disable rsyslog. For Ubuntu Core 18, this operation is not necessary, since the rsyslog service is disabled by default.
-
-``` sh
-$ snap set system service.rsyslog.disable=true
-
-# to enable it again
-$ snap set system service.rsyslog.disable=false
-```
-
-For the same reason, by default, the log files of the feeders are disabled or placed in tmpfs to reduce the writing of storage. Use the following commands to turn them on.
+To reduce the writes to the storage (SD cards wear out), the logs of the services are disabled or kept in memory (tmpfs) by default. To turn a log on, set its `enable-log` setting to `1`; use `0` to turn it off again.
 
 ``` sh
-# lighttpd access log: local traffic
-$ snap set adsb-box lighttpd.enable-localhost-log=1
-# plane-finder
-$ snap set adsb-box plane-finder.enable-log=1
-# piaware
-$ snap set adsb-box piaware.enable-log=1
-# fr24feed
-$ snap set adsb-box fr24feed.enable-log=1
+$ sudo adsb-box.config set piaware.enable-log=1
+# or
+$ sudo snap set adsb-box piaware.enable-log=1
+$ sudo snap restart adsb-box.piaware
 ```
-Use 0 instead of 1 to disable logging again.
 
-### lighttpd
+The log settings are `adsbexchange.enable-log`, `collectd.enable-log`, `dump1090.enable-log`, `dump978.enable-log`, `fr24feed.enable-log`, `graphs-gend.enable-log`, `openskyd.enable-log`, `piaware.enable-log`, `plane-finder.enable-log`, `rbfeeder.enable-log` and `skyaware978.enable-log`. `lighttpd.enable-localhost-log` turns on the access log of requests from the device itself.
 
-It's not allow to change the configuration of lighttpd currently.
+### Web server
+
+The web interface uses port `8080`. To use another port:
+
+``` sh
+$ sudo adsb-box.config set lighttpd.port=8081
+# or
+$ sudo snap set adsb-box lighttpd.port=8081
+$ sudo snap restart adsb-box.lighttpd
+```
+
+Other options of lighttpd cannot be changed.
 
 ### collectd
-To reduce the number/overhead of rrd file updating, the cache mechanism of rrdtool plugin is enabled. _The trade off is that the graphs kind of "drag behind" and that more memory is used._ The [manual of collectd](https://collectd.org/documentation/manpages/collectd.conf.5.shtml#plugin_rrdtool) provides more explanations. To disable or adjust the settings, please refer to the following commands:
+
+To reduce the writes to the rrd files, the cache of the rrdtool plugin of collectd is enabled. _The trade-off is that the graphs "drag behind" a bit and more memory is used._ Read the [collectd manual](https://collectd.org/documentation/manpages/collectd.conf.html#plugin-rrdtool) before changing these settings.
+
 ``` sh
-## Read the manual before tuning the settings!
-# CacheTimeout, defulat - 300, 0 to disable cache
-$ snap set adsb-box collectd.rrd-cache-timeout=0
-# CacheFlush, default - 10*CacheTimeout
-$ snap set adsb-box collectd.rrd-cache-flush=0
-# RandomTimeout, default - 0
-$ snap set adsb-box collectd.rrd-random-timeout=0
-# WritesPerSecond, default - 50
-$ snap set adsb-box collectd.rrd-writes-per-second=80
+# CacheTimeout, default 300 (seconds), 0 disables the cache
+$ sudo adsb-box.config set collectd.rrd-cache-timeout=0
+# CacheFlush, default 10 * CacheTimeout
+$ sudo adsb-box.config set collectd.rrd-cache-flush=0
+# RandomTimeout, default 0
+$ sudo adsb-box.config set collectd.rrd-random-timeout=0
+# WritesPerSecond, default 50
+$ sudo adsb-box.config set collectd.rrd-writes-per-second=80
+
+# or with snap set, then restart collectd
+$ sudo snap set adsb-box collectd.rrd-cache-timeout=0
+$ sudo snap restart adsb-box.collectd
 ```
 
-Another method to reduce the number of Disk I/O is moving the rrd files to tmpfs. This implementation will:
-1. when collectd starts, copy rrd files from `$SNAP_COMMON/collectd/rrd` to `/tmp/rrd` which is located on tmpfs.
-2. periodically sync the rrd files back to `$SNAP_COMMON/collectd/rrd` according to the config value.
-3. when collectd shuts down, sync the rrd files again.
-The method has a drawback. If the system does not shut down properly (e.g. power outage), the records will be lost. Maximum duration is equal to the period configured.
-To enable this feature:
+Another way to reduce the writes is to keep the rrd files in tmpfs:
+
+1. When collectd starts, the rrd files are copied from `/var/snap/adsb-box/common/collectd/rrd` to tmpfs.
+2. They are copied back periodically, at the configured period.
+3. They are copied back again when collectd stops.
+
+The drawback: if the system does not shut down properly (e.g. a power outage), the records since the last copy are lost, at most one period.
+
 ``` sh
-# unit of period is second
-$ snap set adsb-box collectd.rrd-backup-period=1800
-# restart related services
-$ snap restart adsb-box.collectd
-$ snap restart adsb-box.graphs-gend
+# period in seconds
+$ sudo adsb-box.config set collectd.rrd-backup-period=1800
+# or
+$ sudo snap set adsb-box collectd.rrd-backup-period=1800
+$ sudo snap restart adsb-box.collectd adsb-box.graphs-gend
 ```
 
 ### dump1090
 
-The configuration of dump1090 is at `/var/snap/adsb-box/<rev>/dump1090-fa.conf`.
-By default, the port of BEAST-format output is `30005` and the port of BEAST-format input is `30104`.
-Change the items upon the requirements.
+The configuration file of dump1090 is `/var/snap/adsb-box/current/dump1090-fa.conf`. By default, the BEAST output port is `30005` and the BEAST input port is `30104`. Edit the file if needed and restart dump1090 (`sudo snap restart adsb-box.dump1090`).
 
-If you want to have range circles on the dump1090 webpage and graphs of the maximum range, change the accuracy of location to `approximate` or `exact`.
+To show range rings on the Skyview map and the range graphs, dump1090 needs to know the location of the receiver: set the [receiver location](#5-set-the-location-of-the-receiver) and the location accuracy to `approximate` or `exact`.
 
 ``` sh
-# enable locationing in dump1090
-$ snap set adsb-box dump1090.location-accuracy=<approximate|exact>
+$ sudo adsb-box.config set dump1090.location-accuracy=exact
 # disable it
-$ snap set adsb-box dump1090.location-accuracy=
+$ sudo adsb-box.config set dump1090.location-accuracy=
 
-# restart dump1090 to apply
-$ snap restart adsb-box.dump1090
+# or
+$ sudo snap set adsb-box dump1090.location-accuracy=exact
+$ sudo snap unset adsb-box dump1090.location-accuracy
+$ sudo snap restart adsb-box.dump1090
 ```
 
-#### Wisdom file support
+The dongle of dump1090 can be selected by its index or serial number (`receiver.dump1090.index`, `receiver.dump1090.serial`), and a bias-tee can be enabled for an active antenna (`receiver.dump1090.enable-biast`, `receiver.dump1090.biast-gpio`). See `sudo adsb-box.config list --details`.
 
-Since dump1090-fa v5.0, it supports [wisdom files](https://github.com/flightaware/dump1090#generating-wisdom-files). It has several built-in versions for various hardware to utilize their FPU/DSP unit. If you consider to have a local version. Run these commands:
+#### Wisdom file
 
-```sh
+dump1090-fa supports [wisdom files](https://github.com/flightaware/dump1090#generating-wisdom-files), which select the fastest implementation of its signal processing for the hardware. Built-in wisdom files are used by default. To generate a local one:
+
+``` sh
 $ sudo snap stop adsb-box
 $ sudo adsb-box.generate-wisdom
 $ sudo snap start adsb-box
 ```
 
-Please note:
+> Ideally, to get stable results, you want to do this on an idle system with CPU frequency scaling disabled. Running the benchmarks will take some time (10s of minutes).
 
-> Ideally, to get stable results, you want to do this on an idle system with CPU frequency scaling disabled. Running the benchmarks will takesome time (10s of minutes).
+#### Terrain-limit rings
 
-### terrain-limit rings
+The Skyview map can show the range limited by the terrain around the receiver, from [heywhatsthat.com](https://www.heywhatsthat.com):
 
-Read the following code block or `/snap/adsb-box/<rev>/usr/share/dump1090-fa/html/script.js`. Get your upintheair.json and place it at `/var/snap/adsb-box/<rev>/`.
-
-``` javascript
-        // Add terrain-limit rings. To enable this:
-        //
-        //  create a panorama for your receiver location on heywhatsthat.com
-        //
-        //  note the "view" value from the URL at the top of the panorama
-        //    i.e. the XXXX in http://www.heywhatsthat.com/?view=XXXX
-        //
-        // fetch a json file from the API for the altitudes you want to see:
-        //
-        //  wget -O /usr/share/dump1090-mutability/html/upintheair.json \
-        //    'http://www.heywhatsthat.com/api/upintheair.json?id=XXXX&refraction=0.25&alts=3048,9144'
-        //
-        // NB: altitudes are in _meters_, you can specify a list of altitudes
-```
-
-If you are using Ubuntu Core, there is no wget command available. Please do this on another machine. For instnace:
+1. Create a panorama for the location of the receiver on heywhatsthat.com.
+2. Note the "view" value from the URL of the panorama, i.e. the `XXXX` in `https://www.heywhatsthat.com/?view=XXXX`.
+3. Download the rings for the altitudes you want (in meters). Ubuntu Core has no `wget` or `curl`, so do this on another computer and copy the file to the device:
 
 ``` sh
-# create a panorama on heywhatsthat.com and get the view value on the webpage.
+# on your PC
+$ wget -O upintheair.json 'https://www.heywhatsthat.com/api/upintheair.json?id=XXXX&refraction=0.25&alts=3048,9144'
+$ scp upintheair.json <your-device-ip>:
 
-# on your Linux PC:
-$ wget -O upintheair.json 'http://www.heywhatsthat.com/api/upintheair.json?id=XXXX&refraction=0.25&alts=3048,9144'
-$ scp upintheair.json YOUR-UBUNTU-CORE-IP-ADDRESS:
-
-# on your ubuntu core system:
+# on the device
 $ sudo cp upintheair.json /var/snap/adsb-box/current/
 ```
 
-### PiAware
+## Feeders
 
-If piaware is working, you can associate the feeder with your account by opening the [URL](https://flightaware.com/adsb/piaware/claim) to claim your new feeder on the FlightAware.
-
-Use `adsb-box.piaware-config` to modify the configuration. Please refer [PiAware README](https://github.com/flightaware/piaware/blob/master/README.md) for the command usages.
+Each feeder runs as its own service and starts when it is configured. Check the services with:
 
 ``` sh
-# display all configuration items
+$ snap services adsb-box
+```
+
+Most feeders need the [receiver location](#5-set-the-location-of-the-receiver) for MLAT (multilateration).
+
+### FlightAware (PiAware)
+
+**Set up:** PiAware starts automatically. Claim the receiver for your FlightAware account at <https://flightaware.com/adsb/piaware/claim>.
+
+Use `adsb-box.piaware-config` to change the configuration of PiAware, see the [PiAware README](https://github.com/flightaware/piaware/blob/master/README.md) for the options.
+
+``` sh
+# show all configuration items
 $ sudo adsb-box.piaware-config -showall
-## update the configurations accordingly
-# restart the piaware to apply the new configuration
+# change an item, e.g.
+$ sudo adsb-box.piaware-config allow-mlat yes
+# restart PiAware to apply the changes
 $ sudo snap restart adsb-box.piaware
 ```
 
-The log of PiAware is disabled by default. Please use `snap set adsb-box piaware.enable-log=1` to enable it and use 0 instead of 1 to disable.
+**Check:**
 
-### FR24Feed
-
-Use `adsb-box.fr24feedcli` to sign-up or reconfigure the system.
-People who don't setup the feeder before, please use
 ``` sh
+$ sudo adsb-box.piaware-status
+```
+
+Due to the confinement of the snap, some parts of its output are incorrect, see [Known issues](#known-issues). Your feeder page on FlightAware shows whether the data arrives.
+
+**Log:** `piaware.enable-log`, see [Logs](#logs).
+
+### Flightradar24 (fr24feed)
+
+**Set up:** sign up (first time) or reconfigure the feeder, then restart it.
+
+``` sh
+# first time
 $ sudo adsb-box.fr24feedcli --signup
-```
-fr24feed will ask serval questions and here are the recommended answers for the questions.
-
-Question | Answer | Note
--|-|-
-email address | email_address | your email address on FR24
-sharing key | sharying_key | If you ever share your day, find it on FR24 web
-participate MLAT | yes_or_no (up to you) | On amd64/i386, MLAT is not supported, please answer **no**. If yes, need to specify your coordinates
-automatically configure dump1090 | no |
-receiver type | 4 | ModeS Beast
-connection type | 1 | network connection
-receiver address | 127.0.0.1 | On amd64/i386, please don't use _localhost_
-receiver port | 30005 |
-enable RAW data feed | yes |
-enable Basestation data feed | yes |
-logfile mode | 0 | disable
-
-There are some known issues on amd64/i386 platform, see the [post](https://forum.flightradar24.com/forum/radar-forums/flightradar24-feeding-data-to-flightradar24/12639-1-0-24-5-amd64-error) for detail.
-
-If you want to modify the configurations later, please use:
-``` sh
+# change the configuration later
 $ sudo adsb-box.fr24feedcli --reconfigure
-```
-
-After finished the setup, restart the service
-``` sh
+# apply
 $ sudo snap restart adsb-box.fr24feed
 ```
 
-### OpenSky Network
+fr24feed asks several questions. Recommended answers:
 
-Username and serial of openskyd-feeder are optional. If you don't set them, you can change them later.
-``` sh
-$ sudo snap set adsb-box opensky-network.username=[USERNAME] opensky-network.serial=[SERIAL]
-```
+| Question | Answer | Note |
+|---|---|---|
+| email address | your email address | the email address of your FR24 account |
+| sharing key | your sharing key | if you have shared data before, find it on the FR24 website |
+| participate in MLAT | yes or no | MLAT needs the location of the receiver |
+| automatically configure dump1090 | no | |
+| receiver type | 4 | ModeS Beast |
+| connection type | 1 | network connection |
+| receiver address | 127.0.0.1 | |
+| receiver port | 30005 | |
+| enable RAW data feed | yes | |
+| enable Basestation data feed | yes | |
+| logfile mode | 0 | disabled |
 
-Restart openskyd-feeder to apply the configurations
-``` sh
-$ sudo snap restart adsb-box.openskyd
-```
+> **May be outdated:** on `amd64`, fr24feed used to have issues with MLAT and with the receiver address `localhost` (answer **no** to MLAT and use `127.0.0.1`), see this [forum post](https://forum.flightradar24.com/forum/radar-forums/flightradar24-feeding-data-to-flightradar24/12639-1-0-24-5-amd64-error) from 2019. Check the [official documentation](https://www.flightradar24.com/share-your-data) for the current state.
 
-### Plane Finder
-
-Due to the limitation of the configuration mechanism, users have to configure the Plane Finder client through its web interface.
-* After installation, open this URL: `http://your-device-ip:30053/` and follow the instructions to fill in fields.
-* Remember to set **Receiver data format** to `Beast`, receiver type to `Network`, **IP address** to `localhost` and **Port number** to `30005`.
-* For more details, please refer to the [document](https://planefinder.net/sharing/client).
-The logs are by default disabled. Use `sudo snap set adsb-box plane-finder.enable-log=1` to enable and change 1 to 0 to disable it.
-
-### ADSB Exchange
-
-For BEAST/AVR/AVRMLAT, you have a costomized port, use the commands to set.
+**Check:**
 
 ``` sh
-$ snap set adsb-box adsbexchange.receiverport=[PORTNUM]
-$ snap restart adsb-box.adsbexchange-netcat
-```
-
-For MLAT, you need to set the location (see the **snap settings** section) and feeder name.
-
-``` sh
-$ snap set adsb-box adsbexchange.username=[FEEDER]
-$ snap restart adsb-box.adsbexchange-mlat
-```
-
-### RadarBox
-
-RadarBox only provides the feeder for Raspberry Pi platform (armhf) officially. So, it's not available on x86/amd64 platforms.
-Before setup, make sure the service is running correctly, then claim your station at the [webpage](https://www.radarbox.com/raspberry-pi/claim)
-``` sh
-$ snap services adsb-box.rbfeeder
-Service            Startup  Current  Notes
-adsb-box.rbfeeder  enabled  active   -
-$ adsb-box.rbfeedercli --showkey
-```
-Copy your `sharing key` to the field and claim it.
-
-To enable MLAT client, you need to set the location (see the **snap settings** section). The program will get the feeder name from the configuration file of rbfeeder.
-
-Read the [document](https://www.radarbox24.com/sharing-data) for more information.
-
-## UAT978 Settings
-### Provision dongle
-This step is used to program the serial numbers in the EEPROM of dongles. The serial numbers will be provided to `dump1090` and `dump978` later.
-It would be easier to provision dongles one by one. If you find that the serial (SN) is not `00000001`, you can skip this step.
-
-```bash
-# run rtl-sdr tools within the snap
-$ sudo snap run --shell adsb-box.dump1090
-(in-snap)$ cd $SNAP
-# list dongles
-(in-snap)$ rtl_test -t
-Found 1 device(s):
-  0:  Realtek, RTL2838UHIDIR, SN: 00000001
-  ...
-# set serial number to a 8 digit number, eg 10900001 or 09780001
-# -d for index, -s for serial
-(in-snap)$ rtl_eeprom -d 0 -s 10900001
-
-# unplug the dongle and plug another one
-# re-do rtl_test and rtl_eeprom commands
-# remember to use a different serial for the second dongle
-
-(in-snap)$ exit
-```
-
-### Enable dump978
-Replace serials with yours set in the previous step.
-In this example, dongle 10900001 is for dump1090 and dongle 09780001 is for dump978.
-
-```bash
-$ sudo snap set adsb-box receiver.dump1090.serial=10900001
-$ sudo snap set adsb-box receiver.dump978.serial=09780001
-$ sudo adsb-box.piaware-config uat-receiver-type sdr
-```
-
-## Restart adsb-box
-Connect both dongles and their cables and antennas.
-
-```bash
-$ sudo snap restart adsb-box
-```
-
-## Verification
-- [ ] Check dump978 status is active in `$ snap services adsb-box`
-- [ ] On the skyview page, you would see `UAT` in the legend list.
-- [ ] On the skyview page, you would see aircraft using UAT.
-- [ ] On the performance view, you would see a new group of dump978 charts.
-- [ ] Check your feeder page on Flightaware if it recevies your UAT data.
-- [ ] Check your feeder page on Radarbox24 if it receives you UAT data.
-- [ ] Run `adsb-box.fr24uat-feed-status` to check fr24uat-feed status.
-- [ ] Open http://your-feeder-ip:8755/ to check fr24uat-feed status.
-- [ ] Check your feeder page on Flighradar24 if it receives your UAT data.
-
-
-## Running Status
-
-### web interface
-
-Use a web browser to open the built-in web pages. The url would be `http://your-device-ip:8080/`
-There are two main pages: one is provided by dump1090 and another is for statistics graphs.
-
-### service status
-
-Use `adsb-box.piaware-status` to check the stuats of **dump1090**, **piaware**, **faup1090**, and **fa-mlat-client**. Due to the security limitations, the output result is not totally correct.
-Use `snap services adsb-box` to check the overview of adsb-box services.
-
-### fr24feed status
-
-If fr24feed is configured correctly, you can find the web here `http://your-device-ip:8754/`. Another CLI tool `fr24feed-status` can show a summary. Here is an example output.
-
-``` sh
-$ adsb-box.fr24feedcli
+$ sudo adsb-box.fr24feed-status
 FR24 Feeder/Decoder Process is running
 FR24 Stats Timestamp: 2019-05-31 00:00:00
 FR24 Link: connected [UDP]
@@ -431,88 +397,238 @@ FR24 Tracked AC: 1
 Receiver: connected (813 MSGS/0 SYNC)
 ```
 
-### pfclient status
+The status page of fr24feed is at `http://<your-device-ip>:8754/`.
 
-Check the pfclient built-in web at `http://your-device-ip:30053/`.
+**Files:** the configuration is `/var/snap/adsb-box/current/fr24feed/fr24feed.ini`.
 
-## rtl-sdr tools
-Use ` $ sudo adsb-box.rtltest` to run the rtl_test utility.
-You can use it to do PPM error measurement (`-p`) or other tests. Use `-h` to show the help messages.
+**Log:** `fr24feed.enable-log`.
 
-# Upgrade, backup and restore
+### OpenSky Network (openskyd)
 
-## Upgrade this snap
-Snapd will refresh snaps automatically by default. If you want to do it manually, use this command:
+**Set up:** set the receiver location and, optionally, your OpenSky username and the serial of the feeder.
+
 ``` sh
-$ sudo snap refresh adsb-box
-```
-When upgrading, snapd will clone the files, including configuration files and logs, for the new revision. It's not necessary to perform *backup* or *restore* operations for upgrading.
- 
-## Backup configuration files
-Configuration files and log files are store at `/var/snap/adsb-box/<rev>/`, To backup your configurations, you can archive the whole directory, or just pick some of files.
-``` sh
-# snap settings
-$ snap get -d adsb-box $HOME/snap-set.json
-# dump1090
-$ sudo cp /var/snap/adsb-box/<rev>/dump1090-fa.conf $HOME
-# piaware
-$ sudo cp -a /var/snap/adsb-box/<rev>/piaware $HOME
-# fr24feed
-$ sudo cp /var/snap/adsb-box/<rev>/fr24feed.ini $HOME
-# opensky feeder
-$ sudo cp -a /var/snap/adsb-box/<rev>/openskyd $HOME
-# plane finder
-$ sudo cp -a /var/snap/adsb-box/<rev>/pfclient/pfclient-config.json $HOME
-# collectd
-$ sudo cp -a /var/snap/adsb-box/common/collectd $HOME
+$ sudo adsb-box.config set opensky-network.username=<USERNAME> opensky-network.serial=<SERIAL>
+# or
+$ sudo snap set adsb-box opensky-network.username=<USERNAME> opensky-network.serial=<SERIAL>
+$ sudo snap restart adsb-box.openskyd
 ```
 
-Alternatively, create a snapshot of the snap data and configuration with:
+Note: openskyd reads these settings and the receiver location only when `/var/snap/adsb-box/current/openskyd/conf.d/10-debconf.conf` does not exist, i.e. at its first start. Changing them later does not affect openskyd.
+
+**Check:** `snap services adsb-box.openskyd` and your receiver on the [OpenSky Network website](https://opensky-network.org/).
+
+**Log:** `openskyd.enable-log`.
+
+### Plane Finder (pfclient)
+
+**Set up:** Plane Finder is configured on its own web page, `http://<your-device-ip>:30053/`. Follow the instructions there and set:
+
+- **Receiver data format**: `Beast`
+- **Receiver type**: `Network`
+- **IP address**: `localhost`
+- **Port number**: `30005`
+
+See the [Plane Finder documentation](https://planefinder.net/sharing/client) for details.
+
+**Check:** the same web page shows the status of the client.
+
+**Files:** the configuration is `/var/snap/adsb-box/current/pfclient/pfclient-config.json`.
+
+**Log:** `plane-finder.enable-log`.
+
+### ADS-B Exchange
+
+> **May be outdated:** adsb-box sends the BEAST data to `feed.adsbexchange.com` with socat and runs mlat-client against `feed.adsbexchange.com:31090`. ADS-B Exchange has changed the way to feed over the years; check the [official documentation](https://www.adsbexchange.com/how-to-feed/) whether this method is still accepted.
+
+**Set up:** if ADS-B Exchange gave you a custom port for BEAST/AVR/AVRMLAT, set it (the default is `30005`):
+
 ``` sh
-$ sudo snap save adsb-box
+$ sudo adsb-box.config set adsbexchange.receiverport=<PORT>
+# or
+$ sudo snap set adsb-box adsbexchange.receiverport=<PORT>
+$ sudo snap restart adsb-box.adsbexchange-netcat
 ```
-This creates a new snapshot (zip archive) under `/var/lib/snapd/snapshots/` directory. It can be restored at any time with `snap restore <id>` command. Existing snapshots can be listed with `snap saved`.
 
-## Restore configuration files
-To restore the settings, copy the file to the `/var/snap/adsb-box/<rev>/`
+For MLAT, set the receiver location and a feeder name:
+
 ``` sh
-# snap settings. sorry, there's no easy way to restore them.
-$ cat $HOME/snap-set.json
-### use "$ snap set adsb-box KEY=value" to restore your settings then
-# restore configuration files
-$ sudo cp $HOME/dump1090-fa.conf /var/snap/adsb-box/<rev>/
-$ sudo cp -a $HOME/piaware /var/snap/adsb-box/<rev>/
-$ sudo cp $HOME/fr24feed.ini /var/snap/adsb-box/<rev>/
-$ sudo cp -a $HOME/openskyd /var/snap/adsb-box/<rev>/
-$ sudo mkdir /var/snap/adsb-box/<rev>/pfclient
-$ sudo cp $HOME/pfclient-config.json /var/snap/adsb-box/<rev>/pfclient/
-$ sudo cp -a $HOME/collectd /var/snap/adsb-box/common/
+$ sudo adsb-box.config set adsbexchange.username=<FEEDER-NAME>
+# or
+$ sudo snap set adsb-box adsbexchange.username=<FEEDER-NAME>
+$ sudo snap restart adsb-box.adsbexchange-mlat
+```
 
-# restart services
+**Check:** `snap services adsb-box` shows `adsbexchange-netcat` and `adsbexchange-mlat`.
+
+**Log:** `adsbexchange.enable-log`.
+
+### RadarBox (rbfeeder)
+
+RadarBox provides its feeder only for ARM (Raspberry Pi), so it runs on `armhf` and `arm64` devices only.
+
+**Set up:** make sure the service is running, get the sharing key and claim your station at <https://www.radarbox.com/raspberry-pi/claim>.
+
+``` sh
+$ snap services adsb-box.rbfeeder
+Service            Startup  Current  Notes
+adsb-box.rbfeeder  enabled  active   -
+$ sudo adsb-box.rbfeedercli --showkey
+```
+
+For MLAT, set the receiver location; the feeder name is read from the configuration of rbfeeder. See the [RadarBox documentation](https://www.radarbox.com/sharing-data) for more information.
+
+**Check:** your station page on RadarBox.
+
+**Log:** `rbfeeder.enable-log`.
+
+## UAT 978MHz
+
+In the USA, some aircraft use UAT on 978MHz instead of ADS-B on 1090MHz. adsb-box can receive both with two RTL-SDR dongles, one for each frequency. Without a 978MHz dongle, the UAT services stay stopped.
+
+### 1. Give each dongle a serial number
+
+The services find the dongles by their serial numbers, which are stored in the EEPROM of the dongles. If your dongles already have different serial numbers (not `00000001`), skip this step. It is easier to program the dongles one by one: plug in only one dongle at a time.
+
+``` sh
+# run the rtl-sdr tools inside the snap
+$ sudo snap run --shell adsb-box.dump1090
+(in-snap)$ cd $SNAP
+# list the dongles
+(in-snap)$ rtl_test -t
+Found 1 device(s):
+  0:  Realtek, RTL2838UHIDIR, SN: 00000001
+  ...
+# set the serial number to an 8 digit number, e.g. 10900001 or 09780001
+# -d for the index, -s for the serial
+(in-snap)$ rtl_eeprom -d 0 -s 10900001
+
+# unplug this dongle, plug in the other one and repeat rtl_test and rtl_eeprom
+# with a different serial number
+
+(in-snap)$ exit
+```
+
+### 2. Enable dump978
+
+Use your serial numbers from the previous step. In this example, the dongle `10900001` is for dump1090 (1090MHz) and `09780001` is for dump978 (978MHz).
+
+``` sh
+$ sudo adsb-box.config set receiver.dump1090.serial=10900001 receiver.dump978.serial=09780001
+# or
+$ sudo snap set adsb-box receiver.dump1090.serial=10900001 receiver.dump978.serial=09780001
+
+# tell PiAware to feed UAT
+$ sudo adsb-box.piaware-config uat-receiver-type sdr
+```
+
+Connect both dongles with their cables and antennas, then restart adsb-box:
+
+``` sh
 $ sudo snap restart adsb-box
 ```
 
-# Remove
+### 3. Check
 
-To remove this snap
+- `snap services adsb-box` shows `dump978` and `skyaware978` as active.
+- The Skyview map shows `UAT` in the legend, and aircraft using UAT. The UAT map (SkyAware978) is at `http://<your-device-ip>:8978/`.
+- The Performance Graphs page shows the Dump978 graphs.
+- Your feeder pages on FlightAware, RadarBox and Flightradar24 show UAT data.
+- For Flightradar24 (fr24feed must be configured first): run `sudo adsb-box.fr24uat-feed-status` or open `http://<your-device-ip>:8755/`.
+
+## Maintenance
+
+### Status
+
+``` sh
+# overview of all services
+$ snap services adsb-box
+# dump1090, PiAware, faup1090 and mlat-client
+$ sudo adsb-box.piaware-status
+# Flightradar24
+$ sudo adsb-box.fr24feed-status
+```
+
+### rtl-sdr tools
+
+`adsb-box.rtltest` runs `rtl_test`, e.g. to measure the PPM error of the dongle (`-p`). Use `-h` for the options. Stop adsb-box first, because dump1090 uses the dongle:
+
+``` sh
+$ sudo snap stop adsb-box
+$ sudo adsb-box.rtltest -p
+$ sudo snap start adsb-box
+```
+
+### Update
+
+snapd updates snaps automatically. To update now:
+
+``` sh
+$ sudo snap refresh adsb-box
+```
+
+The configuration files and logs are copied to the new revision, so there is no need to back them up for an update. To go back to the previous revision:
+
+``` sh
+$ sudo snap revert adsb-box
+```
+
+### Backup and restore
+
+The easiest way is a snapshot of the snap settings and data:
+
+``` sh
+# create a snapshot (stored in /var/lib/snapd/snapshots/)
+$ sudo snap save adsb-box
+# list the snapshots
+$ snap saved
+# restore a snapshot, <id> is the "Set" column of "snap saved"
+$ sudo snap restore <id>
+```
+
+To back up selected files instead: the snap settings can be saved with `snap get -d adsb-box`, the configuration files are in `/var/snap/adsb-box/current/` and the statistics in `/var/snap/adsb-box/common/`.
+
+``` sh
+# snap settings
+$ sudo snap get -d adsb-box > $HOME/adsb-box-settings.json
+# configuration files
+$ sudo cp /var/snap/adsb-box/current/dump1090-fa.conf $HOME/            # dump1090
+$ sudo cp -a /var/snap/adsb-box/current/piaware $HOME/                  # PiAware
+$ sudo cp /var/snap/adsb-box/current/fr24feed/fr24feed.ini $HOME/       # Flightradar24
+$ sudo cp -a /var/snap/adsb-box/current/openskyd $HOME/                 # OpenSky Network
+$ sudo cp /var/snap/adsb-box/current/pfclient/pfclient-config.json $HOME/   # Plane Finder
+# statistics (rrd files of collectd)
+$ sudo cp -a /var/snap/adsb-box/common/collectd $HOME/
+```
+
+To restore them, set the settings again (e.g. `sudo adsb-box.config set KEY=VALUE ...` with the values in `adsb-box-settings.json`), copy the files back to the same places and restart adsb-box (`sudo snap restart adsb-box`).
+
+### Remove
 
 ``` sh
 $ sudo snap remove adsb-box
 ```
 
-# Bug reports and feedback
+snapd keeps a snapshot of the data for a while after the removal. Use `sudo snap remove --purge adsb-box` to remove everything.
 
-Please use the [github issues page](https://github.com/tsunghanliu/adsb-box.snap/issues) to report any problems and suggestions.
+## Building the snap
 
-# Known issues
+The snap is built with [snapcraft](https://snapcraft.io/docs/snapcraft-overview). The result is a file named `adsb-box_<version>_<arch>.snap`.
 
-* piaware cannot get all system-information.
-* piaware-status output is incorrect.
+``` sh
+# build locally (snapcraft uses LXD or Multipass for the build environment)
+$ snapcraft pack
+# or build on Launchpad, e.g. for a Raspberry Pi
+$ snapcraft remote-build --build-for arm64
+```
 
-# Future plans
+Supported architectures: `amd64`, `armhf` and `arm64`. `check-feeder-version.sh` checks whether newer versions of the bundled feeders are available.
 
-* Add a configuration item to contorl PiAware service.
-* Support other feeders. Is there any other public projects?!
-    * [RadarBox24](https://www.radarbox24.com/) (in-progress)
-* Support other architectures. (x86/armhf/arm64)
-    adsb-box is available for x86/armhf/arm64 as well, but it hasn't been fully verified.
+## Known issues
+
+- The confinement of the snap prevents PiAware from collecting all system information, and some parts of the output of `adsb-box.piaware-status` are incorrect.
+- openskyd reads the OpenSky settings and the receiver location only at its first start, see [OpenSky Network](#opensky-network-openskyd).
+
+## Bug reports and feedback
+
+Please use the [GitHub issues page](https://github.com/tsunghanliu/adsb-box.snap/issues) to report problems and suggestions.

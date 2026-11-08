@@ -72,12 +72,82 @@ PERIOD_BACKUP=${PERIOD_BACKUP:-0}
 # create output directory which is defined in make-collectd-graphs.sh
 mkdir -p /tmp/graphs
 
+# draw all graphs of a period ($1) in a theme ($3: light or dark), $2 is the
+# pause between the graphs
 gen_graphs()
 {
 	if [ "$ENABLE_LOG" != "0" ]; then
 		echo "[$(date +"%F %T")] run cmd, arg=$*"
 	fi
-	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" 0.7 >/dev/null 2>&1
+	# without a 978MHz receiver, skip the UAT graphs (the same check as
+	# bin/collectd and bin/lighttpd)
+	if [ -z "$(snapctl get receiver.dump978.index)" ] && [ -z "$(snapctl get receiver.dump978.serial)" ]; then
+		export SKIP_UAT=1
+	else
+		unset SKIP_UAT
+	fi
+	if [ "$3" = "dark" ]; then
+		export GRAPHS1090_COLORSCHEME=dark GRAPHS1090_DOCUMENTROOT=$GRAPHS_DIR/dark
+	else
+		export GRAPHS1090_COLORSCHEME=default GRAPHS1090_DOCUMENTROOT=$GRAPHS_DIR
+	fi
+	nice -n 5 "$SNAP/usr/share/graphs1090/graphs1090.sh" "$1" "$2" >/dev/null 2>&1
+}
+
+# graphs.always-generate=1: draw the graphs of every period on schedule in the
+# default theme (graphs.default-dark-theme); otherwise, and for the other
+# theme, draw only the periods and themes which the graphs page asked for
+# recently
+ALWAYS_GENERATE=$(snapctl get graphs.always-generate)
+DEFAULT_THEME=light
+[ "$(snapctl get graphs.default-dark-theme)" = "1" ] && DEFAULT_THEME=dark
+WANTED_DIR=/tmp/graphs-wanted	# written by bin/graphs-wanted-cgi
+GRAPHS_DIR=/tmp/graphs1090	# light graphs, the dark ones are in $GRAPHS_DIR/dark
+IDLE_TIMEOUT=300
+
+# wanted PERIOD THEME: somebody viewed the graphs of PERIOD in THEME in the
+# last 5 minutes
+wanted()
+{
+	f="$WANTED_DIR/$1-$2"
+	[ -f "$f" ] && [ $((now - $(stat -c %Y "$f"))) -lt "$IDLE_TIMEOUT" ]
+}
+
+# stale PERIOD THEME INTERVAL: the graphs of PERIOD in THEME are missing or
+# older than INTERVAL
+stale()
+{
+	img="$GRAPHS_DIR/dump1090-localhost-aircraft-$1.png"
+	[ "$2" = "dark" ] && img="$GRAPHS_DIR/dark/dump1090-localhost-aircraft-$1.png"
+	[ ! -f "$img" ] || [ $((now - $(stat -c %Y "$img"))) -ge "$3" ]
+}
+
+# check_period PERIOD: draw the graphs of PERIOD if needed
+check_period()
+{
+	eval "timeout=\$TIMEOUT_$1 interval=\$PERIOD_$1"
+	due=0
+	if [ "$now" -ge "$timeout" ]; then
+		due=1
+		eval "TIMEOUT_$1=$((timeout + interval))"
+	fi
+
+	for theme in light dark; do
+		if [ "$ALWAYS_GENERATE" = "1" ] && [ "$theme" = "$DEFAULT_THEME" ]; then
+			[ "$due" -eq 1 ] && gen_graphs "$1" 0.7 "$theme" &
+			continue
+		fi
+
+		wanted "$1" "$theme" || continue
+		# while somebody views the graphs, redraw them at the same intervals
+		# as the schedule; draw at once without pauses if they are missing or
+		# much older (first view after a while)
+		if stale "$1" "$theme" $((interval * 2)); then
+			gen_graphs "$1" 0 "$theme" &
+		elif stale "$1" "$theme" "$interval"; then
+			gen_graphs "$1" 0.7 "$theme" &
+		fi
+	done
 }
 
 init_timeouts()
@@ -110,62 +180,16 @@ init_timeouts()
 
 init_timeouts
 
+# on demand, check more often to draw soon after the page asks for graphs
+LOOP_INTERVAL=60
+[ "$ALWAYS_GENERATE" = "1" ] || LOOP_INTERVAL=10
+
 while true; do
 	now=$(date +"%s")
 
-	## 1hr work
-	if [ "$now" -ge "$TIMEOUT_1h" ]; then
-		gen_graphs 1h &
-		TIMEOUT_1h=$((TIMEOUT_1h+PERIOD_1h))
-	fi
-
-	## 6hr work
-	if [ "$now" -ge "$TIMEOUT_6h" ]; then
-		gen_graphs 6h &
-		TIMEOUT_6h=$((TIMEOUT_6h+PERIOD_6h))
-	fi
-
-	## 12hr work
-	if [ "$now" -ge "$TIMEOUT_12h" ]; then
-		gen_graphs 12h &
-		TIMEOUT_24h=$((TIMEOUT_12h+PERIOD_12h))
-	fi
-
-	## 24hr work
-	if [ "$now" -ge "$TIMEOUT_24h" ]; then
-		gen_graphs 24h &
-		TIMEOUT_24h=$((TIMEOUT_24h+PERIOD_24h))
-	fi
-
-	## 7d work
-	if [ "$now" -ge "$TIMEOUT_7d" ]; then
-		gen_graphs 7d &
-		TIMEOUT_7d=$((TIMEOUT_7d+PERIOD_7d))
-	fi
-
-	## 30d work
-	if [ "$now" -ge "$TIMEOUT_30d" ]; then
-		gen_graphs 30d &
-		TIMEOUT_30d=$((TIMEOUT_30d+PERIOD_30d))
-	fi
-
-	## 90d work
-	if [ "$now" -ge "$TIMEOUT_90d" ]; then
-		gen_graphs 90d &
-		TIMEOUT_90d=$((TIMEOUT_90d+PERIOD_90d))
-	fi
-
-	## 180d work
-	if [ "$now" -ge "$TIMEOUT_180d" ]; then
-		gen_graphs 180d &
-		TIMEOUT_180d=$((TIMEOUT_180d+PERIOD_180d))
-	fi
-
-	## 365d work
-	if [ "$now" -ge "$TIMEOUT_365d" ]; then
-		gen_graphs 365d &
-		TIMEOUT_365d=$((TIMEOUT_365d+PERIOD_365d))
-	fi
+	for period in 1h 6h 12h 24h 7d 30d 90d 180d 365d; do
+		check_period "$period"
+	done
 
 	## Backup work
 	if [ "$PERIOD_BACKUP" -ne 0 ] && [ "$now" -ge "$TIMEOUT_BACKUP" ]; then
@@ -173,6 +197,6 @@ while true; do
 		TIMEOUT_BACKUP=$((TIMEOUT_BACKUP+PERIOD_BACKUP))
 	fi
 
-	sleep 60
+	sleep "$LOOP_INTERVAL"
 done
 

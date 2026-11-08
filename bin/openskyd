@@ -19,26 +19,28 @@ if [ ! -d "$DAEMON_HOME" ] || [ ! -d "$CONF_DIR" ]; then
 	mkdir -p "$CONF_DIR"
 fi
 
-if [ ! -f "$CONF_FILE" ]; then
-	LAT="$(snapctl get receiver.latitude)"
-	LONG="$(snapctl get receiver.longitude)"
-	ALT="$(snapctl get receiver.altitude)"
-	if [ -z "$LAT" ] || [ -z "$LONG" ] || [ -z "$ALT" ]; then
-		echo "Receiver does not have valid settings of its position"
-		exit 0
-	fi
+# the settings are read at every start, so changes take effect after a
+# restart; the serial assigned by OpenSky is kept in 05-serial.conf
+LAT="$(snapctl get receiver.latitude)"
+LONG="$(snapctl get receiver.longitude)"
+ALT="$(snapctl get receiver.altitude)"
+if [ -z "$LAT" ] || [ -z "$LONG" ] || [ -z "$ALT" ]; then
+	echo "Receiver does not have valid settings of its position"
+	exit 0
+fi
 
-	DEVTYPE="default"
-	USER="$(snapctl get opensky-network.username)"
-	SERIAL="$(snapctl get opensky-network.serial)"
-	if [ -z "$USER" ] || [ -z "$SERIAL" ]; then
-		echo "Username or serial for OpenSky Network is empty, remember to update it"
-	fi
+DEVTYPE="default"
+USER="$(snapctl get opensky-network.username)"
+SERIAL="$(snapctl get opensky-network.serial)"
+if [ -z "$USER" ] || [ -z "$SERIAL" ]; then
+	echo "Username or serial for OpenSky Network is empty, remember to update it"
+fi
 
-	HOST="localhost"
-	PORT="30005"
+HOST="localhost"
+PORT="30005"
 
-	cat > "$CONF_FILE" <<EOF
+NEW_FILE="$CONF_FILE.new"
+cat > "$NEW_FILE" <<EOF
 [GPS]
 Latitude=$LAT
 Longitude=$LONG
@@ -54,15 +56,19 @@ Username=$USER
 Host=$HOST
 Port=$PORT
 EOF
-	
-	if [ -n "$SERIAL" ]; then
-		{
-			echo
-			echo "[DEVICE]"
-			echo "Serial=$SERIAL"
-		} >> "$CONF_FILE"
-	fi
-	
+
+if [ -n "$SERIAL" ]; then
+	{
+		echo
+		echo "[DEVICE]"
+		echo "Serial=$SERIAL"
+	} >> "$NEW_FILE"
+fi
+
+if cmp -s "$NEW_FILE" "$CONF_FILE"; then
+	rm -f "$NEW_FILE"
+else
+	mv "$NEW_FILE" "$CONF_FILE"
 	echo "Your GPS location has been set to Lat: $LAT Long: $LONG Alt: $ALT"
 	if [ -n "$USER" ]; then
 		echo "Your Username has been set to $USER"

@@ -357,11 +357,6 @@ cmd_set() {
 	done
 
 	notes=""
-	case "$changed" in
-		*opensky-network.*|*receiver.latitude*|*receiver.longitude*|*receiver.altitude*)
-			notes="openskyd reads opensky-network.* and receiver location only when $SNAP_DATA/openskyd/conf.d/10-debconf.conf does not exist."
-			;;
-	esac
 
 	if [ "$JSON" = "1" ]; then
 		printf '{"ok":true,"changed":%s,"restarted":%s,"warnings":%s,"notes":%s}\n' \

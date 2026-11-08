@@ -15,6 +15,8 @@
 			--adsb-error: #cc0f35;
 			--adsb-key: #257942;
 			--adsb-key-bg: #effaf5;
+			--adsb-heading-bg: #00796b;
+			--adsb-heading-text: #fff;
 		}
 		:root[data-theme="dark"] {
 			--adsb-focus: #8c9cff;
@@ -22,6 +24,8 @@
 			--adsb-error: #ff8fa3;
 			--adsb-key: #8fe0b5;
 			--adsb-key-bg: #1d3a2b;
+			--adsb-heading-bg: #004d40;
+			--adsb-heading-text: #e8f5f2;
 		}
 		@media (prefers-color-scheme: dark) {
 			:root:not([data-theme="light"]) {
@@ -30,6 +34,8 @@
 				--adsb-error: #ff8fa3;
 				--adsb-key: #8fe0b5;
 				--adsb-key-bg: #1d3a2b;
+				--adsb-heading-bg: #004d40;
+				--adsb-heading-text: #e8f5f2;
 			}
 		}
 		#settings .help {
@@ -46,11 +52,19 @@
 		#settings .select select[disabled] {
 			color: var(--adsb-help);
 		}
+		/* group names: a header bar, the same colours as the graph headings */
+		#settings fieldset.box {
+			padding-top: 0;
+		}
 		#settings fieldset.box legend {
 			float: left;
-			width: 100%;
-			padding: 0;
-			margin-bottom: 1.5rem;
+			width: calc(100% + 2.5rem);
+			margin: 0 -1.25rem 1.5rem;
+			padding: 0.6rem 1.25rem;
+			font-weight: 600;
+			color: var(--adsb-heading-text);
+			background-color: var(--adsb-heading-bg);
+			border-radius: var(--bulma-box-radius) var(--bulma-box-radius) 0 0;
 		}
 		#settings fieldset.box legend + * {
 			clear: both;
